@@ -348,4 +348,174 @@ export interface HabitStreakOverview {
   heatmapData: { date: string; count: number; level: number }[]
 }
 
+/* ============================
+   Book Library
+   ============================ */
+
+export type BookShelfStatus = 'reading' | 'completed' | 'want_to_read'
+export type BookShelfTab = 'reading' | 'completed' | 'want_to_read' | 'favorites'
+
+export interface Book {
+  id: string
+  space_id: string
+  user_id?: string | null
+  title: string
+  author: string
+  cover_url: string | null
+  total_pages: number | null
+  current_page: number
+  status: BookShelfStatus
+  start_date: string | null
+  end_date: string | null
+  rating: number | null
+  genres: string[]
+  review: string | null
+  insights: string | null
+  quotes: string | null
+  recommended_by: string | null
+  is_favorite: boolean
+  created_at: string
+  updated_at?: string
+}
+
+export interface ReadingLog {
+  id: string
+  book_id: string
+  date: string // YYYY-MM-DD
+  pages_read: number
+  notes: string | null
+  created_at?: string
+}
+
+export interface BookFormData {
+  title: string
+  author: string
+  cover_url?: string | null
+  total_pages: number | null
+  current_page: number
+  status: BookShelfStatus
+  start_date: string
+  end_date: string
+  rating: number | null
+  genres: string[]
+  review: string
+  insights: string
+  quotes: string
+  recommended_by: string
+  is_favorite: boolean
+}
+
+export interface BookLibraryStats {
+  totalRead: number
+  currentlyReading: number
+  booksThisYear: number
+  readingStreak: number
+  pagesReadThisMonth: number
+  averageRating: number
+}
+
+export interface GenreStat {
+  genre: string
+  count: number
+  percentage: number
+}
+
+export interface ReadingHeatmapDay {
+  date: string
+  pages: number
+  count: number
+  level: number // 0-4
+}
+
+/* ============================
+   Event Tracker
+   ============================ */
+
+export type EventCategory =
+  | 'Trading Event'
+  | 'Seminar'
+  | 'Workshop'
+  | 'Competition'
+  | 'Networking'
+  | 'Personal'
+
+export type EventStatus = 'planning' | 'registered' | 'attending' | 'completed'
+
+export interface EventChecklistItem {
+  id: string
+  text: string
+  completed: boolean
+}
+
+export interface EventAttachment {
+  id: string
+  event_id: string
+  file_url: string
+  file_name: string
+  file_type: string
+  created_at?: string
+}
+
+export interface EventReview {
+  id: string
+  event_id: string
+  what_learned: string | null
+  takeaways: string | null
+  contacts_made: string | null
+  rating: number | null
+  would_attend_again: boolean
+  created_at?: string
+}
+
+export interface EventItem {
+  id: string
+  space_id: string
+  user_id?: string | null
+  title: string
+  start_datetime: string
+  end_datetime: string | null
+  location: string | null
+  category: EventCategory
+  description: string | null
+  status: EventStatus
+  cost: number | null
+  notes: string | null
+  reminder_days: number[] // e.g. [1, 3, 7]
+  checklist: EventChecklistItem[]
+  attachments?: EventAttachment[]
+  review?: EventReview | null
+  created_at: string
+  updated_at?: string
+}
+
+export interface EventFormData {
+  title: string
+  start_datetime: string
+  end_datetime: string
+  location: string
+  category: EventCategory
+  status: EventStatus
+  cost: number | null
+  description: string
+  reminder_days: number[]
+  checklist: EventChecklistItem[]
+  notes: string
+}
+
+export interface EventReviewFormData {
+  what_learned: string
+  takeaways: string
+  contacts_made: string
+  rating: number | null
+  would_attend_again: boolean
+}
+
+export interface EventTrackerStats {
+  upcomingCount: number
+  thisMonthCount: number
+  completedCount: number
+  totalBudget: number
+}
+
+
 

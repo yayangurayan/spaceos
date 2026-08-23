@@ -529,4 +529,283 @@ CREATE POLICY "Users can delete habit logs in their spaces"
     )
   );
 
+-- ============================================================
+-- 9. Book Library: Books & Reading Logs
+-- ============================================================
+CREATE TABLE IF NOT EXISTS books (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  title VARCHAR(255) NOT NULL,
+  author VARCHAR(255) NOT NULL,
+  cover_url TEXT,
+  total_pages INTEGER,
+  current_page INTEGER DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'want_to_read' CHECK (status IN ('reading', 'completed', 'want_to_read')),
+  start_date DATE,
+  end_date DATE,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  genres TEXT[] DEFAULT '{}',
+  review TEXT,
+  insights TEXT,
+  quotes TEXT,
+  recommended_by VARCHAR(255),
+  is_favorite BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS reading_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  pages_read INTEGER NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Indexes for Book Library
+CREATE INDEX IF NOT EXISTS idx_books_space_id ON books(space_id);
+CREATE INDEX IF NOT EXISTS idx_books_status ON books(space_id, status);
+CREATE INDEX IF NOT EXISTS idx_books_created_at ON books(space_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reading_logs_book_id ON reading_logs(book_id);
+CREATE INDEX IF NOT EXISTS idx_reading_logs_date ON reading_logs(date DESC);
+
+-- RLS for Book Library
+ALTER TABLE books ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reading_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view books in their spaces" ON books;
+DROP POLICY IF EXISTS "Users can insert books in their spaces" ON books;
+DROP POLICY IF EXISTS "Users can update books in their spaces" ON books;
+DROP POLICY IF EXISTS "Users can delete books in their spaces" ON books;
+
+CREATE POLICY "Users can view books in their spaces"
+  ON books FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert books in their spaces"
+  ON books FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update books in their spaces"
+  ON books FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete books in their spaces"
+  ON books FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+DROP POLICY IF EXISTS "Users can view reading logs in their spaces" ON reading_logs;
+DROP POLICY IF EXISTS "Users can insert reading logs in their spaces" ON reading_logs;
+DROP POLICY IF EXISTS "Users can update reading logs in their spaces" ON reading_logs;
+DROP POLICY IF EXISTS "Users can delete reading logs in their spaces" ON reading_logs;
+
+CREATE POLICY "Users can view reading logs in their spaces"
+  ON reading_logs FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.books b
+      WHERE b.id = reading_logs.book_id
+        AND public.is_space_member(b.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can insert reading logs in their spaces"
+  ON reading_logs FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.books b
+      WHERE b.id = reading_logs.book_id
+        AND public.is_space_member(b.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can update reading logs in their spaces"
+  ON reading_logs FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.books b
+      WHERE b.id = reading_logs.book_id
+        AND public.is_space_member(b.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can delete reading logs in their spaces"
+  ON reading_logs FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.books b
+      WHERE b.id = reading_logs.book_id
+        AND public.is_space_member(b.space_id, (SELECT auth.uid()))
+    )
+  );
+
+-- ============================================================
+-- 10. Event Tracker: Events, Attachments & Reviews
+-- ============================================================
+CREATE TABLE IF NOT EXISTS events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  title VARCHAR(255) NOT NULL,
+  start_datetime TIMESTAMPTZ NOT NULL,
+  end_datetime TIMESTAMPTZ,
+  location VARCHAR(255),
+  category VARCHAR(50) NOT NULL,
+  description TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'planning' CHECK (status IN ('planning', 'registered', 'attending', 'completed')),
+  cost DECIMAL(10,2),
+  notes TEXT,
+  reminder_days INTEGER[] DEFAULT '{1}', -- [1, 3, 7]
+  checklist JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS event_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  file_url TEXT NOT NULL,
+  file_name VARCHAR(255),
+  file_type VARCHAR(50),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS event_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE UNIQUE,
+  what_learned TEXT,
+  takeaways TEXT,
+  contacts_made TEXT,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  would_attend_again BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Indexes for Events
+CREATE INDEX IF NOT EXISTS idx_events_space_id ON events(space_id);
+CREATE INDEX IF NOT EXISTS idx_events_start_datetime ON events(space_id, start_datetime DESC);
+CREATE INDEX IF NOT EXISTS idx_events_status ON events(space_id, status);
+CREATE INDEX IF NOT EXISTS idx_events_category ON events(space_id, category);
+CREATE INDEX IF NOT EXISTS idx_event_attachments_event_id ON event_attachments(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_reviews_event_id ON event_reviews(event_id);
+
+-- RLS for Events
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_attachments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_reviews ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view events in their spaces" ON events;
+DROP POLICY IF EXISTS "Users can insert events in their spaces" ON events;
+DROP POLICY IF EXISTS "Users can update events in their spaces" ON events;
+DROP POLICY IF EXISTS "Users can delete events in their spaces" ON events;
+
+CREATE POLICY "Users can view events in their spaces"
+  ON events FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert events in their spaces"
+  ON events FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update events in their spaces"
+  ON events FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete events in their spaces"
+  ON events FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+DROP POLICY IF EXISTS "Users can view event attachments in their spaces" ON event_attachments;
+DROP POLICY IF EXISTS "Users can insert event attachments in their spaces" ON event_attachments;
+DROP POLICY IF EXISTS "Users can update event attachments in their spaces" ON event_attachments;
+DROP POLICY IF EXISTS "Users can delete event attachments in their spaces" ON event_attachments;
+
+CREATE POLICY "Users can view event attachments in their spaces"
+  ON event_attachments FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_attachments.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can insert event attachments in their spaces"
+  ON event_attachments FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_attachments.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can update event attachments in their spaces"
+  ON event_attachments FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_attachments.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can delete event attachments in their spaces"
+  ON event_attachments FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_attachments.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can view event reviews in their spaces" ON event_reviews;
+DROP POLICY IF EXISTS "Users can insert event reviews in their spaces" ON event_reviews;
+DROP POLICY IF EXISTS "Users can update event reviews in their spaces" ON event_reviews;
+DROP POLICY IF EXISTS "Users can delete event reviews in their spaces" ON event_reviews;
+
+CREATE POLICY "Users can view event reviews in their spaces"
+  ON event_reviews FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_reviews.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can insert event reviews in their spaces"
+  ON event_reviews FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_reviews.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can update event reviews in their spaces"
+  ON event_reviews FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_reviews.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can delete event reviews in their spaces"
+  ON event_reviews FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_reviews.event_id
+        AND public.is_space_member(e.space_id, (SELECT auth.uid()))
+    )
+  );
+
+
 
