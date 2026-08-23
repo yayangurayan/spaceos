@@ -91,7 +91,7 @@
 
           <!-- Rows -->
           <div
-            v-for="(trade, idx) in recentTrades"
+            v-for="trade in recentTrades"
             :key="trade.id"
             class="trade-row grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 px-5 py-4 border-b border-slate-700/30 last:border-0 cursor-pointer"
             @click="onTradeClick(trade)"

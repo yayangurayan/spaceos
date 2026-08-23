@@ -68,12 +68,6 @@ function animate(from: number, to: number) {
   animationId = requestAnimationFrame(tick)
 }
 
-// Parse the current display back to a number (strip formatting)
-function parseDisplay(): number {
-  const cleaned = displayValue.value.replace(/,/g, '')
-  return parseFloat(cleaned) || 0
-}
-
 // Watch for value changes and re-animate
 watch(() => props.value, (newVal, oldVal) => {
   animate(oldVal ?? 0, newVal)

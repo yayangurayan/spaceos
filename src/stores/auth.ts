@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/utils/supabase'
-import type { Profile, SpaceWithMeta, UserSession } from '@/types'
+import type { Profile, SpaceWithMeta } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   /* ============================
@@ -200,7 +200,7 @@ export const useAuthStore = defineStore('auth', () => {
         ...item.spaces,
         role: item.role,
         last_accessed: sessions?.current_space_id === item.spaces.id
-          ? sessions.last_accessed
+          ? (sessions?.last_accessed ?? null)
           : null,
       }))
     } catch (err: any) {
