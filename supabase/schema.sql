@@ -182,3 +182,98 @@ CREATE POLICY "Users can insert own sessions"
 CREATE POLICY "Users can update own sessions"
   ON user_sessions FOR UPDATE
   USING (auth.uid() = user_id);
+
+-- ============================================================
+-- 5. Trades Table (Trading Journal)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS trades (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  date TIMESTAMPTZ NOT NULL,
+  pair VARCHAR(20) NOT NULL,
+  position VARCHAR(4) NOT NULL CHECK (position IN ('BUY', 'SELL')),
+  entry_price DECIMAL(10,5) NOT NULL,
+  exit_price DECIMAL(10,5),
+  stop_loss DECIMAL(10,5),
+  take_profit DECIMAL(10,5),
+  lot_size DECIMAL(5,2) NOT NULL,
+  pnl DECIMAL(10,2),
+  rr_ratio DECIMAL(4,2),
+  pips DECIMAL(8,2),
+  account_type VARCHAR(20) DEFAULT 'Real',
+  setup TEXT,
+  entry_reason TEXT,
+  exit_reason TEXT,
+  what_went_well TEXT,
+  improvements TEXT,
+  emotions TEXT[], -- array of emotion tags
+  pre_mood VARCHAR(20),
+  post_mood VARCHAR(20),
+  mistakes TEXT[],
+  screenshot_urls TEXT[],
+  status VARCHAR(20) DEFAULT 'Open' CHECK (status IN ('Win', 'Loss', 'Breakeven', 'Open')),
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================
+-- Trades Indexes
+-- ============================
+CREATE INDEX IF NOT EXISTS idx_trades_space_id ON trades(space_id);
+CREATE INDEX IF NOT EXISTS idx_trades_user_id ON trades(user_id);
+CREATE INDEX IF NOT EXISTS idx_trades_date ON trades(date DESC);
+CREATE INDEX IF NOT EXISTS idx_trades_space_date ON trades(space_id, date DESC);
+
+-- ============================
+-- Trades RLS Policies
+-- ============================
+ALTER TABLE trades ENABLE ROW LEVEL SECURITY;
+
+-- Users can view trades in spaces they belong to
+CREATE POLICY "Users can view trades in their spaces"
+  ON trades FOR SELECT
+  USING (
+    space_id IN (
+      SELECT space_id FROM space_members WHERE user_id = auth.uid()
+    )
+  );
+
+-- Users can insert trades in spaces they belong to
+CREATE POLICY "Users can insert trades in their spaces"
+  ON trades FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id
+    AND space_id IN (
+      SELECT space_id FROM space_members WHERE user_id = auth.uid()
+    )
+  );
+
+-- Users can update their own trades
+CREATE POLICY "Users can update their own trades"
+  ON trades FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Users can delete their own trades
+CREATE POLICY "Users can delete their own trades"
+  ON trades FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================================
+-- 6. Storage Bucket for Trade Screenshots (Optional)
+-- Run this in Supabase SQL editor or create via Storage dashboard
+-- ============================================================
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('trade-screenshots', 'trade-screenshots', true)
+-- ON CONFLICT (id) DO NOTHING;
+--
+-- CREATE POLICY "Authenticated users can upload trade screenshots"
+--   ON storage.objects FOR INSERT
+--   TO authenticated
+--   WITH CHECK (bucket_id = 'trade-screenshots');
+--
+-- CREATE POLICY "Public can view trade screenshots"
+--   ON storage.objects FOR SELECT
+--   TO public
+--   USING (bucket_id = 'trade-screenshots');
+

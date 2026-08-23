@@ -102,3 +102,115 @@ export interface Toast {
   message?: string
   duration?: number
 }
+
+/* ============================
+   Trading Journal
+   ============================ */
+
+export type TradePosition = 'BUY' | 'SELL'
+export type TradeStatus = 'Win' | 'Loss' | 'Breakeven' | 'Open'
+export type TradeAccountType = 'Real' | 'Funded' | 'Demo'
+
+export type EmotionTag =
+  | 'FOMO'
+  | 'Confident'
+  | 'Greedy'
+  | 'Fearful'
+  | 'Disciplined'
+  | 'Revenge'
+  | 'Patient'
+
+export type MistakeTag =
+  | 'Overleveraged'
+  | 'No SL'
+  | 'Moved SL'
+  | 'Early Exit'
+  | 'Late Entry'
+  | 'Chasing Price'
+  | 'Overtrading'
+
+export interface Trade {
+  id: string
+  space_id: string
+  user_id: string
+  date: string
+  pair: string
+  position: TradePosition
+  entry_price: number
+  exit_price: number | null
+  stop_loss: number | null
+  take_profit: number | null
+  lot_size: number
+  pnl: number | null
+  rr_ratio: number | null
+  pips: number | null
+  account_type: TradeAccountType
+  setup: string | null
+  entry_reason: string | null
+  exit_reason: string | null
+  what_went_well: string | null
+  improvements: string | null
+  emotions: EmotionTag[]
+  pre_mood: string | null
+  post_mood: string | null
+  mistakes: MistakeTag[]
+  screenshot_urls: string[]
+  status: TradeStatus
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TradeFormData {
+  date: string
+  pair: string
+  position: TradePosition
+  account_type: TradeAccountType
+  entry_price: number | null
+  exit_price: number | null
+  stop_loss: number | null
+  take_profit: number | null
+  lot_size: number | null
+  setup: string
+  entry_reason: string
+  exit_reason: string
+  what_went_well: string
+  improvements: string
+  emotions: EmotionTag[]
+  pre_mood: string
+  post_mood: string
+  mistakes: MistakeTag[]
+  screenshot_urls: string[]
+  notes: string
+  // Calculated / overrides
+  pnl?: number | null
+  rr_ratio?: number | null
+  pips?: number | null
+  status?: TradeStatus
+}
+
+export interface TradeFilters {
+  dateRange: 'all' | 'today' | 'this_week' | 'this_month' | 'last_month' | 'custom'
+  startDate?: string
+  endDate?: string
+  accountType: 'all' | TradeAccountType
+  pair: string
+  status: 'all' | TradeStatus
+  search?: string
+}
+
+export interface TradeJournalStats {
+  totalTrades: number
+  winTrades: number
+  lossTrades: number
+  breakevenTrades: number
+  openTrades: number
+  winRate: number
+  totalPnl: number
+  bestTrade: number
+  worstTrade: number
+  avgRrRatio: number
+  profitFactor: number
+  totalPips: number
+}
+

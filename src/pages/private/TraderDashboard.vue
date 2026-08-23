@@ -70,7 +70,7 @@
       <div class="mb-8 animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold text-white">Trades Terakhir</h2>
-          <button class="text-accent text-sm hover:underline transition-colors">
+          <button @click="router.push('/trading')" class="text-accent text-sm hover:underline transition-colors">
             Lihat Semua →
           </button>
         </div>
@@ -147,11 +147,15 @@
         <div class="animate-fade-in" :style="{ animationDelay: '450ms', opacity: 0 }">
           <h2 class="text-lg font-semibold text-white mb-4">Quick Actions</h2>
           <div class="flex flex-col sm:flex-row gap-3">
-            <button class="btn-primary flex-1 flex items-center justify-center gap-2 py-3">
+            <button
+              @click="router.push('/trading')"
+              class="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
+            >
               <span class="text-lg">📝</span>
               Add New Trade
             </button>
             <button
+              @click="router.push('/trading')"
               class="flex-1 glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5"
             >
               <span class="text-lg mr-2">📋</span>
@@ -221,11 +225,14 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import StatCard from '@/components/ui/StatCard.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import { useTraderDashboard } from '@/composables/useTraderDashboard'
 import type { TradeEntry } from '@/composables/useTraderDashboard'
+
+const router = useRouter()
 
 const {
   isLoading,
@@ -242,9 +249,8 @@ function formatTradeDate(dateStr: string): string {
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 }
 
-function onTradeClick(trade: TradeEntry) {
-  // Placeholder - will navigate to trade detail in the future
-  alert(`Trade detail: ${trade.pair} (${trade.position}) — P&L: $${trade.pnl.toFixed(2)}`)
+function onTradeClick(_trade: TradeEntry) {
+  router.push('/trading')
 }
 </script>
 
