@@ -166,18 +166,27 @@
       <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
         <h2 class="text-lg font-semibold text-white mb-4">Quick Actions</h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button class="btn-primary flex items-center justify-center gap-2 py-3">
+          <router-link
+            to="/students"
+            class="btn-primary flex items-center justify-center gap-2 py-3 text-sm font-bold shadow-lg shadow-cyan-500/10"
+          >
             <span class="text-lg">👤</span>
-            Tambah Siswa Baru
-          </button>
-          <button class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <span>Kelola & Tambah Siswa</span>
+          </router-link>
+          <router-link
+            to="/lessons"
+            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
             <span class="text-lg">📅</span>
-            Jadwalkan Lesson
-          </button>
-          <button class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <span>Jadwalkan Lesson</span>
+          </router-link>
+          <router-link
+            to="/income"
+            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
             <span class="text-lg">💵</span>
-            Catat Pendapatan
-          </button>
+            <span>Tagihan & SPP Siswa</span>
+          </router-link>
         </div>
       </div>
     </template>

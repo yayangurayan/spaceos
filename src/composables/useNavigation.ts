@@ -95,6 +95,7 @@ export function useNavigation() {
             { label: 'Dashboard', to: '/', icon: 'home' },
             { label: 'Students', to: '/students', icon: 'users' },
             { label: 'Lessons', to: '/lessons', icon: 'graduation-cap' },
+            { label: 'Lesson Plans', to: '/lesson-plans', icon: 'clipboard' },
             { label: 'Schedule', to: '/schedule', icon: 'calendar' },
             { label: 'Materials', to: '/materials', icon: 'folder' },
             { label: 'Income Tracker', to: '/income', icon: 'dollar-sign' },

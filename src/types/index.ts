@@ -517,5 +517,192 @@ export interface EventTrackerStats {
   totalBudget: number
 }
 
+/* ============================
+   Guru Les / Teacher Management
+   ============================ */
+
+export type StudentStatus = 'active' | 'paused' | 'graduated'
+
+export interface ParentContact {
+  name?: string
+  phone?: string
+  email?: string
+  relationship?: string
+}
+
+export interface StudentScheduleItem {
+  day: string // 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'
+  start_time: string // '16:00'
+  end_time: string // '17:30'
+  duration?: number // in minutes
+}
+
+export interface Student {
+  id: string
+  space_id: string
+  user_id?: string | null
+  name: string
+  grade?: string | null
+  subjects: string[]
+  parent_contact?: ParentContact
+  schedule: StudentScheduleItem[]
+  monthly_fee: number
+  payment_method: string
+  payment_due_date: number
+  notes?: string | null
+  status: StudentStatus
+  start_date?: string | null
+  end_date?: string | null
+  created_at: string
+  updated_at?: string
+}
+
+export interface StudentFormData {
+  name: string
+  grade: string
+  subjects: string[]
+  parent_name: string
+  parent_phone: string
+  parent_email: string
+  schedule: StudentScheduleItem[]
+  monthly_fee: number | null
+  payment_method: string
+  payment_due_date: number
+  notes: string
+  status: StudentStatus
+  start_date: string
+}
+
+export type LessonStatus = 'scheduled' | 'completed' | 'cancelled'
+export type LessonPerformance = 'Excellent' | 'Good' | 'Needs Improvement'
+
+export interface Lesson {
+  id: string
+  space_id: string
+  student_id: string
+  datetime: string
+  duration_minutes: number
+  topic?: string | null
+  material_covered?: string | null
+  activities?: string | null
+  homework?: string | null
+  performance?: LessonPerformance
+  next_lesson_notes?: string | null
+  attachments?: { name: string; url: string }[]
+  status: LessonStatus
+  created_at: string
+  updated_at?: string
+  student?: Student
+}
+
+export interface LessonFormData {
+  student_id: string
+  datetime: string
+  duration_minutes: number
+  topic: string
+  material_covered: string
+  activities: string
+  homework: string
+  performance: LessonPerformance
+  next_lesson_notes: string
+  status: LessonStatus
+  attachments?: { name: string; url: string }[]
+}
+
+export interface LessonPlan {
+  id: string
+  space_id: string
+  title: string
+  subject: string
+  grade?: string | null
+  duration_minutes: number
+  objectives?: string | null
+  materials?: string | null
+  activities?: string | null
+  assessment?: string | null
+  created_at: string
+  updated_at?: string
+}
+
+export interface LessonPlanFormData {
+  title: string
+  subject: string
+  grade: string
+  duration_minutes: number
+  objectives: string
+  materials: string
+  activities: string
+  assessment: string
+}
+
+export type MaterialType = 'Worksheet' | 'Slides' | 'Video' | 'Quiz' | 'Notes'
+
+export interface TeacherMaterial {
+  id: string
+  space_id: string
+  title: string
+  subject: string
+  grade?: string | null
+  type: MaterialType
+  file_url: string
+  description?: string | null
+  tags: string[]
+  is_favorite: boolean
+  created_at: string
+  updated_at?: string
+}
+
+export interface MaterialFormData {
+  title: string
+  subject: string
+  grade: string
+  type: MaterialType
+  file_url: string
+  description: string
+  tags: string[]
+  is_favorite: boolean
+}
+
+export type PaymentStatus = 'paid' | 'pending' | 'overdue'
+
+export interface TeacherPayment {
+  id: string
+  space_id: string
+  student_id: string
+  amount: number
+  month: number
+  year: number
+  status: PaymentStatus
+  paid_date?: string | null
+  payment_method: string
+  category: string
+  notes?: string | null
+  created_at: string
+  updated_at?: string
+  student?: Student
+}
+
+export interface PaymentFormData {
+  student_id: string
+  amount: number | null
+  month: number
+  year: number
+  status: PaymentStatus
+  paid_date: string
+  payment_method: string
+  category: string
+  notes: string
+}
+
+export interface TeacherOverviewStats {
+  totalStudents: number
+  activeStudents: number
+  monthlyIncomeCollected: number
+  monthlyIncomePending: number
+  lessonsThisWeek: number
+  lessonsToday: number
+}
+
+
 
 

@@ -82,27 +82,37 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'students',
         name: 'Students',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/Students.vue'),
+      },
+      {
+        path: 'students/:id',
+        name: 'StudentDetail',
+        component: () => import('@/pages/private/StudentDetail.vue'),
       },
       {
         path: 'lessons',
         name: 'Lessons',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/Lessons.vue'),
+      },
+      {
+        path: 'lesson-plans',
+        name: 'LessonPlans',
+        component: () => import('@/pages/private/LessonPlans.vue'),
       },
       {
         path: 'schedule',
         name: 'Schedule',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/Schedule.vue'),
       },
       {
         path: 'materials',
         name: 'Materials',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/Materials.vue'),
       },
       {
         path: 'income',
         name: 'Income',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/TeacherIncome.vue'),
       },
       // Couple Space routes
       {

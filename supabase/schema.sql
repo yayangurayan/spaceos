@@ -807,5 +807,229 @@ CREATE POLICY "Users can delete event reviews in their spaces"
     )
   );
 
+-- ============================================================
+-- 11. Guru Les (Teacher Space): Students, Lessons, Plans, Materials, Payments
+-- ============================================================
+
+-- 11.1 Students Table
+CREATE TABLE IF NOT EXISTS students (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  name VARCHAR(255) NOT NULL,
+  grade VARCHAR(50),
+  subjects TEXT[] DEFAULT '{}',
+  parent_contact JSONB DEFAULT '{}'::jsonb, -- {phone, email, name}
+  schedule JSONB DEFAULT '[]'::jsonb, -- [{day, start_time, end_time, duration}]
+  monthly_fee DECIMAL(10,2) DEFAULT 0,
+  payment_method VARCHAR(50) DEFAULT 'Transfer',
+  payment_due_date INTEGER DEFAULT 5, -- day of month (1-31)
+  notes TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'paused', 'graduated')),
+  start_date DATE DEFAULT CURRENT_DATE,
+  end_date DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 11.2 Lessons Table
+CREATE TABLE IF NOT EXISTS lessons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  datetime TIMESTAMPTZ NOT NULL,
+  duration_minutes INTEGER NOT NULL DEFAULT 60,
+  topic VARCHAR(255),
+  material_covered TEXT,
+  activities TEXT,
+  homework TEXT,
+  performance VARCHAR(30) DEFAULT 'Good' CHECK (performance IN ('Excellent', 'Good', 'Needs Improvement')),
+  next_lesson_notes TEXT,
+  attachments JSONB DEFAULT '[]'::jsonb,
+  status VARCHAR(20) NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'cancelled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 11.3 Lesson Plans Table
+CREATE TABLE IF NOT EXISTS lesson_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  subject VARCHAR(100) NOT NULL,
+  grade VARCHAR(50),
+  duration_minutes INTEGER DEFAULT 60,
+  objectives TEXT,
+  materials TEXT,
+  activities TEXT,
+  assessment TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 11.4 Materials Table
+CREATE TABLE IF NOT EXISTS materials (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  subject VARCHAR(100) NOT NULL,
+  grade VARCHAR(50),
+  type VARCHAR(50) NOT NULL DEFAULT 'Worksheet' CHECK (type IN ('Worksheet', 'Slides', 'Video', 'Quiz', 'Notes')),
+  file_url TEXT NOT NULL,
+  description TEXT,
+  tags TEXT[] DEFAULT '{}',
+  is_favorite BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 11.5 Payments Table
+CREATE TABLE IF NOT EXISTS payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  amount DECIMAL(10,2) NOT NULL,
+  month INTEGER NOT NULL,
+  year INTEGER NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('paid', 'pending', 'overdue')),
+  paid_date DATE,
+  payment_method VARCHAR(50) DEFAULT 'Transfer',
+  category VARCHAR(50) DEFAULT 'Les Income', -- 'Les Income', 'Material Sales', 'Bonus/Extra Classes'
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(student_id, month, year, category)
+);
+
+-- Indexes for Teacher Management
+CREATE INDEX IF NOT EXISTS idx_students_space_id ON students(space_id);
+CREATE INDEX IF NOT EXISTS idx_students_status ON students(space_id, status);
+CREATE INDEX IF NOT EXISTS idx_lessons_space_id ON lessons(space_id);
+CREATE INDEX IF NOT EXISTS idx_lessons_student_id ON lessons(student_id);
+CREATE INDEX IF NOT EXISTS idx_lessons_datetime ON lessons(space_id, datetime DESC);
+CREATE INDEX IF NOT EXISTS idx_lesson_plans_space_id ON lesson_plans(space_id);
+CREATE INDEX IF NOT EXISTS idx_materials_space_id ON materials(space_id);
+CREATE INDEX IF NOT EXISTS idx_payments_space_id ON payments(space_id);
+CREATE INDEX IF NOT EXISTS idx_payments_student_id ON payments(student_id);
+CREATE INDEX IF NOT EXISTS idx_payments_period ON payments(space_id, year, month);
+
+-- RLS for Teacher Management
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lessons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+
+-- Students Policies
+DROP POLICY IF EXISTS "Users can view students in their spaces" ON students;
+DROP POLICY IF EXISTS "Users can insert students in their spaces" ON students;
+DROP POLICY IF EXISTS "Users can update students in their spaces" ON students;
+DROP POLICY IF EXISTS "Users can delete students in their spaces" ON students;
+
+CREATE POLICY "Users can view students in their spaces"
+  ON students FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert students in their spaces"
+  ON students FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update students in their spaces"
+  ON students FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete students in their spaces"
+  ON students FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Lessons Policies
+DROP POLICY IF EXISTS "Users can view lessons in their spaces" ON lessons;
+DROP POLICY IF EXISTS "Users can insert lessons in their spaces" ON lessons;
+DROP POLICY IF EXISTS "Users can update lessons in their spaces" ON lessons;
+DROP POLICY IF EXISTS "Users can delete lessons in their spaces" ON lessons;
+
+CREATE POLICY "Users can view lessons in their spaces"
+  ON lessons FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert lessons in their spaces"
+  ON lessons FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update lessons in their spaces"
+  ON lessons FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete lessons in their spaces"
+  ON lessons FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Lesson Plans Policies
+DROP POLICY IF EXISTS "Users can view lesson plans in their spaces" ON lesson_plans;
+DROP POLICY IF EXISTS "Users can insert lesson plans in their spaces" ON lesson_plans;
+DROP POLICY IF EXISTS "Users can update lesson plans in their spaces" ON lesson_plans;
+DROP POLICY IF EXISTS "Users can delete lesson plans in their spaces" ON lesson_plans;
+
+CREATE POLICY "Users can view lesson plans in their spaces"
+  ON lesson_plans FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert lesson plans in their spaces"
+  ON lesson_plans FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update lesson plans in their spaces"
+  ON lesson_plans FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete lesson plans in their spaces"
+  ON lesson_plans FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Materials Policies
+DROP POLICY IF EXISTS "Users can view materials in their spaces" ON materials;
+DROP POLICY IF EXISTS "Users can insert materials in their spaces" ON materials;
+DROP POLICY IF EXISTS "Users can update materials in their spaces" ON materials;
+DROP POLICY IF EXISTS "Users can delete materials in their spaces" ON materials;
+
+CREATE POLICY "Users can view materials in their spaces"
+  ON materials FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert materials in their spaces"
+  ON materials FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update materials in their spaces"
+  ON materials FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete materials in their spaces"
+  ON materials FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Payments Policies
+DROP POLICY IF EXISTS "Users can view payments in their spaces" ON payments;
+DROP POLICY IF EXISTS "Users can insert payments in their spaces" ON payments;
+DROP POLICY IF EXISTS "Users can update payments in their spaces" ON payments;
+DROP POLICY IF EXISTS "Users can delete payments in their spaces" ON payments;
+
+CREATE POLICY "Users can view payments in their spaces"
+  ON payments FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert payments in their spaces"
+  ON payments FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update payments in their spaces"
+  ON payments FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete payments in their spaces"
+  ON payments FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+
 
 
