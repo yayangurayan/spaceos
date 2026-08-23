@@ -76,7 +76,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'review',
         name: 'Review',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/WeeklyReview.vue'),
       },
       // Personal Space (Guru Les / Teacher) routes
       {

@@ -346,8 +346,15 @@ export function useEvents() {
         if (attRes.data) eventAttachments.value = attRes.data
         if (revRes.data) eventReviews.value = revRes.data
       } else {
-        // Auto-seed presets for first time load
-        await seedPresetsToDb(spaceId)
+        const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+        if (isCleanSlate) {
+          events.value = []
+          eventAttachments.value = []
+          eventReviews.value = []
+        } else {
+          // Auto-seed presets for first time load
+          await seedPresetsToDb(spaceId)
+        }
       }
     } catch (err: any) {
       console.error('fetchEventsData error:', err)
@@ -401,8 +408,7 @@ export function useEvents() {
             rating: presetWithRev.review.rating,
             would_attend_again: presetWithRev.review.would_attend_again,
           }
-          const { data: revRes } = await supabase.from('event_reviews').insert([revData]).select()
-          if (revRes) eventReviews.value = revRes
+          await supabase.from('event_reviews').insert([revData])
         }
       }
     } catch {
@@ -416,7 +422,7 @@ export function useEvents() {
       ...p,
       id: 'event-' + (idx + 1),
       space_id: spaceId,
-      created_at: new Date(Date.now() - (idx + 1) * 86400000 * 3).toISOString(),
+      created_at: new Date().toISOString(),
     }))
 
     events.value = generated
@@ -438,6 +444,7 @@ export function useEvents() {
      LocalStorage Helpers
      ============================ */
   function loadFromLocalStorage(spaceId: string) {
+    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const eKey = `spaceos_events_${spaceId}`
       const aKey = `spaceos_event_attachments_${spaceId}`
@@ -449,6 +456,12 @@ export function useEvents() {
 
       if (savedEvts) {
         events.value = JSON.parse(savedEvts)
+      } else if (isCleanSlate) {
+        events.value = []
+        eventAttachments.value = []
+        eventReviews.value = []
+        saveToLocalStorage(spaceId)
+        return
       } else {
         seedLocalDefaults()
         return
@@ -458,7 +471,9 @@ export function useEvents() {
       if (savedRevs) eventReviews.value = JSON.parse(savedRevs)
       usingFallback.value = true
     } catch {
-      seedLocalDefaults()
+      events.value = []
+      eventAttachments.value = []
+      eventReviews.value = []
     }
   }
 

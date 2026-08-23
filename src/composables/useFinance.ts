@@ -483,6 +483,7 @@ export function useFinance() {
   }
 
   function loadFromLocalStorage(spaceId: string) {
+    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const txKey = `spaceos_tx_${spaceId}`
       const bgKey = `spaceos_bg_${spaceId}`
@@ -491,6 +492,9 @@ export function useFinance() {
 
       if (savedTx) {
         transactions.value = JSON.parse(savedTx)
+      } else if (isCleanSlate) {
+        transactions.value = []
+        saveToLocalStorage(spaceId)
       } else {
         const initial = DEMO_TRANSACTIONS.map(t => ({
           ...t,
@@ -502,6 +506,8 @@ export function useFinance() {
 
       if (savedBg) {
         budgets.value = JSON.parse(savedBg)
+      } else if (isCleanSlate) {
+        budgets.value = []
       } else {
         const initialBg = DEMO_BUDGETS.map(b => ({
           ...b,
@@ -511,8 +517,8 @@ export function useFinance() {
       }
       usingFallback.value = true
     } catch {
-      transactions.value = [...DEMO_TRANSACTIONS]
-      budgets.value = [...DEMO_BUDGETS]
+      transactions.value = isCleanSlate ? [] : [...DEMO_TRANSACTIONS]
+      budgets.value = isCleanSlate ? [] : [...DEMO_BUDGETS]
       usingFallback.value = true
     }
   }

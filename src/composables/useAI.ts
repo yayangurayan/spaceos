@@ -1,19 +1,21 @@
 import { ref } from 'vue'
 
-export type AIProvider = 'offline' | 'openai' | 'anthropic' | 'gemini'
+export type AIProvider = 'offline' | 'glm'
 
 export interface AISettings {
   provider: AIProvider
   apiKey: string
   model: string
   temperature: number
+  baseUrl?: string
 }
 
 const DEFAULT_SETTINGS: AISettings = {
   provider: 'offline',
   apiKey: '',
-  model: 'gpt-4o-mini',
+  model: 'glm-4-flash',
   temperature: 0.7,
+  baseUrl: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
 }
 
 const SETTINGS_KEY = 'spaceos_ai_settings'
@@ -84,18 +86,19 @@ export function useAI() {
 
     const settings = getSettings()
 
-    // 1. If user provided OpenAI key
-    if (settings.provider === 'openai' && settings.apiKey) {
+    // 1. If GLM 5.2 / Zhipu AI provider is active with API key
+    if (settings.provider === 'glm' && settings.apiKey.trim()) {
       try {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        const endpoint = settings.baseUrl || 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${settings.apiKey}`,
+            'Authorization': `Bearer ${settings.apiKey.trim()}`,
           },
           body: JSON.stringify({
-            model: settings.model || 'gpt-4o-mini',
-            temperature: settings.temperature,
+            model: settings.model || 'glm-4-flash',
+            temperature: settings.temperature ?? 0.7,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: prompt },
@@ -105,27 +108,29 @@ export function useAI() {
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}))
-          throw new Error(errData.error?.message || `OpenAI API Error (${res.status})`)
+          throw new Error(errData.error?.message || `GLM API Error (${res.status})`)
         }
 
         const data = await res.json()
         const content = data.choices?.[0]?.message?.content || ''
-        if (cacheKey && content) setCachedResponse(cacheKey, content)
-        isLoading.value = false
-        return content
+        if (content) {
+          if (cacheKey) setCachedResponse(cacheKey, content)
+          isLoading.value = false
+          return content
+        }
       } catch (err: any) {
-        console.warn('OpenAI API call failed, fallback to local heuristics:', err.message)
+        console.warn('GLM API call failed, falling back to intelligent offline heuristics:', err.message)
       }
     }
 
-    // 2. Intelligent Offline Heuristics Engine with smooth human typing delay (400ms - 900ms)
+    // 2. Intelligent Offline Heuristics Engine (Zero Setup & Fast)
     await new Promise(r => setTimeout(r, 600))
 
     let result = ''
     if (offlineGenerator) {
       result = offlineGenerator()
     } else {
-      result = `### 🤖 Analisis AI SpaceOS\n\nBerdasarkan data yang diproses, performa Anda berjalan secara stabil. Pertahankan disiplin dan ikuti trading/study plan Anda dengan konsisten.`
+      result = `### 🤖 Analisis AI SpaceOS\n\nBerdasarkan data performa yang diproses, seluruh metrik berjalan dengan baik. Pertahankan disiplin dan ikuti strategi Anda secara konsisten.`
     }
 
     if (cacheKey && result) setCachedResponse(cacheKey, result)

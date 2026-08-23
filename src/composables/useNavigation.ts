@@ -64,19 +64,20 @@ export function useNavigation() {
   }
 
   /* ============================
-     Navigation Items by Space Type
+     Navigation Items by Space Type & Category
      ============================ */
   const navigationSections = computed((): NavSection[] => {
     const space = currentSpace.value
     const spaceType = space?.type
     const category = space?.category
+    const name = space?.name?.toLowerCase() || ''
 
     if (spaceType === 'couple') {
       return [
         {
-          title: 'Menu',
+          title: 'Menu Couple Hub',
           items: [
-            { label: 'Dashboard', to: '/', icon: 'home' },
+            { label: 'Dashboard Couple', to: '/', icon: 'home' },
             { label: 'Our Gallery', to: '/gallery', icon: 'images' },
             { label: 'Shared Journal', to: '/journal', icon: 'book-heart' },
             { label: 'Our Calendar', to: '/calendar', icon: 'calendar-heart' },
@@ -86,13 +87,13 @@ export function useNavigation() {
       ]
     }
 
-    // Personal Space - Teacher / Guru Les
-    if (category === 'teacher' || space?.name?.toLowerCase().includes('guru') || space?.name?.toLowerCase().includes('les') || space?.name?.toLowerCase().includes('tutor') || space?.name?.toLowerCase().includes('teacher')) {
+    // Teacher / Guru Les Space
+    if (category === 'teacher' || name.includes('guru') || name.includes('les') || name.includes('bimbel') || name.includes('tutor') || name.includes('teach') || space?.id === 'space-teacher') {
       return [
         {
-          title: 'Menu',
+          title: 'Menu Guru Les & Bimbel',
           items: [
-            { label: 'Dashboard', to: '/', icon: 'home' },
+            { label: 'Dashboard Tutor', to: '/', icon: 'home' },
             { label: 'Students', to: '/students', icon: 'users' },
             { label: 'Lessons', to: '/lessons', icon: 'graduation-cap' },
             { label: 'Lesson Plans', to: '/lesson-plans', icon: 'clipboard' },
@@ -104,12 +105,12 @@ export function useNavigation() {
       ]
     }
 
-    // Personal Space — Trader / General (default)
+    // Trader Space & General (default)
     return [
       {
-        title: 'Menu',
+        title: 'Menu Trader & Habits',
         items: [
-          { label: 'Dashboard', to: '/', icon: 'home' },
+          { label: 'Dashboard Trading', to: '/', icon: 'home' },
           { label: 'Trading Journal', to: '/trading', icon: 'chart-line' },
           { label: 'Finance Tracker', to: '/finance', icon: 'wallet' },
           { label: 'Habit Tracker', to: '/habits', icon: 'target' },

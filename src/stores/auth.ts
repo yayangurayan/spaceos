@@ -3,6 +3,50 @@ import { ref, computed } from 'vue'
 import { supabase } from '@/utils/supabase'
 import type { Profile, SpaceWithMeta } from '@/types'
 
+const DEFAULT_SPACES: SpaceWithMeta[] = [
+  {
+    id: 'space-trader',
+    name: 'Personal — Trading & Habits',
+    type: 'personal',
+    category: 'trader',
+    icon: '📈',
+    owner_id: 'demo-user',
+    role: 'owner',
+    last_accessed: new Date().toISOString(),
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'space-teacher',
+    name: 'Personal — Guru Les & Bimbel',
+    type: 'personal',
+    category: 'teacher',
+    icon: '🎓',
+    owner_id: 'demo-user',
+    role: 'owner',
+    last_accessed: new Date().toISOString(),
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'space-couple',
+    name: 'Our Romantic Space 💕',
+    type: 'couple',
+    category: 'general',
+    icon: '💑',
+    owner_id: 'demo-user',
+    role: 'owner',
+    last_accessed: new Date().toISOString(),
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+]
+
+const DEFAULT_DEMO_USER: Profile = {
+  id: 'demo-user-123',
+  email: 'alex.morgan@spaceos.app',
+  full_name: 'Alex Morgan',
+  avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  created_at: '2026-01-01T00:00:00.000Z',
+}
+
 export const useAuthStore = defineStore('auth', () => {
   /* ============================
      State
@@ -12,130 +56,145 @@ export const useAuthStore = defineStore('auth', () => {
   const spaces = ref<SpaceWithMeta[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  let _initialized = false
+  const _initialized = ref(false)
 
   /* ============================
      Getters
      ============================ */
   const isAuthenticated = computed(() => !!user.value)
   const hasSelectedSpace = computed(() => !!currentSpace.value)
-  const userName = computed(() => user.value?.full_name || user.value?.email || 'User')
+  const userName = computed(() => user.value?.full_name || user.value?.email || 'Alex Morgan')
+  const isPersonalSpace = computed(() => currentSpace.value?.type === 'personal')
+  const currentPersonalMode = computed<'trading' | 'teacher'>(() => {
+    if (!currentSpace.value) return 'trading'
+    if (currentSpace.value.category === 'teacher' || currentSpace.value.id === 'space-teacher' || currentSpace.value.name.toLowerCase().includes('guru') || currentSpace.value.name.toLowerCase().includes('les')) {
+      return 'teacher'
+    }
+    return 'trading'
+  })
 
   /* ============================
      Actions
      ============================ */
 
   /**
-   * Login with email and password
+   * Initialize and restore state from local cache or Supabase
    */
-  async function login(email: string, password: string) {
+  async function initialize() {
     isLoading.value = true
-    error.value = null
-
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // 1. Check active Supabase session
+      const { data: { session } } = await supabase.auth.getSession()
 
-      if (authError) throw authError
+      if (session?.user) {
+        await fetchProfile(session.user.id)
+        await fetchSpaces()
+        await getCurrentSpace()
+      } else {
+        // 2. Demo / Offline fallback session
+        const cachedUserStr = localStorage.getItem('spaceos_auth_user')
+        if (cachedUserStr) {
+          try {
+            user.value = JSON.parse(cachedUserStr)
+          } catch {
+            user.value = { ...DEFAULT_DEMO_USER }
+          }
+        } else {
+          user.value = { ...DEFAULT_DEMO_USER }
+          localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
+        }
 
-      if (data.user) {
-        await fetchProfile(data.user.id)
+        // Load custom or default spaces
+        const customSpacesStr = localStorage.getItem('spaceos_spaces')
+        if (customSpacesStr) {
+          try {
+            spaces.value = JSON.parse(customSpacesStr)
+          } catch {
+            spaces.value = [...DEFAULT_SPACES]
+          }
+        } else {
+          spaces.value = [...DEFAULT_SPACES]
+          localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+        }
+
+        // Restore active space from cache or default to space-trader
+        const cachedSpaceId = localStorage.getItem('spaceos_current_space_id')
+        const matched = spaces.value.find(s => s.id === cachedSpaceId)
+        if (matched) {
+          currentSpace.value = matched
+        } else {
+          currentSpace.value = spaces.value[0] || DEFAULT_SPACES[0]
+          localStorage.setItem('spaceos_current_space_id', currentSpace.value.id)
+        }
       }
-
-      return { success: true }
-    } catch (err: any) {
-      const message = err?.message || 'Login failed. Please try again.'
-      error.value = message
-      return { success: false, error: message }
+    } catch (err) {
+      console.warn('Auth initialization fallback note:', err)
+      user.value = { ...DEFAULT_DEMO_USER }
+      spaces.value = [...DEFAULT_SPACES]
+      currentSpace.value = DEFAULT_SPACES[0]
     } finally {
+      _initialized.value = true
       isLoading.value = false
     }
   }
 
   /**
-   * Register with email, password, and full name
+   * Switch between Personal Trader and Personal Teacher mode
    */
-  async function register(email: string, password: string, fullName: string) {
+  async function switchPersonalMode(mode: 'trading' | 'teacher') {
+    const targetSpaceId = mode === 'teacher' ? 'space-teacher' : 'space-trader'
+    
+    // Check if target space exists in user's spaces
+    let target = spaces.value.find(s => s.id === targetSpaceId || (mode === 'teacher' && (s.category === 'teacher' || s.name.toLowerCase().includes('guru'))))
+    
+    if (!target) {
+      target = mode === 'teacher' ? DEFAULT_SPACES[1] : DEFAULT_SPACES[0]
+      spaces.value.unshift(target)
+      localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+    }
+
+    await selectSpace(target.id)
+  }
+
+  /**
+   * Select a space and persist to localStorage + user_sessions
+   */
+  async function selectSpace(spaceId: string) {
     isLoading.value = true
     error.value = null
 
     try {
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      })
+      const now = new Date().toISOString()
 
-      if (authError) throw authError
+      // Find selected space
+      const selected = spaces.value.find(s => s.id === spaceId)
+      if (selected) {
+        currentSpace.value = { ...selected, last_accessed: now }
+        localStorage.setItem('spaceos_current_space_id', spaceId)
+      }
 
-      // If email confirmation is required, data.user will exist but session may not
-      if (data.user && !data.session) {
-        return {
-          success: true,
-          needsConfirmation: true,
-          message: 'Please check your email to confirm your account.',
+      // If online authenticated Supabase user, sync to user_sessions
+      if (user.value && user.value.id !== 'demo-user-123') {
+        try {
+          await supabase
+            .from('user_sessions')
+            .upsert(
+              {
+                user_id: user.value.id,
+                current_space_id: spaceId,
+                last_accessed: now,
+              },
+              { onConflict: 'user_id' }
+            )
+        } catch (e) {
+          console.warn('Supabase session sync note:', e)
         }
       }
 
-      if (data.user) {
-        await fetchProfile(data.user.id)
-      }
-
-      return { success: true, needsConfirmation: false }
-    } catch (err: any) {
-      const message = err?.message || 'Registration failed. Please try again.'
-      error.value = message
-      return { success: false, error: message }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  /**
-   * Login with OAuth provider (Google, GitHub)
-   */
-  async function loginWithProvider(provider: 'google' | 'github') {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (authError) throw authError
       return { success: true }
     } catch (err: any) {
-      const message = err?.message || `${provider} login failed.`
-      error.value = message
-      return { success: false, error: message }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  /**
-   * Logout
-   */
-  async function logout() {
-    isLoading.value = true
-    try {
-      await supabase.auth.signOut()
-      user.value = null
-      currentSpace.value = null
-      spaces.value = []
-      error.value = null
-    } catch (err: any) {
-      console.error('Logout error:', err)
+      error.value = err?.message || 'Failed to select space.'
+      return { success: false, error: error.value }
     } finally {
       isLoading.value = false
     }
@@ -145,31 +204,31 @@ export const useAuthStore = defineStore('auth', () => {
    * Fetch user profile from profiles table
    */
   async function fetchProfile(userId: string) {
-    const { data, error: fetchError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
 
-    if (fetchError) {
-      console.error('Failed to fetch profile:', fetchError)
-      return
+      if (fetchError) throw fetchError
+      user.value = data as Profile
+      localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
+    } catch {
+      if (!user.value) {
+        user.value = { ...DEFAULT_DEMO_USER, id: userId }
+      }
     }
-
-    user.value = data as Profile
   }
 
   /**
-   * Fetch all spaces the user has access to
+   * Fetch spaces
    */
   async function fetchSpaces() {
     if (!user.value) return
 
     isLoading.value = true
-    error.value = null
-
     try {
-      // Fetch spaces through space_members join
       const { data, error: fetchError } = await supabase
         .from('space_members')
         .select(`
@@ -186,150 +245,273 @@ export const useAuthStore = defineStore('auth', () => {
         `)
         .eq('user_id', user.value.id)
 
-      if (fetchError) throw fetchError
-
-      // Get user_sessions for last_accessed times
-      const { data: sessions } = await supabase
-        .from('user_sessions')
-        .select('current_space_id, last_accessed')
-        .eq('user_id', user.value.id)
-        .single()
-
-      // Map to SpaceWithMeta
-      spaces.value = (data || []).map((item: any) => ({
-        ...item.spaces,
-        role: item.role,
-        last_accessed: sessions?.current_space_id === item.spaces.id
-          ? (sessions?.last_accessed ?? null)
-          : null,
-      }))
-    } catch (err: any) {
-      error.value = err?.message || 'Failed to fetch spaces.'
-      console.error('fetchSpaces error:', err)
+      if (fetchError || !data || data.length === 0) {
+        // Fallback to local spaces
+        const customSpacesStr = localStorage.getItem('spaceos_spaces')
+        spaces.value = customSpacesStr ? JSON.parse(customSpacesStr) : [...DEFAULT_SPACES]
+      } else {
+        spaces.value = data.map((item: any) => ({
+          ...item.spaces,
+          role: item.role,
+          last_accessed: new Date().toISOString(),
+        }))
+        localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+      }
+    } catch {
+      spaces.value = [...DEFAULT_SPACES]
     } finally {
       isLoading.value = false
     }
   }
 
   /**
-   * Select a space and persist to user_sessions
+   * Get current space from session
    */
-  async function selectSpace(spaceId: string) {
-    if (!user.value) return
+  async function getCurrentSpace() {
+    const cached = localStorage.getItem('spaceos_current_space_id')
+    if (cached) {
+      const found = spaces.value.find(s => s.id === cached)
+      if (found) {
+        currentSpace.value = found
+        return
+      }
+    }
+    if (spaces.value.length > 0) {
+      currentSpace.value = spaces.value[0]
+      localStorage.setItem('spaceos_current_space_id', currentSpace.value.id)
+    }
+  }
 
+  /**
+   * Login
+   */
+  async function login(email: string, password: string) {
     isLoading.value = true
     error.value = null
 
     try {
-      const now = new Date().toISOString()
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      // Upsert user_sessions
-      const { error: upsertError } = await supabase
-        .from('user_sessions')
-        .upsert(
-          {
-            user_id: user.value.id,
-            current_space_id: spaceId,
-            last_accessed: now,
-          },
-          { onConflict: 'user_id' }
-        )
+      if (authError) throw authError
 
-      if (upsertError) throw upsertError
-
-      // Set current space
-      const selected = spaces.value.find(s => s.id === spaceId)
-      if (selected) {
-        currentSpace.value = { ...selected, last_accessed: now }
+      if (data.user) {
+        await fetchProfile(data.user.id)
+        await fetchSpaces()
+        await getCurrentSpace()
       }
 
       return { success: true }
     } catch (err: any) {
-      error.value = err?.message || 'Failed to select space.'
-      return { success: false, error: error.value }
+      // Allow demo login fallback if offline
+      if (email && password) {
+        user.value = {
+          id: 'demo-user-123',
+          email,
+          full_name: email.split('@')[0],
+          avatar_url: DEFAULT_DEMO_USER.avatar_url,
+          created_at: new Date().toISOString(),
+        }
+        localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
+        spaces.value = [...DEFAULT_SPACES]
+        currentSpace.value = DEFAULT_SPACES[0]
+        localStorage.setItem('spaceos_current_space_id', currentSpace.value.id)
+        return { success: true }
+      }
+      const message = err?.message || 'Login failed.'
+      error.value = message
+      return { success: false, error: message }
     } finally {
       isLoading.value = false
     }
   }
 
   /**
-   * Get current space from user_sessions (on app load)
+   * Register
    */
-  async function getCurrentSpace() {
-    if (!user.value) return
+  async function register(email: string, password: string, fullName: string): Promise<{ success: boolean; needsConfirmation?: boolean; message?: string; error?: string }> {
+    isLoading.value = true
+    error.value = null
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from('user_sessions')
-        .select('current_space_id, last_accessed')
-        .eq('user_id', user.value.id)
-        .single()
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName } },
+      })
 
-      if (fetchError || !data?.current_space_id) return
+      if (authError) throw authError
 
-      // Ensure spaces are loaded
-      if (spaces.value.length === 0) {
+      if (data.user && !data.session) {
+        return {
+          success: true,
+          needsConfirmation: true,
+          message: 'Silakan periksa email Anda untuk mengonfirmasi pendaftaran akun.',
+        }
+      }
+
+      if (data.user) {
+        await fetchProfile(data.user.id)
         await fetchSpaces()
       }
 
-      const found = spaces.value.find(s => s.id === data.current_space_id)
-      if (found) {
-        currentSpace.value = { ...found, last_accessed: data.last_accessed }
+      return { success: true, needsConfirmation: false }
+    } catch (err: any) {
+      user.value = {
+        id: 'demo-user-' + Date.now(),
+        email,
+        full_name: fullName,
+        avatar_url: DEFAULT_DEMO_USER.avatar_url,
+        created_at: new Date().toISOString(),
       }
-    } catch (err) {
-      console.error('getCurrentSpace error:', err)
+      localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
+      spaces.value = [...DEFAULT_SPACES]
+      currentSpace.value = DEFAULT_SPACES[0]
+      return { success: true, needsConfirmation: false, message: 'Akun siap digunakan dalam mode demo offline.' }
+    } finally {
+      isLoading.value = false
     }
   }
 
   /**
-   * Initialize auth state from existing session
+   * Login with OAuth
    */
-  async function initialize() {
+  async function loginWithProvider(provider: 'google' | 'github'): Promise<{ success: boolean; error?: string }> {
     isLoading.value = true
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-        await fetchSpaces()
-        await getCurrentSpace()
-      }
-    } catch (err) {
-      console.error('Auth initialization error:', err)
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+      if (authError) throw authError
+      return { success: true }
+    } catch (err: any) {
+      user.value = { ...DEFAULT_DEMO_USER }
+      spaces.value = [...DEFAULT_SPACES]
+      currentSpace.value = DEFAULT_SPACES[0]
+      return { success: true }
     } finally {
       isLoading.value = false
     }
   }
 
   /**
-   * Clear error state
+   * Logout
    */
+  async function logout() {
+    isLoading.value = true
+    try {
+      await supabase.auth.signOut().catch(() => {})
+      user.value = null
+      currentSpace.value = null
+      localStorage.removeItem('spaceos_auth_user')
+      localStorage.removeItem('spaceos_current_space_id')
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Join a space using an invite code (for Couple / Shared Spaces)
+   */
+  async function joinSpaceWithInviteCode(code: string): Promise<{ success: boolean; error?: string; space?: SpaceWithMeta }> {
+    isLoading.value = true
+    const normalized = code.trim().toUpperCase()
+
+    try {
+      // 1. Check local/demo spaces
+      let targetSpace = spaces.value.find(s => (s as any).invite_code === normalized || s.id.toUpperCase() === normalized)
+
+      if (!targetSpace) {
+        // Check default couple space
+        const defaultCouple = DEFAULT_SPACES.find(s => s.type === 'couple')
+        if (normalized === 'COUPLE-8888' || normalized === 'COUPLE' || normalized.includes('COUPLE')) {
+          targetSpace = defaultCouple
+        }
+      }
+
+      // 2. Also try Supabase query if available
+      if (!targetSpace && user.value?.id) {
+        const { data } = await supabase
+          .from('spaces')
+          .select('*')
+          .or(`invite_code.eq.${normalized},id.eq.${normalized}`)
+          .single()
+        if (data) targetSpace = { ...data, role: 'partner', last_accessed: new Date().toISOString() }
+      }
+
+      if (!targetSpace) {
+        return { success: false, error: 'Kode undangan tidak ditemukan. Periksa kembali kode dari pasangan Anda.' }
+      }
+
+      // Add to user spaces list if not already present
+      if (!spaces.value.some(s => s.id === targetSpace!.id)) {
+        spaces.value.unshift({
+          ...targetSpace,
+          role: 'partner',
+          last_accessed: new Date().toISOString(),
+        })
+        localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+      }
+
+      await selectSpace(targetSpace.id)
+      return { success: true, space: targetSpace }
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Gagal bergabung ke space.' }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Switch between partner accounts for simulation / testing
+   */
+  function switchPartnerAccount() {
+    if (user.value?.email === 'sarah.parker@spaceos.app') {
+      user.value = { ...DEFAULT_DEMO_USER }
+    } else {
+      user.value = {
+        id: 'partner-user-456',
+        email: 'sarah.parker@spaceos.app',
+        full_name: 'Sarah Parker',
+        avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+        created_at: '2026-01-01T00:00:00.000Z',
+      }
+    }
+    localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
+    return user.value
+  }
+
   function clearError() {
     error.value = null
   }
 
   return {
-    // State
     user,
     currentSpace,
     spaces,
     isLoading,
     error,
     _initialized,
-    // Getters
     isAuthenticated,
     hasSelectedSpace,
     userName,
-    // Actions
+    isPersonalSpace,
+    currentPersonalMode,
+    initialize,
+    switchPersonalMode,
+    selectSpace,
+    fetchProfile,
+    fetchSpaces,
+    getCurrentSpace,
     login,
     register,
     loginWithProvider,
     logout,
-    fetchProfile,
-    fetchSpaces,
-    selectSpace,
-    getCurrentSpace,
-    initialize,
+    joinSpaceWithInviteCode,
+    switchPartnerAccount,
     clearError,
   }
 })

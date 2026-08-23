@@ -1,9 +1,21 @@
 <template>
   <div>
     <!-- Page Header -->
-    <div class="mb-6 animate-fade-in">
-      <h1 class="text-2xl font-bold text-white mb-1">Dashboard Guru</h1>
-      <p class="text-slate-400 text-sm">Kelola jadwal, siswa, dan pendapatan kamu.</p>
+    <div class="mb-6 animate-fade-in flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-2">
+          <span>🎓</span>
+          <span>Dashboard Guru Les</span>
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm">Kelola jadwal les, siswa bimbingan, dan pendapatan bulanan kamu.</p>
+      </div>
+
+      <router-link
+        to="/students"
+        class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5"
+      >
+        <span>➕ Tambah Siswa Baru</span>
+      </router-link>
     </div>
 
     <!-- Error State -->

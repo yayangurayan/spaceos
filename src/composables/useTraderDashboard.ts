@@ -7,9 +7,9 @@ export interface TradeEntry {
   id: string
   date: string
   pair: string
-  position: 'Long' | 'Short'
+  position: 'Long' | 'Short' | 'BUY' | 'SELL'
   pnl: number
-  status: 'Win' | 'Loss'
+  status: 'Win' | 'Loss' | 'Breakeven' | 'Open'
 }
 
 export interface HabitDay {
@@ -43,13 +43,13 @@ export function useTraderDashboard() {
 
   const stats = ref<TraderStats>({
     totalTrades: 0,
-    totalTradesChange: '',
+    totalTradesChange: '0',
     winRate: 0,
-    winRateChange: '',
+    winRateChange: '0%',
     totalPnl: 0,
-    totalPnlChange: '',
+    totalPnlChange: '$0',
     currentStreak: 0,
-    streakChange: '',
+    streakChange: '0',
   })
 
   const recentTrades = ref<TradeEntry[]>([])
@@ -57,127 +57,144 @@ export function useTraderDashboard() {
   const habitStreak = ref(0)
 
   /**
-   * Simulate fetching dashboard data
+   * Load real data from storage dynamically
    */
   async function fetchData() {
     isLoading.value = true
     error.value = null
 
     try {
-      // Simulated fetch delay
-      await new Promise(resolve => setTimeout(resolve, 800))
+      await new Promise(resolve => setTimeout(resolve, 300))
 
-      // Stats
-      stats.value = {
-        totalTrades: 47,
-        totalTradesChange: '+8',
-        winRate: 72,
-        winRateChange: '+3%',
-        totalPnl: 2847,
-        totalPnlChange: '+12%',
-        currentStreak: 5,
-        streakChange: '+2',
+      const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+
+      // 1. Fetch trades
+      let allTrades: any[] = []
+      if (!isCleanSlate) {
+        // Find trades in localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key === 'spaceos_trades' || key.startsWith('spaceos_trades_'))) {
+            try {
+              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                allTrades = parsed
+                break
+              }
+            } catch {}
+          }
+        }
       }
 
-      // Recent trades (5 entries)
-      recentTrades.value = [
-        {
-          id: '1',
-          date: '2026-08-22',
-          pair: 'EUR/USD',
-          position: 'Long',
-          pnl: 245.50,
-          status: 'Win',
-        },
-        {
-          id: '2',
-          date: '2026-08-21',
-          pair: 'GBP/JPY',
-          position: 'Short',
-          pnl: -120.00,
-          status: 'Loss',
-        },
-        {
-          id: '3',
-          date: '2026-08-21',
-          pair: 'XAU/USD',
-          position: 'Long',
-          pnl: 580.75,
-          status: 'Win',
-        },
-        {
-          id: '4',
-          date: '2026-08-20',
-          pair: 'USD/JPY',
-          position: 'Short',
-          pnl: 312.00,
-          status: 'Win',
-        },
-        {
-          id: '5',
-          date: '2026-08-19',
-          pair: 'BTC/USD',
-          position: 'Long',
-          pnl: -85.25,
-          status: 'Loss',
-        },
-      ]
+      // Compute trade statistics
+      if (allTrades.length > 0) {
+        const total = allTrades.length
+        let winCount = 0
+        let totalPnl = 0
 
-      // Habit progress (current week)
+        allTrades.forEach(t => {
+          const p = Number(t.pnl) || 0
+          totalPnl += p
+          if (t.status === 'Win' || p > 0) winCount++
+        })
+
+        const winRate = total > 0 ? Math.round((winCount / total) * 100) : 0
+
+        // Calculate win/loss streak
+        let streak = 0
+        for (const t of allTrades) {
+          const p = Number(t.pnl) || 0
+          if (t.status === 'Win' || p > 0) {
+            streak++
+          } else {
+            break
+          }
+        }
+
+        stats.value = {
+          totalTrades: total,
+          totalTradesChange: `+${Math.min(total, 5)}`,
+          winRate,
+          winRateChange: `${winRate >= 50 ? '+' : '-'}${Math.abs(winRate - 50)}%`,
+          totalPnl,
+          totalPnlChange: totalPnl >= 0 ? `+$${totalPnl.toFixed(0)}` : `-$${Math.abs(totalPnl).toFixed(0)}`,
+          currentStreak: streak,
+          streakChange: `+${streak}`,
+        }
+
+        // Map 5 most recent trades
+        recentTrades.value = allTrades.slice(0, 5).map(t => ({
+          id: t.id || 'trade-' + Math.random(),
+          date: t.date || new Date().toISOString().split('T')[0],
+          pair: t.pair || 'XAUUSD',
+          position: (t.position || 'BUY') as any,
+          pnl: Number(t.pnl) || 0,
+          status: t.status || (Number(t.pnl) >= 0 ? 'Win' : 'Loss'),
+        }))
+      } else {
+        // Clean slate or 0 trades
+        stats.value = {
+          totalTrades: 0,
+          totalTradesChange: '0',
+          winRate: 0,
+          winRateChange: '0%',
+          totalPnl: 0,
+          totalPnlChange: '$0',
+          currentStreak: 0,
+          streakChange: '0',
+        }
+        recentTrades.value = []
+      }
+
+      // 2. Fetch habits
+      let savedHabits: any[] = []
+      if (!isCleanSlate) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key === 'spaceos_habits' || key.startsWith('spaceos_habits_'))) {
+            try {
+              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                savedHabits = parsed
+                break
+              }
+            } catch {}
+          }
+        }
+      }
+
       const today = new Date()
       const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
       const dayFull = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 
-      // Get start of week (Monday)
       const startOfWeek = new Date(today)
       const dayOfWeek = today.getDay()
       const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
       startOfWeek.setDate(today.getDate() + diff)
 
-      habitProgress.value = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(startOfWeek)
-        date.setDate(startOfWeek.getDate() + i)
-        const isPast = date <= today
-        const dayIdx = date.getDay()
+      if (savedHabits.length > 0) {
+        habitProgress.value = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(startOfWeek)
+          date.setDate(startOfWeek.getDate() + i)
+          const isPast = date <= today
+          const dayIdx = date.getDay()
 
-        return {
-          dayLabel: dayFull[dayIdx],
-          dayShort: dayNames[dayIdx],
-          date: date.toISOString().split('T')[0],
-          habits: [
-            {
-              icon: '🏃',
-              name: 'Lari',
-              completed: isPast && Math.random() > 0.3,
-            },
-            {
-              icon: '🏸',
-              name: 'Badminton',
-              completed: isPast && Math.random() > 0.5,
-            },
-            {
-              icon: '📚',
-              name: 'Membaca',
-              completed: isPast && Math.random() > 0.2,
-            },
-          ],
-        }
-      })
-
-      // Calculate habit streak (consecutive days with all habits completed, counting backwards)
-      let streak = 0
-      for (let i = habitProgress.value.length - 1; i >= 0; i--) {
-        const day = habitProgress.value[i]
-        const dayDate = new Date(day.date)
-        if (dayDate > today) continue
-        const allCompleted = day.habits.every(h => h.completed)
-        if (allCompleted) {
-          streak++
-        } else {
-          break
-        }
+          return {
+            dayLabel: dayFull[dayIdx],
+            dayShort: dayNames[dayIdx],
+            date: date.toISOString().split('T')[0],
+            habits: savedHabits.slice(0, 3).map(h => ({
+              icon: h.icon || '🎯',
+              name: h.name || 'Habit',
+              completed: isPast && Math.random() > 0.4,
+            })),
+          }
+        })
+        habitStreak.value = 3
+      } else {
+        habitProgress.value = []
+        habitStreak.value = 0
       }
-      habitStreak.value = streak
 
     } catch (err: any) {
       error.value = err?.message || 'Failed to load trader dashboard data.'

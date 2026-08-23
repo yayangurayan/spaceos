@@ -35,8 +35,8 @@ export function useCoupleDashboard() {
   const error = ref<string | null>(null)
 
   // Couple info
-  const coupleNames = ref('Rizky & Sarah')
-  const togetherSince = ref('2023-02-14') // Valentine's Day 2023
+  const coupleNames = ref('Alex & Sarah')
+  const togetherSince = ref('2023-02-14')
 
   const upcomingEvents = ref<CoupleEvent[]>([])
   const recentJournals = ref<JournalEntry[]>([])
@@ -61,7 +61,7 @@ export function useCoupleDashboard() {
     const start = new Date(togetherSince.value)
     const now = new Date()
     const diff = now.getTime() - start.getTime()
-    return Math.floor(diff / (1000 * 60 * 60 * 24))
+    return Math.max(1, Math.floor(diff / (1000 * 60 * 60 * 24)))
   })
 
   /**
@@ -71,21 +71,18 @@ export function useCoupleDashboard() {
     const start = new Date(togetherSince.value)
     const now = new Date()
 
-    // Next anniversary date
     const nextAnniversary = new Date(
       now.getFullYear(),
       start.getMonth(),
       start.getDate()
     )
 
-    // If already passed this year, go to next year
     if (nextAnniversary <= now) {
       nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1)
     }
 
     const diff = nextAnniversary.getTime() - now.getTime()
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-
     const yearsTogether = nextAnniversary.getFullYear() - start.getFullYear()
 
     return {
@@ -100,94 +97,101 @@ export function useCoupleDashboard() {
   })
 
   /**
-   * Simulate fetching dashboard data
+   * Load real couple data dynamically
    */
   async function fetchData() {
     isLoading.value = true
     error.value = null
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 800))
+      await new Promise(resolve => setTimeout(resolve, 300))
 
-      // Upcoming events
-      upcomingEvents.value = [
-        {
-          id: '1',
-          title: 'Date Night - Dinner',
-          date: '2026-08-25',
-          icon: '🍽️',
-          type: 'date',
-        },
-        {
-          id: '2',
-          title: 'Weekend Trip ke Bandung',
-          date: '2026-08-30',
-          icon: '✈️',
-          type: 'trip',
-        },
-        {
-          id: '3',
-          title: 'Anniversary ke-4',
-          date: '2027-02-14',
-          icon: '💕',
-          type: 'anniversary',
-        },
-      ]
+      const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
 
-      // Recent journal entries
-      recentJournals.value = [
-        {
-          id: '1',
-          title: 'Weekend yang Indah',
-          preview: 'Hari ini kita jalan-jalan ke taman kota. Cuaca cerah dan kita ngobrol banyak tentang rencana masa depan...',
-          date: '2026-08-21',
-          mood: '🥰',
-          author: 'Sarah',
-        },
-        {
-          id: '2',
-          title: 'Masak Bersama',
-          preview: 'Coba resep baru pasta carbonara. Agak gosong tapi tetap enak karena masak bareng 😂...',
-          date: '2026-08-19',
-          mood: '😂',
-          author: 'Rizky',
-        },
-      ]
+      let allEvents: any[] = []
+      let allJournals: any[] = []
+      let allPhotos: any[] = []
 
-      // Recent photos (using placeholder gradients instead of actual images)
-      recentPhotos.value = [
-        {
-          id: '1',
-          url: '',
-          caption: 'Sunset di pantai 🌅',
-          date: '2026-08-20',
-        },
-        {
-          id: '2',
-          url: '',
-          caption: 'Coffee date ☕',
-          date: '2026-08-18',
-        },
-        {
-          id: '3',
-          url: '',
-          caption: 'Hiking together 🏔️',
-          date: '2026-08-15',
-        },
-        {
-          id: '4',
-          url: '',
-          caption: 'Movie night 🎬',
-          date: '2026-08-12',
-        },
-      ]
+      if (!isCleanSlate) {
+        // Read couple events
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key === 'spaceos_couple_events' || key.startsWith('spaceos_couple_events_'))) {
+            try {
+              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                allEvents = parsed
+                break
+              }
+            } catch {}
+          }
+        }
 
-      // "On this day" - a memory from the past
-      onThisDay.value = {
-        id: 'memory-1',
-        url: '',
-        caption: 'Pertama kali ke Bali bersama! 🏖️ — 1 tahun lalu',
-        date: '2025-08-22',
+        // Read couple journals
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key === 'spaceos_couple_journals' || key.startsWith('spaceos_couple_journals_'))) {
+            try {
+              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                allJournals = parsed
+                break
+              }
+            } catch {}
+          }
+        }
+
+        // Read couple photos
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key === 'spaceos_couple_photos' || key.startsWith('spaceos_couple_photos_'))) {
+            try {
+              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                allPhotos = parsed
+                break
+              }
+            } catch {}
+          }
+        }
+      }
+
+      if (allEvents.length > 0) {
+        upcomingEvents.value = allEvents.slice(0, 3).map(e => ({
+          id: e.id || 'ev-' + Math.random(),
+          title: e.title || 'Event Bersama',
+          date: e.date || new Date().toISOString().split('T')[0],
+          icon: e.icon || '💕',
+          type: e.type || 'date',
+        }))
+      } else {
+        upcomingEvents.value = []
+      }
+
+      if (allJournals.length > 0) {
+        recentJournals.value = allJournals.slice(0, 3).map(j => ({
+          id: j.id || 'j-' + Math.random(),
+          title: j.title || 'Catatan Bersama',
+          preview: (j.content || '').slice(0, 100) + '...',
+          date: j.created_at ? j.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          mood: j.mood || '🥰',
+          author: j.author || 'Pasangan',
+        }))
+      } else {
+        recentJournals.value = []
+      }
+
+      if (allPhotos.length > 0) {
+        recentPhotos.value = allPhotos.slice(0, 4).map(p => ({
+          id: p.id || 'p-' + Math.random(),
+          url: p.photo_url || p.url || '',
+          caption: p.caption || 'Momen Kita ✨',
+          date: p.date_taken || new Date().toISOString().split('T')[0],
+        }))
+        onThisDay.value = recentPhotos.value[0] || null
+      } else {
+        recentPhotos.value = []
+        onThisDay.value = null
       }
 
     } catch (err: any) {

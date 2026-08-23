@@ -29,7 +29,7 @@ export interface Profile {
 
 export type SpaceType = 'personal' | 'couple'
 export type SpaceCategory = 'trader' | 'teacher' | 'general'
-export type SpaceRole = 'owner' | 'admin' | 'member'
+export type SpaceRole = 'owner' | 'admin' | 'member' | 'partner'
 
 export interface Space {
   id: string
@@ -38,6 +38,7 @@ export interface Space {
   category?: SpaceCategory
   icon: string | null
   owner_id: string
+  invite_code?: string
   created_at: string
 }
 

@@ -70,6 +70,48 @@
       </div>
 
       <!-- ============================
+           Partner Connection & Shared Space Info
+           ============================ -->
+      <div class="glass rounded-2xl p-5 mb-8 border border-pink-500/30 bg-pink-950/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center text-xl shadow-md">
+            💞
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-white">Akun Aktif: {{ currentUser?.full_name || 'Alex Morgan' }}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/30">
+                {{ isPartnerSarah ? 'Akun Pasangan (Sarah)' : 'Akun Pemilik (Alex)' }}
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Kode Undangan Space: <strong class="text-pink-300 font-mono tracking-wider">{{ coupleInviteCode }}</strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            @click="copyInviteCode"
+            class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 transition-colors"
+          >
+            <span>📋</span>
+            <span>Salin Kode Undangan</span>
+          </button>
+
+          <button
+            type="button"
+            @click="handleTogglePartnerAccount"
+            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-bold shadow-md shadow-pink-500/20 flex items-center gap-1.5 transition-all hover:scale-102"
+          >
+            <span>🎭</span>
+            <span>Simulasi Ganti Akun Pasangan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================
            Memory Lane
            ============================ -->
       <div class="mb-8 animate-fade-in" :style="{ animationDelay: '200ms', opacity: 0 }">
@@ -230,9 +272,33 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import AnimatedNumber from '@/components/ui/AnimatedNumber.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import { useCoupleDashboard } from '@/composables/useCoupleDashboard'
+import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
+
+const authStore = useAuthStore()
+const toast = useToastStore()
+const { user: currentUser, currentSpace } = storeToRefs(authStore)
+
+const isPartnerSarah = computed(() => currentUser.value?.email === 'sarah.parker@spaceos.app')
+const coupleInviteCode = computed(() => (currentSpace.value as any)?.invite_code || 'COUPLE-8888')
+
+function copyInviteCode() {
+  navigator.clipboard.writeText(coupleInviteCode.value)
+  toast.success('Kode Undangan Disalin! 📋', `Kode "${coupleInviteCode.value}" siap dikirim ke pasangan Anda.`)
+}
+
+function handleTogglePartnerAccount() {
+  const newUser = authStore.switchPartnerAccount()
+  toast.info(
+    'Beralih Akun Pasangan 🎭',
+    `Sekarang login sebagai: ${newUser.full_name} (${newUser.email}). Anda tetap mengakses Couple Space yang sama!`
+  )
+}
 
 const {
   isLoading,

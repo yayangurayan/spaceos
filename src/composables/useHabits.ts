@@ -263,9 +263,14 @@ export function useHabits() {
           habitLogs.value = logsData
         }
       } else {
-        // Space has 0 habits, auto seed defaults based on space persona
-        const isTeacher = currentSpace.value?.category === 'teacher' || currentSpace.value?.name?.toLowerCase().includes('guru')
-        await seedPresetToDb(spaceId, isTeacher ? 'teacher' : 'trader')
+        const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+        if (isCleanSlate) {
+          habits.value = []
+          habitLogs.value = []
+        } else {
+          const isTeacher = currentSpace.value?.category === 'teacher' || currentSpace.value?.name?.toLowerCase().includes('guru')
+          await seedPresetToDb(spaceId, isTeacher ? 'teacher' : 'trader')
+        }
       }
     } catch (err: any) {
       console.error('fetchHabitsData error:', err)
@@ -362,17 +367,23 @@ export function useHabits() {
   }
 
   function loadFromLocalStorage(spaceId: string) {
+    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const savedHabits = localStorage.getItem(`spaceos_habits_${spaceId}`)
       const savedLogs = localStorage.getItem(`spaceos_logs_${spaceId}`)
       if (savedHabits) {
         habits.value = JSON.parse(savedHabits)
         habitLogs.value = savedLogs ? JSON.parse(savedLogs) : []
+      } else if (isCleanSlate) {
+        habits.value = []
+        habitLogs.value = []
+        saveToLocalStorage(spaceId)
       } else {
         seedLocalPreset('trader')
       }
     } catch {
-      seedLocalPreset('trader')
+      habits.value = []
+      habitLogs.value = []
     }
   }
 

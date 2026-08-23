@@ -14,14 +14,6 @@ import CoupleDashboard from '@/pages/shared/CoupleDashboard.vue'
 const authStore = useAuthStore()
 const { currentSpace } = storeToRefs(authStore)
 
-/**
- * Resolve the correct dashboard component based on space type & category.
- *
- * Logic:
- *  - couple space → CoupleDashboard
- *  - personal space with teacher category (or name hint) → TeacherDashboard
- *  - everything else → TraderDashboard (default)
- */
 const activeDashboard = computed(() => {
   const space = currentSpace.value
 
@@ -32,14 +24,10 @@ const activeDashboard = computed(() => {
     return CoupleDashboard
   }
 
-  // Teacher / Guru Les detection
-  if (space.category === 'teacher') {
-    return TeacherDashboard
-  }
-
-  // Name-based fallback detection for teacher
+  // Teacher / Guru Les Space
+  const category = space.category
   const name = space.name?.toLowerCase() || ''
-  if (name.includes('guru') || name.includes('les') || name.includes('tutor') || name.includes('teacher')) {
+  if (category === 'teacher' || name.includes('guru') || name.includes('les') || name.includes('bimbel') || name.includes('tutor') || name.includes('teach') || space.id === 'space-teacher') {
     return TeacherDashboard
   }
 

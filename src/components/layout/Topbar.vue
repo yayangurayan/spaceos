@@ -1,10 +1,10 @@
 <template>
-  <header class="sticky top-0 z-30 h-16 glass border-b border-slate-700/50 flex items-center justify-between px-4 lg:px-6 shrink-0">
+  <header class="sticky top-0 z-30 h-16 glass border-b border-slate-700/50 flex items-center justify-between px-4 lg:px-6 shrink-0 backdrop-blur-xl bg-slate-950/70">
     <!-- Left: Hamburger + Space name -->
     <div class="flex items-center gap-3">
       <!-- Mobile Hamburger -->
       <button
-        class="lg:hidden p-2 -ml-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+        class="lg:hidden p-2 -ml-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all hover:scale-105"
         @click="$emit('toggle-mobile-sidebar')"
       >
         <Icon name="menu" :size="20" />
@@ -12,80 +12,124 @@
 
       <!-- Desktop Sidebar Toggle -->
       <button
-        class="hidden lg:flex p-2 -ml-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+        class="hidden lg:flex p-2 -ml-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all hover:scale-105"
         @click="$emit('toggle-sidebar')"
       >
         <Icon name="menu" :size="20" />
       </button>
 
-      <!-- Current Space -->
-      <div v-if="currentSpace" class="hidden sm:block">
-        <p class="text-sm font-medium text-white leading-tight">{{ currentSpace.name }}</p>
-        <p class="text-[11px] text-slate-500 leading-tight capitalize">{{ currentSpace.type }} space</p>
+      <!-- Current Space Badge -->
+      <div v-if="currentSpace" class="hidden sm:flex items-center gap-2.5">
+        <span class="text-xl p-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-sm">
+          {{ currentSpace.type === 'couple' ? '💑' : currentSpace.category === 'teacher' ? '🎓' : '📈' }}
+        </span>
+        <div>
+          <p class="text-sm font-bold text-white leading-tight flex items-center gap-1.5">
+            <span>{{ currentSpace.name }}</span>
+            <span
+              class="text-[10px] font-extrabold px-2 py-0.2 rounded-full uppercase tracking-wider"
+              :class="currentSpace.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : currentSpace.category === 'teacher' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
+            >
+              {{ currentSpace.type === 'couple' ? 'Couple Space' : currentSpace.category === 'teacher' ? 'Guru Les Space' : 'Trader Space' }}
+            </span>
+          </p>
+          <p class="text-[11px] text-slate-400 leading-tight">
+            {{ currentSpace.type === 'couple' ? 'Romantic Shared Hub' : currentSpace.category === 'teacher' ? 'Bimbingan Belajar & Les Privat' : 'Trading & Habit Performance' }}
+          </p>
+        </div>
       </div>
     </div>
 
-    <!-- Right: Avatar + Space Switcher -->
-    <div class="flex items-center gap-3">
-      <span class="text-xs text-slate-500 hidden md:block">v0.1</span>
+    <!-- Right: Quick Actions + Theme Switcher + Avatar + Space Switcher -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Dark / Light Theme Toggle Button -->
+      <button
+        type="button"
+        @click="appStore.toggleTheme"
+        class="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/60 transition-all hover:scale-105 flex items-center justify-center"
+        :title="appStore.isDarkMode ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'"
+      >
+        <span v-if="appStore.isDarkMode" class="text-sm">☀️</span>
+        <span v-else class="text-sm">🌙</span>
+      </button>
 
       <!-- Space Switcher Dropdown -->
       <div class="relative" ref="dropdownRef">
         <button
           @click="isDropdownOpen = !isDropdownOpen"
-          class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-700/50 transition-colors"
+          class="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl hover:bg-slate-800 border border-transparent hover:border-slate-700 transition-all hover:scale-102"
         >
           <!-- Avatar -->
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center text-white text-xs font-bold ring-2 ring-slate-700/50">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-600 flex items-center justify-center text-white text-xs font-extrabold ring-2 ring-slate-700/50 shadow-md">
             {{ userInitials }}
           </div>
-          <Icon name="chevron-down" :size="14" class="text-slate-500 transition-transform duration-200" :class="{ 'rotate-180': isDropdownOpen }" />
+          <div class="hidden xl:block text-left text-xs">
+            <span class="font-bold text-white block leading-none">{{ userName }}</span>
+            <span class="text-[10px] text-slate-400 leading-none">SpaceOS User</span>
+          </div>
+          <Icon name="chevron-down" :size="14" class="text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': isDropdownOpen }" />
         </button>
 
         <!-- Dropdown Menu -->
         <transition name="dropdown">
           <div
             v-if="isDropdownOpen"
-            class="absolute right-0 top-full mt-2 w-72 glass rounded-xl shadow-2xl shadow-black/30 border border-slate-700/50 overflow-hidden"
+            class="absolute right-0 top-full mt-2 w-80 glass rounded-2xl shadow-2xl shadow-black/60 border border-slate-700/80 overflow-hidden z-50 bg-slate-900/95 backdrop-blur-xl"
           >
             <!-- User Info -->
-            <div class="px-4 py-3 border-b border-slate-700/50">
-              <p class="text-sm font-medium text-white truncate">{{ userName }}</p>
-              <p class="text-xs text-slate-500 truncate">{{ userEmail }}</p>
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                {{ userInitials }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-white truncate">{{ userName }}</p>
+                <p class="text-xs text-slate-400 truncate font-mono">{{ userEmail }}</p>
+              </div>
             </div>
 
             <!-- Spaces List -->
-            <div class="py-1.5 max-h-60 overflow-y-auto">
-              <p class="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Your Spaces</p>
+            <div class="p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
+              <p class="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Pilih Space Kerja</p>
+              
               <button
                 v-for="space in spaces"
                 :key="space.id"
                 @click="handleSwitchSpace(space.id)"
-                class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-700/40 transition-colors"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
+                :class="currentSpace?.id === space.id ? 'bg-cyan-500/15 border border-cyan-500/30 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-300 border border-transparent'"
               >
-                <span class="text-lg shrink-0">{{ space.type === 'couple' ? '💑' : '👤' }}</span>
+                <span class="text-xl shrink-0">{{ space.type === 'couple' ? '💑' : space.category === 'teacher' ? '🎓' : '📈' }}</span>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm text-white truncate">{{ space.name }}</p>
-                  <p class="text-[11px] text-slate-500 capitalize">{{ space.type }}</p>
+                  <p class="text-xs font-bold text-white truncate">{{ space.name }}</p>
+                  <p class="text-[10px] text-slate-400 capitalize">{{ space.type === 'couple' ? 'Couple Space' : space.category === 'teacher' ? 'Guru Les Space' : 'Trader Space' }}</p>
                 </div>
                 <span
                   v-if="currentSpace?.id === space.id"
-                  class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent shrink-0"
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shrink-0"
                 >
-                  Active
+                  Aktif
                 </span>
               </button>
             </div>
 
             <!-- Actions -->
-            <div class="border-t border-slate-700/50 p-2">
+            <div class="border-t border-slate-800 p-2 space-y-1">
               <button
                 @click="handleSwitchAll"
-                class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-700/40 transition-colors"
+                class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
               >
-                <Icon name="switch" :size="16" />
-                <span>Switch Space</span>
+                <Icon name="switch" :size="15" />
+                <span>Lihat Semua Space (Space Hub)</span>
               </button>
+
+              <router-link
+                to="/settings"
+                @click="isDropdownOpen = false"
+                class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <span>⚙️</span>
+                <span>Pengaturan & Reset Data</span>
+              </router-link>
             </div>
           </div>
         </transition>
@@ -99,6 +143,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
 import { useToastStore } from '@/stores/toast'
 import Icon from '@/components/ui/Icon.vue'
 
@@ -109,14 +154,15 @@ defineEmits<{
 
 const router = useRouter()
 const authStore = useAuthStore()
+const appStore = useAppStore()
 const toast = useToastStore()
 const { currentSpace, spaces, user } = storeToRefs(authStore)
 
 const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 
-const userName = computed(() => user.value?.full_name || user.value?.email || 'User')
-const userEmail = computed(() => user.value?.email || '')
+const userName = computed(() => user.value?.full_name || user.value?.email || 'Alex Morgan')
+const userEmail = computed(() => user.value?.email || 'alex.morgan@spaceos.app')
 const userInitials = computed(() => {
   const name = userName.value
   const parts = name.split(' ')
@@ -142,10 +188,9 @@ async function handleSwitchSpace(spaceId: string) {
 
   const result = await authStore.selectSpace(spaceId)
   if (result?.success) {
-    toast.success('Space switched', 'Now viewing a different space.')
+    toast.success('Space Berganti ✨', 'Menampilkan data ruang kerja yang dipilih.')
     isDropdownOpen.value = false
-    // Re-navigate to home to refresh content
-    router.push({ name: 'Home' })
+    router.push('/')
   }
 }
 
@@ -157,17 +202,17 @@ function handleSwitchAll() {
 
 <style scoped>
 .dropdown-enter-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dropdown-leave-active {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 .dropdown-enter-from {
   opacity: 0;
-  transform: scale(0.95) translateY(-4px);
+  transform: scale(0.95) translateY(-6px);
 }
 .dropdown-leave-to {
   opacity: 0;
-  transform: scale(0.95) translateY(-4px);
+  transform: scale(0.95) translateY(-6px);
 }
 </style>

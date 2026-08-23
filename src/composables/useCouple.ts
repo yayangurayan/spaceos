@@ -377,7 +377,16 @@ export function useCouple() {
         if (calRes.data) calendarEvents.value = calRes.data
         if (lnRes.data) loveNotes.value = lnRes.data
       } else {
-        await seedPresetsToDb(spaceId)
+        const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+        if (isCleanSlate) {
+          albums.value = []
+          photos.value = []
+          journalEntries.value = []
+          calendarEvents.value = []
+          loveNotes.value = []
+        } else {
+          await seedPresetsToDb(spaceId)
+        }
       }
     } catch (err: any) {
       console.error('fetchCoupleData error:', err)
@@ -523,6 +532,7 @@ export function useCouple() {
      LocalStorage Helpers
      ============================ */
   function loadFromLocalStorage(spaceId: string) {
+    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const aKey = `spaceos_couple_albums_${spaceId}`
       const pKey = `spaceos_couple_photos_${spaceId}`
@@ -538,11 +548,24 @@ export function useCouple() {
         calendarEvents.value = JSON.parse(localStorage.getItem(cKey) || '[]')
         loveNotes.value = JSON.parse(localStorage.getItem(lKey) || '[]')
         usingFallback.value = true
+      } else if (isCleanSlate) {
+        albums.value = []
+        photos.value = []
+        journalEntries.value = []
+        calendarEvents.value = []
+        loveNotes.value = []
+        saveToLocalStorage(spaceId)
+        usingFallback.value = true
       } else {
         seedLocalDefaults()
       }
     } catch {
-      seedLocalDefaults()
+      albums.value = []
+      photos.value = []
+      journalEntries.value = []
+      calendarEvents.value = []
+      loveNotes.value = []
+      usingFallback.value = true
     }
   }
 
@@ -1093,7 +1116,7 @@ export function useCouple() {
         const mockNote: LoveNote = {
           ...payload,
           id: 'ln-' + Date.now(),
-          from_name: 'Kamu',
+          from_name: user.value?.full_name || 'Kamu 💕',
           created_at: new Date().toISOString(),
         }
         loveNotes.value.unshift(mockNote)

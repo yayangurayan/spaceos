@@ -435,11 +435,15 @@ export function useTrading() {
      Local Storage Fallback
      ============================ */
   function loadFromLocalStorage(spaceId: string) {
+    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const key = `spaceos_trades_${spaceId}`
       const saved = localStorage.getItem(key)
       if (saved) {
         trades.value = JSON.parse(saved)
+      } else if (isCleanSlate) {
+        trades.value = []
+        saveToLocalStorage(spaceId, [])
       } else {
         // Populate default demo trades customized for space
         const initial = DEMO_TRADES.map(t => ({
@@ -452,7 +456,7 @@ export function useTrading() {
       }
       usingFallback.value = true
     } catch {
-      trades.value = [...DEMO_TRADES]
+      trades.value = isCleanSlate ? [] : [...DEMO_TRADES]
       usingFallback.value = true
     }
   }

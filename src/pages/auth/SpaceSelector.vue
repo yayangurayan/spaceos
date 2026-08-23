@@ -35,19 +35,32 @@
       </div>
 
       <!-- Actions Bar -->
-      <div class="flex items-center justify-between mb-6 animate-slide-in">
-        <p class="text-sm text-slate-500">
-          {{ spaces.length }} space{{ spaces.length !== 1 ? 's' : '' }} available
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 animate-slide-in">
+        <p class="text-sm text-slate-400">
+          {{ spaces.length }} ruang kerja aktif tersedia
         </p>
-        <button
-          @click="showCreateModal = true"
-          class="btn-primary flex items-center gap-2 text-sm"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Create New Space
-        </button>
+
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            @click="showJoinModal = true"
+            class="px-4 py-2.5 rounded-xl border border-pink-500/40 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all hover:scale-102"
+          >
+            <span>🔑</span>
+            <span>Gabung Space Pasangan</span>
+          </button>
+
+          <button
+            type="button"
+            @click="showCreateModal = true"
+            class="btn-primary flex items-center gap-2 text-xs sm:text-sm"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Buat Space Baru</span>
+          </button>
+        </div>
       </div>
 
       <!-- Loading State -->
@@ -104,10 +117,10 @@
             <div class="flex items-center gap-4 mb-4">
               <!-- Space Icon -->
               <div
-                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-transform duration-150 group-hover:scale-110"
-                :class="space.type === 'couple' ? 'bg-couple/20' : 'bg-primary/20'"
+                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-transform duration-150 group-hover:scale-110 shadow-md"
+                :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
               >
-                {{ space.type === 'couple' ? '💑' : '👤' }}
+                {{ space.type === 'couple' ? '💑' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
               </div>
               <!-- Space Info -->
               <div class="flex-1 min-w-0">
@@ -117,10 +130,12 @@
                 <span
                   class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
                   :class="space.type === 'couple'
-                    ? 'bg-couple/10 text-couple'
-                    : 'bg-primary/10 text-blue-400'"
+                    ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
+                    : (space.category === 'teacher' || space.id === 'space-teacher')
+                    ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                    : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'"
                 >
-                  {{ space.type === 'couple' ? 'Couple' : 'Personal' }}
+                  {{ space.type === 'couple' ? 'Couple Space' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'Personal: Guru Les' : 'Personal: Trader' }}
                 </span>
               </div>
               <!-- Arrow -->
@@ -167,31 +182,56 @@
                   class="input-field w-full"
                 />
               </div>
-              <!-- Space Type -->
+              <!-- Space Category / Template -->
               <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1.5">Type</label>
-                <div class="grid grid-cols-2 gap-3">
+                <label class="block text-sm font-medium text-slate-300 mb-1.5">Pilih Kategori & Tipe Space</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <!-- Option 1: Trading & Habits -->
                   <button
                     type="button"
-                    @click="newSpace.type = 'personal'"
-                    class="p-3 rounded-lg border text-center transition-all duration-150"
-                    :class="newSpace.type === 'personal'
-                      ? 'border-accent bg-accent/10 text-white'
+                    @click="setSpaceTemplate('personal', 'trader', '📈', 'My Trading Space')"
+                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
+                    :class="newSpace.category === 'trader' && newSpace.type === 'personal'
+                      ? 'border-cyan-500 bg-cyan-500/15 text-white shadow-lg shadow-cyan-500/10 scale-102 ring-1 ring-cyan-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-2xl block mb-1">👤</span>
-                    <span class="text-sm font-medium">Personal</span>
+                    <span class="text-2xl mb-1 block">📈</span>
+                    <div>
+                      <span class="text-xs font-bold text-white block">Trading Hub</span>
+                      <span class="text-[10px] text-slate-400 leading-tight">Journal, Finance, Habits, Books</span>
+                    </div>
                   </button>
+
+                  <!-- Option 2: Guru Les & Bimbel -->
                   <button
                     type="button"
-                    @click="newSpace.type = 'couple'"
-                    class="p-3 rounded-lg border text-center transition-all duration-150"
-                    :class="newSpace.type === 'couple'
-                      ? 'border-couple bg-couple/10 text-white'
+                    @click="setSpaceTemplate('personal', 'teacher', '🎓', 'Bimbingan Belajar')"
+                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
+                    :class="newSpace.category === 'teacher' && newSpace.type === 'personal'
+                      ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg shadow-indigo-500/10 scale-102 ring-1 ring-indigo-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-2xl block mb-1">💑</span>
-                    <span class="text-sm font-medium">Couple</span>
+                    <span class="text-2xl mb-1 block">🎓</span>
+                    <div>
+                      <span class="text-xs font-bold text-white block">Guru Les Hub</span>
+                      <span class="text-[10px] text-slate-400 leading-tight">Siswa, Lessons, Modul, SPP</span>
+                    </div>
+                  </button>
+
+                  <!-- Option 3: Couple Space -->
+                  <button
+                    type="button"
+                    @click="setSpaceTemplate('couple', 'general', '💑', 'Our Romantic Space 💕')"
+                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
+                    :class="newSpace.type === 'couple'
+                      ? 'border-pink-500 bg-pink-500/15 text-white shadow-lg shadow-pink-500/10 scale-102 ring-1 ring-pink-500'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
+                  >
+                    <span class="text-2xl mb-1 block">💑</span>
+                    <div>
+                      <span class="text-xs font-bold text-white block">Couple Space</span>
+                      <span class="text-[10px] text-slate-400 leading-tight">Galeri, Journal, Kalender, Notes</span>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -220,6 +260,65 @@
         </div>
       </transition>
     </teleport>
+
+    <!-- Join Couple Space Modal -->
+    <teleport to="body">
+      <transition name="modal">
+        <div
+          v-if="showJoinModal"
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        >
+          <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showJoinModal = false"></div>
+          <div class="relative z-10 w-full max-w-md glass rounded-3xl p-6 sm:p-8 border border-pink-500/40 bg-slate-950/95 animate-slide-in space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center text-2xl mx-auto shadow-md">
+              🔑
+            </div>
+
+            <div class="text-center space-y-1">
+              <h3 class="text-lg font-extrabold text-white">Gabung Couple Space</h3>
+              <p class="text-xs text-slate-400">
+                Masukkan kode undangan dari pasangan Anda untuk mengakses dan mengisi ruang bersama.
+              </p>
+            </div>
+
+            <form @submit.prevent="handleJoinSpace" class="space-y-4 pt-2">
+              <div class="space-y-1">
+                <label class="block text-xs font-semibold text-slate-300">Kode Undangan Pasangan</label>
+                <input
+                  v-model="inviteCodeInput"
+                  type="text"
+                  required
+                  placeholder="Contoh: COUPLE-8888"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono uppercase tracking-wider focus:outline-none focus:border-pink-500 text-center"
+                />
+              </div>
+
+              <div class="p-3 rounded-xl bg-pink-500/10 border border-pink-500/20 text-xs text-pink-200 text-center">
+                💡 <em>Kedua akun akan dapat melihat galeri foto, menulis jurnal bersama, dan mencatat tanggal spesial yang sama.</em>
+              </div>
+
+              <div class="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  @click="showJoinModal = false"
+                  class="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  :disabled="joinLoading"
+                  class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-bold shadow-lg shadow-pink-500/20 transition-all"
+                >
+                  <span v-if="!joinLoading">Gabung Sekarang</span>
+                  <span v-else>Memproses...</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </transition>
+    </teleport>
   </div>
 </template>
 
@@ -230,7 +329,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { supabase } from '@/utils/supabase'
-import type { SpaceType } from '@/types'
+import type { SpaceType, SpaceCategory, SpaceWithMeta } from '@/types'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -239,11 +338,39 @@ const { spaces, isLoading, userName } = storeToRefs(authStore)
 
 const showCreateModal = ref(false)
 const createLoading = ref(false)
+const showJoinModal = ref(false)
+const joinLoading = ref(false)
+const inviteCodeInput = ref('')
+
+async function handleJoinSpace() {
+  if (!inviteCodeInput.value.trim()) return
+  joinLoading.value = true
+  const res = await authStore.joinSpaceWithInviteCode(inviteCodeInput.value.trim())
+  joinLoading.value = false
+  if (res.success) {
+    toast.success('Berhasil Terhubung! 💞', `Anda telah bergabung ke space: "${res.space?.name}"`)
+    showJoinModal.value = false
+    router.push('/')
+  } else {
+    toast.error('Gagal Bergabung', res.error || 'Kode undangan tidak valid.')
+  }
+}
 
 const newSpace = reactive({
-  name: '',
+  name: 'My Trading Space',
   type: 'personal' as SpaceType,
+  category: 'trader' as SpaceCategory,
+  icon: '📈',
 })
+
+function setSpaceTemplate(type: SpaceType, category: SpaceCategory, icon: string, defaultName: string) {
+  newSpace.type = type
+  newSpace.category = category
+  newSpace.icon = icon
+  if (!newSpace.name || newSpace.name === 'My Trading Space' || newSpace.name === 'Bimbingan Belajar' || newSpace.name === 'Our Romantic Space 💕') {
+    newSpace.name = defaultName
+  }
+}
 
 const firstName = computed(() => {
   const name = userName.value
@@ -286,64 +413,74 @@ async function handleSelectSpace(spaceId: string, event: MouseEvent) {
   }
 
   // Small delay for visual feedback
-  await new Promise(r => setTimeout(r, 200))
+  await new Promise(r => setTimeout(r, 150))
 
   const result = await authStore.selectSpace(spaceId)
   if (result?.success) {
-    toast.success('Space selected', 'Entering your space...')
-    router.push({ name: 'Home' })
+    toast.success('Memasuki Ruang Kerja ✨', 'Membuka space yang Anda pilih...')
+    router.push('/')
   } else {
-    toast.error('Error', 'Failed to select space.')
+    toast.error('Error', 'Gagal memilih space.')
   }
 }
 
 async function handleCreateSpace() {
   if (!newSpace.name.trim()) {
-    toast.error('Error', 'Space name is required.')
+    toast.error('Error', 'Nama space harus diisi.')
     return
   }
 
   createLoading.value = true
 
   try {
-    const userId = authStore.user?.id
-    if (!userId) throw new Error('Not authenticated')
+    const userId = authStore.user?.id || 'demo-user'
 
-    // Create the space
-    const { data: space, error: createError } = await supabase
-      .from('spaces')
-      .insert({
-        name: newSpace.name.trim(),
-        type: newSpace.type,
-        owner_id: userId,
-      })
-      .select()
-      .single()
-
-    if (createError) throw createError
-
-    // Add creator as owner in space_members (upsert handles trigger or client insert gracefully)
-    const { error: memberError } = await supabase
-      .from('space_members')
-      .upsert({
-        space_id: space.id,
-        user_id: userId,
-        role: 'owner',
-      }, { onConflict: 'space_id,user_id' })
-
-    if (memberError) {
-      console.warn('space_members insert note:', memberError.message)
+    const createdSpace: SpaceWithMeta = {
+      id: 'space-' + Date.now(),
+      name: newSpace.name.trim(),
+      type: newSpace.type,
+      category: newSpace.category,
+      icon: newSpace.icon,
+      owner_id: userId,
+      role: 'owner',
+      last_accessed: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     }
 
-    toast.success('Space created!', `"${space.name}" is ready to use.`)
-    showCreateModal.value = false
-    newSpace.name = ''
-    newSpace.type = 'personal'
+    // Add to spaces list
+    spaces.value.unshift(createdSpace)
+    localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
 
-    // Refresh spaces list
-    await authStore.fetchSpaces()
+    // Optional online sync
+    if (authStore.user && authStore.user.id !== 'demo-user-123') {
+      try {
+        await supabase
+          .from('spaces')
+          .insert({
+            id: createdSpace.id,
+            name: createdSpace.name,
+            type: createdSpace.type,
+            category: createdSpace.category,
+            icon: createdSpace.icon,
+            owner_id: userId,
+          })
+      } catch (err) {
+        console.warn('Supabase space sync note:', err)
+      }
+    }
+
+    toast.success('Space Berhasil Dibuat! ✨', `"${createdSpace.name}" siap digunakan.`)
+    showCreateModal.value = false
+    newSpace.name = 'My Trading Space'
+    newSpace.type = 'personal'
+    newSpace.category = 'trader'
+    newSpace.icon = '📈'
+
+    // Automatically enter the new space
+    await authStore.selectSpace(createdSpace.id)
+    router.push('/')
   } catch (err: any) {
-    toast.error('Failed to create space', err?.message || 'Please try again.')
+    toast.error('Gagal membuat space', err?.message || 'Silakan coba lagi.')
   } finally {
     createLoading.value = false
   }

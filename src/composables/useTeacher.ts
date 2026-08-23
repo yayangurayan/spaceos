@@ -667,10 +667,8 @@ export function useTeacher() {
     saveToLocalStorage(spaceId)
   }
 
-  /* ============================
-     LocalStorage Helpers
-     ============================ */
   function loadFromLocalStorage(spaceId: string) {
+    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const sKey = `spaceos_teacher_students_${spaceId}`
       const lKey = `spaceos_teacher_lessons_${spaceId}`
@@ -686,11 +684,24 @@ export function useTeacher() {
         materials.value = JSON.parse(localStorage.getItem(mKey) || '[]')
         payments.value = JSON.parse(localStorage.getItem(pyKey) || '[]')
         usingFallback.value = true
+      } else if (isCleanSlate) {
+        students.value = []
+        lessons.value = []
+        lessonPlans.value = []
+        materials.value = []
+        payments.value = []
+        saveToLocalStorage(spaceId)
+        usingFallback.value = true
       } else {
         seedLocalDefaults()
       }
     } catch {
-      seedLocalDefaults()
+      students.value = []
+      lessons.value = []
+      lessonPlans.value = []
+      materials.value = []
+      payments.value = []
+      usingFallback.value = true
     }
   }
 

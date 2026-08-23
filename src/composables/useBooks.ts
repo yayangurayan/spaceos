@@ -395,8 +395,14 @@ export function useBooks() {
           readingLogs.value = logsData
         }
       } else {
-        // First time space load: auto-seed presets
-        await seedPresetsToDb(spaceId)
+        const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+        if (isCleanSlate) {
+          books.value = []
+          readingLogs.value = []
+        } else {
+          // First time space load: auto-seed presets
+          await seedPresetsToDb(spaceId)
+        }
       }
     } catch (err: any) {
       console.error('fetchBooksData error:', err)
@@ -477,6 +483,7 @@ export function useBooks() {
      LocalStorage Helpers
      ============================ */
   function loadFromLocalStorage(spaceId: string) {
+    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const bKey = `spaceos_books_${spaceId}`
       const lKey = `spaceos_reading_logs_${spaceId}`
@@ -485,6 +492,11 @@ export function useBooks() {
 
       if (savedBooks) {
         books.value = JSON.parse(savedBooks)
+      } else if (isCleanSlate) {
+        books.value = []
+        readingLogs.value = []
+        saveToLocalStorage(spaceId)
+        return
       } else {
         seedLocalDefaults()
         return
@@ -492,10 +504,12 @@ export function useBooks() {
 
       if (savedLogs) {
         readingLogs.value = JSON.parse(savedLogs)
+      } else {
+        readingLogs.value = []
       }
-      usingFallback.value = true
-    } catch (e) {
-      seedLocalDefaults()
+    } catch {
+      books.value = []
+      readingLogs.value = []
     }
   }
 
