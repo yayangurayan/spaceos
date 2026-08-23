@@ -118,28 +118,38 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'gallery',
         name: 'Gallery',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/shared/Gallery.vue'),
+      },
+      {
+        path: 'gallery/:id',
+        name: 'AlbumDetail',
+        component: () => import('@/pages/shared/AlbumDetail.vue'),
       },
       {
         path: 'journal',
         name: 'Journal',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/shared/Journal.vue'),
+      },
+      {
+        path: 'journal/:id',
+        name: 'JournalEntry',
+        component: () => import('@/pages/shared/JournalEntry.vue'),
       },
       {
         path: 'calendar',
         name: 'Calendar',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/shared/Calendar.vue'),
       },
       {
         path: 'love-notes',
         name: 'LoveNotes',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/shared/LoveNotes.vue'),
       },
       // Shared routes
       {
         path: 'settings',
         name: 'Settings',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/shared/SettingsPage.vue'),
       },
     ],
   },

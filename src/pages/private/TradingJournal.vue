@@ -15,7 +15,18 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-2.5 w-full sm:w-auto">
+      <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+        <!-- AI Trading Coach CTA -->
+        <button
+          type="button"
+          @click="runAICoach"
+          class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-xs font-bold text-white shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 transition-all hover:scale-102"
+          title="Analisis pola performa, emosi, dan rekomendasi trading dengan AI"
+        >
+          <span class="text-sm">🧠</span>
+          <span>AI Trading Coach</span>
+        </button>
+
         <!-- Export to CSV -->
         <button
           type="button"
@@ -499,6 +510,17 @@
       @edit="handleEditFromDetail"
       @delete="handleDeleteFromDetail"
     />
+
+    <!-- 3. AI Trading Coach Modal -->
+    <AIInsightModal
+      v-if="showAIModal"
+      title="Laporan AI Trading Coach & Analisis Psikologi"
+      icon="🧠"
+      :content="aiAnalysisResult"
+      :is-loading="isAnalyzing"
+      loading-title="AI Sedang Menganalisis Pola 20 Trade & Psikologi Anda..."
+      @close="showAIModal = false"
+    />
   </div>
 </template>
 
@@ -510,7 +532,9 @@ import TradeFilters from '@/components/trading/TradeFilters.vue'
 import PnLChart from '@/components/trading/PnLChart.vue'
 import TradeForm from '@/components/trading/TradeForm.vue'
 import TradeDetail from '@/components/trading/TradeDetail.vue'
+import AIInsightModal from '@/components/ai/AIInsightModal.vue'
 import { useTrading } from '@/composables/useTrading'
+import { useTradingAI } from '@/composables/useTradingAI'
 import type { Trade, TradeFormData } from '@/types'
 
 const {
@@ -519,8 +543,8 @@ const {
   stats,
   filters,
   currentPage,
-  itemsPerPage,
   totalPages,
+  itemsPerPage,
   isLoading,
   fetchTrades,
   createTrade,
@@ -528,6 +552,18 @@ const {
   deleteTrade,
   exportToCSV,
 } = useTrading()
+
+const { isAnalyzing, analyzeTrades } = useTradingAI()
+
+const showAIModal = ref(false)
+const aiAnalysisResult = ref('')
+
+async function runAICoach() {
+  showAIModal.value = true
+  aiAnalysisResult.value = ''
+  const res = await analyzeTrades(filteredTrades.value)
+  aiAnalysisResult.value = res
+}
 
 // UI state
 const viewMode = ref<'table' | 'card'>('table')

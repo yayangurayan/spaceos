@@ -65,6 +65,17 @@
 
         <!-- Quick Header Actions -->
         <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <!-- AI Evaluation CTA -->
+          <button
+            type="button"
+            @click="runAIEvaluation"
+            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-xs font-bold text-white shadow-lg shadow-purple-500/20 flex items-center justify-center gap-1.5 transition-all hover:scale-102"
+            title="Evaluasi kemajuan belajar siswa dengan AI"
+          >
+            <span>🤖</span>
+            <span>Evaluasi AI</span>
+          </button>
+
           <button
             type="button"
             @click="openRecordLesson"
@@ -449,6 +460,17 @@
       @close="showPaymentModal = false; selectedPayment = null"
       @save="handleSavePayment"
     />
+
+    <!-- AI Student Evaluation Modal -->
+    <AIInsightModal
+      v-if="showAIModal"
+      :title="`Laporan Evaluasi Pedagogis Siswa (${student?.name || ''})`"
+      icon="🎓"
+      :content="aiEvalResult"
+      :is-loading="isEvaluating"
+      loading-title="AI Sedang Menganalisis Pola Pemahaman & Kemajuan Belajar Siswa..."
+      @close="showAIModal = false"
+    />
   </div>
 </template>
 
@@ -459,7 +481,9 @@ import Icon from '@/components/ui/Icon.vue'
 import StudentFormModal from '@/components/teacher/StudentFormModal.vue'
 import RecordLessonModal from '@/components/teacher/RecordLessonModal.vue'
 import RecordPaymentModal from '@/components/teacher/RecordPaymentModal.vue'
+import AIInsightModal from '@/components/ai/AIInsightModal.vue'
 import { useTeacher } from '@/composables/useTeacher'
+import { useTeachingAI } from '@/composables/useTeachingAI'
 import type { StudentFormData, Lesson, LessonFormData, TeacherPayment, PaymentFormData } from '@/types'
 
 const route = useRoute()
@@ -479,6 +503,19 @@ const {
   updatePayment,
   generateWhatsAppReminder,
 } = useTeacher()
+
+const { isGenerating: isEvaluating, evaluateStudentProgress } = useTeachingAI()
+
+const showAIModal = ref(false)
+const aiEvalResult = ref('')
+
+async function runAIEvaluation() {
+  if (!student.value) return
+  showAIModal.value = true
+  aiEvalResult.value = ''
+  const res = await evaluateStudentProgress(student.value)
+  aiEvalResult.value = res
+}
 
 const activeTab = ref<'overview' | 'lessons' | 'progress' | 'payments'>('overview')
 

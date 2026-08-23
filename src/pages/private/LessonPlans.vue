@@ -15,14 +15,23 @@
       </div>
 
       <!-- Header Action -->
-      <div class="flex items-center gap-2.5 w-full sm:w-auto">
+      <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+        <button
+          type="button"
+          @click="showAIModal = true"
+          class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 transition-all hover:scale-102"
+        >
+          <span>🤖</span>
+          <span>Generate dengan AI</span>
+        </button>
+
         <button
           type="button"
           @click="openAddPlan"
           class="btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
         >
           <Icon name="plus" :size="16" />
-          <span>+ Buat Lesson Plan Baru</span>
+          <span>+ Buat Manual</span>
         </button>
       </div>
     </div>
@@ -161,6 +170,13 @@
       @close="showLessonModal = false; templateLesson = null"
       @save="handleSaveLesson"
     />
+
+    <!-- AI Lesson Plan Modal -->
+    <AILessonPlanModal
+      v-if="showAIModal"
+      @close="showAIModal = false"
+      @save="handleSaveAIPlan"
+    />
   </div>
 </template>
 
@@ -169,6 +185,7 @@ import { ref, computed, onMounted } from 'vue'
 import Icon from '@/components/ui/Icon.vue'
 import LessonPlanModal from '@/components/teacher/LessonPlanModal.vue'
 import RecordLessonModal from '@/components/teacher/RecordLessonModal.vue'
+import AILessonPlanModal from '@/components/ai/AILessonPlanModal.vue'
 import { useTeacher, TEACHER_SUBJECTS, GRADE_LEVELS } from '@/composables/useTeacher'
 import type { LessonPlan, LessonPlanFormData, Lesson, LessonFormData } from '@/types'
 
@@ -192,6 +209,7 @@ const searchQuery = ref('')
 // Modals
 const showPlanModal = ref(false)
 const selectedPlan = ref<LessonPlan | null>(null)
+const showAIModal = ref(false)
 
 const showLessonModal = ref(false)
 const templateLesson = ref<Lesson | null>(null)
@@ -228,6 +246,11 @@ async function handleSavePlan(formData: LessonPlanFormData) {
   }
   showPlanModal.value = false
   selectedPlan.value = null
+}
+
+async function handleSaveAIPlan(planData: LessonPlanFormData) {
+  await createLessonPlan(planData)
+  showAIModal.value = false
 }
 
 function useTemplateToCreateLesson(plan: LessonPlan) {

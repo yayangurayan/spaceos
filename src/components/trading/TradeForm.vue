@@ -276,14 +276,13 @@
               </div>
             </div>
 
-            <!-- Risk Warning Badge -->
-            <div
-              v-if="computedRr != null && computedRr < 2 && computedRr > 0"
-              class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs text-amber-300"
-            >
-              <span>⚠️</span>
-              <span><strong>Catatan Risk:</strong> R:R ratio kurang dari 1:2. Pastikan sesuai dengan trading plan kamu.</span>
-            </div>
+            <!-- AI Live Suggestion Alert -->
+            <AISuggestion
+              v-if="aiSuggestion"
+              :title="aiSuggestion.title"
+              :message="aiSuggestion.message"
+              :type="aiSuggestion.type"
+            />
           </div>
 
           <!-- Section 3: Analysis & Reasons -->
@@ -540,6 +539,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import AISuggestion from '@/components/ai/AISuggestion.vue'
 import type {
   Trade,
   TradeFormData,
@@ -553,6 +553,7 @@ import {
   determineStatus,
 } from '@/composables/useTradeCalculations'
 import { useTrading } from '@/composables/useTrading'
+import { useTradingAI } from '@/composables/useTradingAI'
 
 const props = defineProps<{
   trade?: Trade | null
@@ -563,7 +564,8 @@ const emit = defineEmits<{
   (e: 'save', data: TradeFormData): void
 }>()
 
-const { uploadScreenshot } = useTrading()
+const { uploadScreenshot, trades } = useTrading()
+const { getLiveTradeSuggestion } = useTradingAI()
 
 const isEditing = computed(() => !!props.trade)
 const isSaving = ref(false)
@@ -654,6 +656,17 @@ const computedRr = computed(() => {
 
 const computedStatus = computed(() => {
   return determineStatus(form.exit_price, computedPnl.value)
+})
+
+const aiSuggestion = computed(() => {
+  return getLiveTradeSuggestion({
+    entryPrice: form.entry_price || 0,
+    stopLoss: form.stop_loss || 0,
+    takeProfit: form.take_profit || 0,
+    position: form.position,
+    lotSize: form.lot_size || 1.0,
+    recentTrades: trades.value,
+  })
 })
 
 /* ============================

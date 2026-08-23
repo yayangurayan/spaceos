@@ -202,18 +202,27 @@
       <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
         <h2 class="text-lg font-semibold text-white mb-4">Quick Actions</h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button class="couple-btn-primary flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium text-white transition-all duration-150 hover:opacity-90">
+          <router-link
+            to="/gallery"
+            class="couple-btn-primary flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium text-white transition-all duration-150 hover:opacity-90 shadow-md shadow-rose-500/20"
+          >
             <span class="text-lg">📷</span>
-            Tambah Foto
-          </button>
-          <button class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-rose-500/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <span>Galeri & Tambah Foto</span>
+          </router-link>
+          <router-link
+            to="/journal"
+            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-rose-500/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
             <span class="text-lg">📖</span>
-            Tulis Journal
-          </button>
-          <button class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-rose-500/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <span>Tulis Journal</span>
+          </router-link>
+          <router-link
+            to="/calendar"
+            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-rose-500/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
             <span class="text-lg">📅</span>
-            Buat Event
-          </button>
+            <span>Kalender & Buat Agenda</span>
+          </router-link>
         </div>
       </div>
     </template>

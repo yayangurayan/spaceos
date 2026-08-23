@@ -703,6 +703,167 @@ export interface TeacherOverviewStats {
   lessonsToday: number
 }
 
+/* ============================
+   Couple Space: Gallery, Journal, Calendar, Love Notes
+   ============================ */
+
+export interface Album {
+  id: string
+  space_id: string
+  name: string
+  description?: string | null
+  cover_photo_id?: string | null
+  cover_url?: string | null
+  tags?: string[]
+  created_by?: string | null
+  created_at: string
+  updated_at?: string
+  photo_count?: number
+  date_range?: string
+}
+
+export interface AlbumFormData {
+  name: string
+  description: string
+  cover_url?: string
+  tags?: string[]
+}
+
+export interface Photo {
+  id: string
+  space_id: string
+  album_id?: string | null
+  image_url: string
+  caption?: string | null
+  taken_at?: string | null
+  location?: string | null
+  tagged_partner?: boolean
+  created_by?: string | null
+  created_at: string
+  reactions?: { [emoji: string]: number }
+  userReaction?: string | null
+}
+
+export interface PhotoFormData {
+  album_id?: string
+  image_url: string
+  caption?: string
+  taken_at?: string
+  location?: string
+  tagged_partner?: boolean
+}
+
+export interface PhotoReaction {
+  id: string
+  photo_id: string
+  user_id: string
+  reaction: string
+  created_at?: string
+}
+
+export type JournalMood = 'Happy' | 'Neutral' | 'Sad' | 'Loving' | 'Excited' | 'Thoughtful'
+
+export interface JournalComment {
+  id: string
+  entry_id: string
+  author_id?: string | null
+  author_name?: string
+  author_avatar?: string
+  content: string
+  parent_id?: string | null
+  created_at: string
+  replies?: JournalComment[]
+}
+
+export interface JournalEntry {
+  id: string
+  space_id: string
+  author_id?: string | null
+  author_name?: string
+  author_avatar?: string
+  title?: string | null
+  content: string
+  mood: JournalMood
+  tags?: string[]
+  is_published: boolean
+  published_at?: string | null
+  created_at: string
+  updated_at?: string
+  comments?: JournalComment[]
+  reactions?: { [emoji: string]: number }
+  userReaction?: string | null
+}
+
+export interface JournalEntryFormData {
+  title?: string
+  content: string
+  mood: JournalMood
+  tags?: string[]
+  is_published: boolean
+}
+
+export type CoupleEventCategory = 'Date Night' | 'Travel' | 'Anniversary' | 'Reminder' | 'Personal' | 'Together'
+
+export interface EventAttendee {
+  event_id: string
+  user_id: string
+  status: 'going' | 'maybe' | 'not_going'
+}
+
+export interface CoupleCalendarEvent {
+  id: string
+  space_id: string
+  title: string
+  description?: string | null
+  start_time: string
+  end_time?: string | null
+  all_day?: boolean
+  location?: string | null
+  category: CoupleEventCategory
+  color?: string
+  reminder_minutes?: number[]
+  repeat_rule?: string
+  created_by?: string | null
+  created_at: string
+  updated_at?: string
+  attendees?: EventAttendee[]
+}
+
+export interface CoupleEventFormData {
+  title: string
+  description?: string
+  start_time: string
+  end_time?: string
+  all_day?: boolean
+  location?: string
+  category: CoupleEventCategory
+  color?: string
+  reminder_minutes?: number[]
+  repeat_rule?: string
+}
+
+export type LoveNoteColor = 'yellow' | 'pink' | 'cyan' | 'purple' | 'peach' | 'mint'
+
+export interface LoveNote {
+  id: string
+  space_id: string
+  from_user?: string | null
+  from_name?: string
+  to_user?: string | null
+  message: string
+  color: LoveNoteColor
+  is_read: boolean
+  is_pinned: boolean
+  created_at: string
+}
+
+export interface LoveNoteFormData {
+  message: string
+  color: LoveNoteColor
+  is_pinned?: boolean
+}
+
+
 
 
 

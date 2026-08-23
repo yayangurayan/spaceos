@@ -1030,6 +1030,322 @@ CREATE POLICY "Users can delete payments in their spaces"
   ON payments FOR DELETE
   USING (public.is_space_member(space_id, (SELECT auth.uid())));
 
+-- ============================================================
+-- 12. Couple Space: Albums, Photos, Journals, Calendar, Love Notes
+-- ============================================================
+
+-- 12.1 Albums Table
+CREATE TABLE IF NOT EXISTS albums (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  cover_photo_id UUID,
+  cover_url TEXT,
+  tags TEXT[] DEFAULT '{}',
+  created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 12.2 Photos Table
+CREATE TABLE IF NOT EXISTS photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  album_id UUID REFERENCES albums(id) ON DELETE SET NULL,
+  image_url TEXT NOT NULL,
+  caption TEXT,
+  taken_at TIMESTAMPTZ DEFAULT NOW(),
+  location VARCHAR(255),
+  tagged_partner BOOLEAN DEFAULT false,
+  created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 12.3 Photo Reactions Table
+CREATE TABLE IF NOT EXISTS photo_reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  reaction VARCHAR(10) NOT NULL DEFAULT '❤️',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(photo_id, user_id)
+);
+
+-- 12.4 Journal Entries Table
+CREATE TABLE IF NOT EXISTS journal_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  author_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  title VARCHAR(255),
+  content TEXT NOT NULL,
+  mood VARCHAR(50) DEFAULT 'Happy',
+  tags TEXT[] DEFAULT '{}',
+  is_published BOOLEAN DEFAULT true,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 12.5 Journal Comments Table
+CREATE TABLE IF NOT EXISTS journal_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entry_id UUID NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
+  author_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  content TEXT NOT NULL,
+  parent_id UUID REFERENCES journal_comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 12.6 Journal Reactions Table
+CREATE TABLE IF NOT EXISTS journal_reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entry_id UUID NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  emoji VARCHAR(10) NOT NULL DEFAULT '❤️',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(entry_id, user_id)
+);
+
+-- 12.7 Couple Calendar Events Table
+CREATE TABLE IF NOT EXISTS calendar_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ,
+  all_day BOOLEAN DEFAULT false,
+  location VARCHAR(255),
+  category VARCHAR(50) NOT NULL DEFAULT 'Date Night',
+  color VARCHAR(20) DEFAULT '#f43f5e',
+  reminder_minutes INTEGER[] DEFAULT '{15}',
+  repeat_rule VARCHAR(50) DEFAULT 'none',
+  created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 12.8 Event Attendees Table
+CREATE TABLE IF NOT EXISTS event_attendees (
+  event_id UUID NOT NULL REFERENCES calendar_events(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'going' CHECK (status IN ('going', 'maybe', 'not_going')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (event_id, user_id)
+);
+
+-- 12.9 Love Notes Table
+CREATE TABLE IF NOT EXISTS love_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  from_user UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  to_user UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  message TEXT NOT NULL,
+  color VARCHAR(20) DEFAULT 'yellow',
+  is_read BOOLEAN DEFAULT false,
+  is_pinned BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Indexes for Couple Space
+CREATE INDEX IF NOT EXISTS idx_albums_space_id ON albums(space_id);
+CREATE INDEX IF NOT EXISTS idx_photos_album_id ON photos(album_id);
+CREATE INDEX IF NOT EXISTS idx_photos_space_id ON photos(space_id);
+CREATE INDEX IF NOT EXISTS idx_photos_taken_at ON photos(space_id, taken_at DESC);
+CREATE INDEX IF NOT EXISTS idx_photo_reactions_photo_id ON photo_reactions(photo_id);
+CREATE INDEX IF NOT EXISTS idx_journal_entries_space_id ON journal_entries(space_id);
+CREATE INDEX IF NOT EXISTS idx_journal_entries_published_at ON journal_entries(space_id, published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_journal_comments_entry_id ON journal_comments(entry_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_events_space_id ON calendar_events(space_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_events_start_time ON calendar_events(space_id, start_time ASC);
+CREATE INDEX IF NOT EXISTS idx_love_notes_space_id ON love_notes(space_id);
+
+-- Enable RLS for Couple Tables
+ALTER TABLE albums ENABLE ROW LEVEL SECURITY;
+ALTER TABLE photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE photo_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE journal_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE journal_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE calendar_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_attendees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE love_notes ENABLE ROW LEVEL SECURITY;
+
+-- Albums RLS Policies
+DROP POLICY IF EXISTS "Users can view albums in their spaces" ON albums;
+DROP POLICY IF EXISTS "Users can insert albums in their spaces" ON albums;
+DROP POLICY IF EXISTS "Users can update albums in their spaces" ON albums;
+DROP POLICY IF EXISTS "Users can delete albums in their spaces" ON albums;
+
+CREATE POLICY "Users can view albums in their spaces"
+  ON albums FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert albums in their spaces"
+  ON albums FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update albums in their spaces"
+  ON albums FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete albums in their spaces"
+  ON albums FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Photos RLS Policies
+DROP POLICY IF EXISTS "Users can view photos in their spaces" ON photos;
+DROP POLICY IF EXISTS "Users can insert photos in their spaces" ON photos;
+DROP POLICY IF EXISTS "Users can update photos in their spaces" ON photos;
+DROP POLICY IF EXISTS "Users can delete photos in their spaces" ON photos;
+
+CREATE POLICY "Users can view photos in their spaces"
+  ON photos FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert photos in their spaces"
+  ON photos FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update photos in their spaces"
+  ON photos FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete photos in their spaces"
+  ON photos FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Photo Reactions RLS
+DROP POLICY IF EXISTS "Users can view photo reactions in their spaces" ON photo_reactions;
+DROP POLICY IF EXISTS "Users can insert photo reactions in their spaces" ON photo_reactions;
+DROP POLICY IF EXISTS "Users can delete photo reactions in their spaces" ON photo_reactions;
+
+CREATE POLICY "Users can view photo reactions in their spaces"
+  ON photo_reactions FOR SELECT
+  USING (EXISTS (SELECT 1 FROM photos p WHERE p.id = photo_reactions.photo_id AND public.is_space_member(p.space_id, (SELECT auth.uid()))));
+
+CREATE POLICY "Users can insert photo reactions in their spaces"
+  ON photo_reactions FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM photos p WHERE p.id = photo_reactions.photo_id AND public.is_space_member(p.space_id, (SELECT auth.uid()))));
+
+CREATE POLICY "Users can delete photo reactions in their spaces"
+  ON photo_reactions FOR DELETE
+  USING (EXISTS (SELECT 1 FROM photos p WHERE p.id = photo_reactions.photo_id AND public.is_space_member(p.space_id, (SELECT auth.uid()))));
+
+-- Journal Entries RLS
+DROP POLICY IF EXISTS "Users can view journal entries in their spaces" ON journal_entries;
+DROP POLICY IF EXISTS "Users can insert journal entries in their spaces" ON journal_entries;
+DROP POLICY IF EXISTS "Users can update journal entries in their spaces" ON journal_entries;
+DROP POLICY IF EXISTS "Users can delete journal entries in their spaces" ON journal_entries;
+
+CREATE POLICY "Users can view journal entries in their spaces"
+  ON journal_entries FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert journal entries in their spaces"
+  ON journal_entries FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update journal entries in their spaces"
+  ON journal_entries FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete journal entries in their spaces"
+  ON journal_entries FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Journal Comments RLS
+DROP POLICY IF EXISTS "Users can view journal comments in their spaces" ON journal_comments;
+DROP POLICY IF EXISTS "Users can insert journal comments in their spaces" ON journal_comments;
+DROP POLICY IF EXISTS "Users can delete journal comments in their spaces" ON journal_comments;
+
+CREATE POLICY "Users can view journal comments in their spaces"
+  ON journal_comments FOR SELECT
+  USING (EXISTS (SELECT 1 FROM journal_entries j WHERE j.id = journal_comments.entry_id AND public.is_space_member(j.space_id, (SELECT auth.uid()))));
+
+CREATE POLICY "Users can insert journal comments in their spaces"
+  ON journal_comments FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM journal_entries j WHERE j.id = journal_comments.entry_id AND public.is_space_member(j.space_id, (SELECT auth.uid()))));
+
+CREATE POLICY "Users can delete journal comments in their spaces"
+  ON journal_comments FOR DELETE
+  USING (EXISTS (SELECT 1 FROM journal_entries j WHERE j.id = journal_comments.entry_id AND public.is_space_member(j.space_id, (SELECT auth.uid()))));
+
+-- Journal Reactions RLS
+DROP POLICY IF EXISTS "Users can view journal reactions in their spaces" ON journal_reactions;
+DROP POLICY IF EXISTS "Users can insert journal reactions in their spaces" ON journal_reactions;
+DROP POLICY IF EXISTS "Users can delete journal reactions in their spaces" ON journal_reactions;
+
+CREATE POLICY "Users can view journal reactions in their spaces"
+  ON journal_reactions FOR SELECT
+  USING (EXISTS (SELECT 1 FROM journal_entries j WHERE j.id = journal_reactions.entry_id AND public.is_space_member(j.space_id, (SELECT auth.uid()))));
+
+CREATE POLICY "Users can insert journal reactions in their spaces"
+  ON journal_reactions FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM journal_entries j WHERE j.id = journal_reactions.entry_id AND public.is_space_member(j.space_id, (SELECT auth.uid()))));
+
+CREATE POLICY "Users can delete journal reactions in their spaces"
+  ON journal_reactions FOR DELETE
+  USING (EXISTS (SELECT 1 FROM journal_entries j WHERE j.id = journal_reactions.entry_id AND public.is_space_member(j.space_id, (SELECT auth.uid()))));
+
+-- Calendar Events RLS
+DROP POLICY IF EXISTS "Users can view calendar events in their spaces" ON calendar_events;
+DROP POLICY IF EXISTS "Users can insert calendar events in their spaces" ON calendar_events;
+DROP POLICY IF EXISTS "Users can update calendar events in their spaces" ON calendar_events;
+DROP POLICY IF EXISTS "Users can delete calendar events in their spaces" ON calendar_events;
+
+CREATE POLICY "Users can view calendar events in their spaces"
+  ON calendar_events FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert calendar events in their spaces"
+  ON calendar_events FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update calendar events in their spaces"
+  ON calendar_events FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete calendar events in their spaces"
+  ON calendar_events FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Event Attendees RLS
+DROP POLICY IF EXISTS "Users can view event attendees in their spaces" ON event_attendees;
+DROP POLICY IF EXISTS "Users can manage event attendees in their spaces" ON event_attendees;
+
+CREATE POLICY "Users can view event attendees in their spaces"
+  ON event_attendees FOR SELECT
+  USING (EXISTS (SELECT 1 FROM calendar_events e WHERE e.id = event_attendees.event_id AND public.is_space_member(e.space_id, (SELECT auth.uid()))));
+
+CREATE POLICY "Users can manage event attendees in their spaces"
+  ON event_attendees FOR ALL
+  USING (EXISTS (SELECT 1 FROM calendar_events e WHERE e.id = event_attendees.event_id AND public.is_space_member(e.space_id, (SELECT auth.uid()))));
+
+-- Love Notes RLS
+DROP POLICY IF EXISTS "Users can view love notes in their spaces" ON love_notes;
+DROP POLICY IF EXISTS "Users can insert love notes in their spaces" ON love_notes;
+DROP POLICY IF EXISTS "Users can update love notes in their spaces" ON love_notes;
+DROP POLICY IF EXISTS "Users can delete love notes in their spaces" ON love_notes;
+
+CREATE POLICY "Users can view love notes in their spaces"
+  ON love_notes FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert love notes in their spaces"
+  ON love_notes FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update love notes in their spaces"
+  ON love_notes FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete love notes in their spaces"
+  ON love_notes FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+
 
 
 
