@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.112.3",
     "@vueuse/core": "^14.4.0",
     "@vueuse/motion": "^3.0.3",
+    "canvas-confetti": "^1.9.4",
     "chart.js": "^4.5.1",
     "pinia": "^4.0.3",
     "vue": "^3.5.40",
@@ -20,6 +21,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.13.3",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/tsconfig": "^0.9.1",

@@ -214,3 +214,138 @@ export interface TradeJournalStats {
   totalPips: number
 }
 
+/* ============================
+   Finance Tracker
+   ============================ */
+
+export type TransactionType = 'income' | 'expense'
+
+export interface Transaction {
+  id: string
+  space_id: string
+  user_id?: string
+  type: TransactionType
+  amount: number
+  category: string
+  description: string | null
+  date: string
+  wallet: string
+  receipt_url: string | null
+  created_at: string
+  updated_at?: string
+}
+
+export interface TransactionFormData {
+  type: TransactionType
+  amount: number | null
+  category: string
+  description: string
+  date: string
+  wallet: string
+  receipt_url?: string | null
+}
+
+export interface TransactionFilters {
+  dateRange: 'all' | 'today' | 'this_week' | 'this_month' | 'last_month' | 'last_30_days' | 'custom'
+  startDate?: string
+  endDate?: string
+  category: string
+  type: 'all' | TransactionType
+  wallet: string
+  search?: string
+}
+
+export interface Budget {
+  id: string
+  space_id: string
+  category: string
+  monthly_limit: number
+  month: number
+  year: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface BudgetCategoryProgress {
+  category: string
+  monthly_limit: number
+  actual_spent: number
+  percentage: number
+  isOverBudget: boolean
+  isNearLimit: boolean // > 80%
+  remaining: number
+}
+
+export interface FinanceOverviewStats {
+  totalBalance: number
+  totalIncome: number
+  totalExpense: number
+  netSavings: number
+  savingsRate: number
+  topExpenseCategory: string
+  transactionCount: number
+}
+
+/* ============================
+   Habit Tracker
+   ============================ */
+
+export type HabitFrequency = 'daily' | 'weekly' | 'custom'
+export type HabitCategory = 'Health' | 'Learning' | 'Trading' | 'Teaching' | 'Spiritual' | 'Social' | 'General'
+
+export interface Habit {
+  id: string
+  space_id: string
+  user_id?: string
+  name: string
+  icon: string
+  frequency: HabitFrequency
+  frequency_days: string[] // e.g. ['monday', 'wednesday', 'friday']
+  reminder_time: string | null
+  target: string | null
+  category: HabitCategory
+  is_active: boolean
+  sort_order?: number
+  created_at: string
+  updated_at?: string
+}
+
+export interface HabitLog {
+  id: string
+  habit_id: string
+  date: string // YYYY-MM-DD
+  completed: boolean
+  notes: string | null
+  created_at?: string
+}
+
+export interface HabitFormData {
+  name: string
+  icon: string
+  frequency: HabitFrequency
+  frequency_days: string[]
+  reminder_time: string
+  target: string
+  category: HabitCategory
+}
+
+export interface HabitWithStats extends Habit {
+  currentStreak: number
+  bestStreak: number
+  totalCompletions: number
+  completionRate: number // 0 - 100
+  isCompletedToday: boolean
+  lastCompletedDate: string | null
+  logs: Record<string, boolean> // dateString (YYYY-MM-DD) -> boolean
+}
+
+export interface HabitStreakOverview {
+  totalActiveHabits: number
+  completedTodayCount: number
+  todayCompletionRate: number
+  averageCompletionRate: number
+  longestStreak: number
+  heatmapData: { date: string; count: number; level: number }[]
+}
+
+

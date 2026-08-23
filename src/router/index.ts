@@ -56,12 +56,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'finance',
         name: 'Finance',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/FinanceTracker.vue'),
       },
       {
         path: 'habits',
         name: 'Habits',
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/private/HabitTracker.vue'),
       },
       {
         path: 'books',

@@ -319,19 +319,214 @@ CREATE POLICY "Users can delete their own trades"
   USING (user_id = (SELECT auth.uid()));
 
 -- ============================================================
--- 6. Storage Bucket for Trade Screenshots (Optional)
+-- 6. Storage Bucket for Trade Screenshots & Receipts (Optional)
 -- Run this in Supabase SQL editor or create via Storage dashboard
 -- ============================================================
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('trade-screenshots', 'trade-screenshots', true)
 -- ON CONFLICT (id) DO NOTHING;
 --
--- CREATE POLICY "Authenticated users can upload trade screenshots"
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('finance-receipts', 'finance-receipts', true)
+-- ON CONFLICT (id) DO NOTHING;
+--
+-- CREATE POLICY "Authenticated users can upload media"
 --   ON storage.objects FOR INSERT
 --   TO authenticated
---   WITH CHECK (bucket_id = 'trade-screenshots');
+--   WITH CHECK (bucket_id IN ('trade-screenshots', 'finance-receipts'));
 --
--- CREATE POLICY "Public can view trade screenshots"
+-- CREATE POLICY "Public can view media"
 --   ON storage.objects FOR SELECT
 --   TO public
---   USING (bucket_id = 'trade-screenshots');
+--   USING (bucket_id IN ('trade-screenshots', 'finance-receipts'));
+
+-- ============================================================
+-- 7. Finance Tracker: Transactions & Budgets
+-- ============================================================
+CREATE TABLE IF NOT EXISTS transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  type VARCHAR(10) NOT NULL CHECK (type IN ('income', 'expense')),
+  amount DECIMAL(12,2) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  description TEXT,
+  date DATE NOT NULL,
+  wallet VARCHAR(50) DEFAULT 'Main Account',
+  receipt_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS budgets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  category VARCHAR(50) NOT NULL,
+  monthly_limit DECIMAL(12,2) NOT NULL,
+  month INTEGER NOT NULL,
+  year INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(space_id, category, month, year)
+);
+
+-- Indexes for Finance
+CREATE INDEX IF NOT EXISTS idx_transactions_space_date ON transactions(space_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(space_id, category);
+CREATE INDEX IF NOT EXISTS idx_budgets_space_month ON budgets(space_id, year, month);
+
+-- RLS for Finance
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view transactions in their spaces" ON transactions;
+DROP POLICY IF EXISTS "Users can insert transactions in their spaces" ON transactions;
+DROP POLICY IF EXISTS "Users can update transactions in their spaces" ON transactions;
+DROP POLICY IF EXISTS "Users can delete transactions in their spaces" ON transactions;
+
+CREATE POLICY "Users can view transactions in their spaces"
+  ON transactions FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert transactions in their spaces"
+  ON transactions FOR INSERT
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND public.is_space_member(space_id, (SELECT auth.uid()))
+  );
+
+CREATE POLICY "Users can update transactions in their spaces"
+  ON transactions FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete transactions in their spaces"
+  ON transactions FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+DROP POLICY IF EXISTS "Users can view budgets in their spaces" ON budgets;
+DROP POLICY IF EXISTS "Users can insert budgets in their spaces" ON budgets;
+DROP POLICY IF EXISTS "Users can update budgets in their spaces" ON budgets;
+DROP POLICY IF EXISTS "Users can delete budgets in their spaces" ON budgets;
+
+CREATE POLICY "Users can view budgets in their spaces"
+  ON budgets FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert budgets in their spaces"
+  ON budgets FOR INSERT
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can update budgets in their spaces"
+  ON budgets FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete budgets in their spaces"
+  ON budgets FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- ============================================================
+-- 8. Habit Tracker: Habits & Logs
+-- ============================================================
+CREATE TABLE IF NOT EXISTS habits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  name VARCHAR(100) NOT NULL,
+  icon VARCHAR(10) DEFAULT '✨',
+  frequency VARCHAR(20) NOT NULL DEFAULT 'daily', -- 'daily', 'weekly', 'custom'
+  frequency_days TEXT[] DEFAULT '{}', -- ['monday', 'wednesday', 'friday']
+  reminder_time TIME,
+  target TEXT,
+  category VARCHAR(50) DEFAULT 'Health',
+  is_active BOOLEAN DEFAULT true,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS habit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  completed BOOLEAN DEFAULT false,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(habit_id, date)
+);
+
+-- Indexes for Habits
+CREATE INDEX IF NOT EXISTS idx_habits_space ON habits(space_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_habit_logs_habit_date ON habit_logs(habit_id, date);
+
+-- RLS for Habits
+ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE habit_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view habits in their spaces" ON habits;
+DROP POLICY IF EXISTS "Users can insert habits in their spaces" ON habits;
+DROP POLICY IF EXISTS "Users can update habits in their spaces" ON habits;
+DROP POLICY IF EXISTS "Users can delete habits in their spaces" ON habits;
+
+CREATE POLICY "Users can view habits in their spaces"
+  ON habits FOR SELECT
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert habits in their spaces"
+  ON habits FOR INSERT
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND public.is_space_member(space_id, (SELECT auth.uid()))
+  );
+
+CREATE POLICY "Users can update habits in their spaces"
+  ON habits FOR UPDATE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can delete habits in their spaces"
+  ON habits FOR DELETE
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+DROP POLICY IF EXISTS "Users can view habit logs in their spaces" ON habit_logs;
+DROP POLICY IF EXISTS "Users can insert habit logs in their spaces" ON habit_logs;
+DROP POLICY IF EXISTS "Users can update habit logs in their spaces" ON habit_logs;
+DROP POLICY IF EXISTS "Users can delete habit logs in their spaces" ON habit_logs;
+
+CREATE POLICY "Users can view habit logs in their spaces"
+  ON habit_logs FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.habits h
+      WHERE h.id = habit_logs.habit_id
+        AND public.is_space_member(h.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can insert habit logs in their spaces"
+  ON habit_logs FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.habits h
+      WHERE h.id = habit_logs.habit_id
+        AND public.is_space_member(h.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can update habit logs in their spaces"
+  ON habit_logs FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.habits h
+      WHERE h.id = habit_logs.habit_id
+        AND public.is_space_member(h.space_id, (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "Users can delete habit logs in their spaces"
+  ON habit_logs FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.habits h
+      WHERE h.id = habit_logs.habit_id
+        AND public.is_space_member(h.space_id, (SELECT auth.uid()))
+    )
+  );
+
 
