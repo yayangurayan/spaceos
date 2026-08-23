@@ -322,16 +322,18 @@ async function handleCreateSpace() {
 
     if (createError) throw createError
 
-    // Add creator as owner in space_members
+    // Add creator as owner in space_members (upsert handles trigger or client insert gracefully)
     const { error: memberError } = await supabase
       .from('space_members')
-      .insert({
+      .upsert({
         space_id: space.id,
         user_id: userId,
         role: 'owner',
-      })
+      }, { onConflict: 'space_id,user_id' })
 
-    if (memberError) throw memberError
+    if (memberError) {
+      console.warn('space_members insert note:', memberError.message)
+    }
 
     toast.success('Space created!', `"${space.name}" is ready to use.`)
     showCreateModal.value = false

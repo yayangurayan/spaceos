@@ -79,6 +79,62 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================================
+-- Helper Functions (Avoid RLS Infinite Recursion)
+-- SECURITY DEFINER functions bypass RLS inside their query
+-- ============================================================
+
+-- Check if user is a member of a space
+CREATE OR REPLACE FUNCTION public.is_space_member(_space_id UUID, _user_id UUID DEFAULT auth.uid())
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.space_members
+    WHERE space_id = _space_id
+      AND user_id = _user_id
+  );
+$$;
+
+-- Check if user is an owner or admin of a space
+CREATE OR REPLACE FUNCTION public.is_space_admin_or_owner(_space_id UUID, _user_id UUID DEFAULT auth.uid())
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.space_members
+    WHERE space_id = _space_id
+      AND user_id = _user_id
+      AND role IN ('owner', 'admin')
+  );
+$$;
+
+-- ============================================================
+-- Auto-add Space Owner to space_members (trigger)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_space()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.space_members (space_id, user_id, role)
+  VALUES (NEW.id, NEW.owner_id, 'owner')
+  ON CONFLICT (space_id, user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_space_created ON public.spaces;
+CREATE TRIGGER on_space_created
+  AFTER INSERT ON public.spaces
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_space();
+
+-- ============================================================
 -- Row Level Security (RLS) Policies
 -- ============================================================
 
@@ -92,12 +148,14 @@ ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
 -- Profiles Policies
 -- ============================
 
--- Users can view their own profile
+-- Drop old policies to allow clean re-run
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+
 CREATE POLICY "Users can view own profile"
   ON profiles FOR SELECT
   USING (auth.uid() = id);
 
--- Users can update their own profile
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
@@ -106,79 +164,82 @@ CREATE POLICY "Users can update own profile"
 -- Spaces Policies
 -- ============================
 
--- Users can view spaces they are a member of
+DROP POLICY IF EXISTS "Users can view their spaces" ON spaces;
+DROP POLICY IF EXISTS "Users can create spaces" ON spaces;
+DROP POLICY IF EXISTS "Owners can update their spaces" ON spaces;
+DROP POLICY IF EXISTS "Owners can delete their spaces" ON spaces;
+
+-- Users can view spaces they own or are member of
 CREATE POLICY "Users can view their spaces"
   ON spaces FOR SELECT
   USING (
-    id IN (
-      SELECT space_id FROM space_members WHERE user_id = auth.uid()
-    )
+    owner_id = (SELECT auth.uid())
+    OR public.is_space_member(id, (SELECT auth.uid()))
   );
 
 -- Users can create spaces (they become the owner)
 CREATE POLICY "Users can create spaces"
   ON spaces FOR INSERT
-  WITH CHECK (auth.uid() = owner_id);
+  WITH CHECK (owner_id = (SELECT auth.uid()));
 
 -- Only owners can update their spaces
 CREATE POLICY "Owners can update their spaces"
   ON spaces FOR UPDATE
-  USING (auth.uid() = owner_id);
+  USING (owner_id = (SELECT auth.uid()));
 
 -- Only owners can delete their spaces
 CREATE POLICY "Owners can delete their spaces"
   ON spaces FOR DELETE
-  USING (auth.uid() = owner_id);
+  USING (owner_id = (SELECT auth.uid()));
 
 -- ============================
 -- Space Members Policies
 -- ============================
 
--- Users can view members of spaces they belong to
+DROP POLICY IF EXISTS "Users can view space members" ON space_members;
+DROP POLICY IF EXISTS "Owners can add members" ON space_members;
+DROP POLICY IF EXISTS "Owners can remove members" ON space_members;
+
+-- Users can view members of spaces they belong to (NO RECURSION using SECURITY DEFINER)
 CREATE POLICY "Users can view space members"
   ON space_members FOR SELECT
   USING (
-    space_id IN (
-      SELECT space_id FROM space_members WHERE user_id = auth.uid()
-    )
+    user_id = (SELECT auth.uid())
+    OR public.is_space_member(space_id, (SELECT auth.uid()))
   );
 
--- Space owners/admins can add members
+-- Space owners/admins can add members, or creator self-insert
 CREATE POLICY "Owners can add members"
   ON space_members FOR INSERT
   WITH CHECK (
-    space_id IN (
-      SELECT space_id FROM space_members
-      WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
-    )
-    OR user_id = auth.uid() -- Allow self-insert (for space creation flow)
+    user_id = (SELECT auth.uid())
+    OR public.is_space_admin_or_owner(space_id, (SELECT auth.uid()))
   );
 
--- Space owners can remove members
+-- Space owners can remove members, or members can leave
 CREATE POLICY "Owners can remove members"
   ON space_members FOR DELETE
   USING (
-    space_id IN (
-      SELECT space_id FROM space_members
-      WHERE user_id = auth.uid() AND role = 'owner'
-    )
+    user_id = (SELECT auth.uid())
+    OR public.is_space_admin_or_owner(space_id, (SELECT auth.uid()))
   );
 
 -- ============================
 -- User Sessions Policies
 -- ============================
 
--- Users can view their own sessions
+DROP POLICY IF EXISTS "Users can view own sessions" ON user_sessions;
+DROP POLICY IF EXISTS "Users can insert own sessions" ON user_sessions;
+DROP POLICY IF EXISTS "Users can update own sessions" ON user_sessions;
+
 CREATE POLICY "Users can view own sessions"
   ON user_sessions FOR SELECT
   USING (auth.uid() = user_id);
 
--- Users can insert their own sessions
 CREATE POLICY "Users can insert own sessions"
   ON user_sessions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- Users can update their own sessions
 CREATE POLICY "Users can update own sessions"
   ON user_sessions FOR UPDATE
   USING (auth.uid() = user_id);
@@ -207,7 +268,7 @@ CREATE TABLE IF NOT EXISTS trades (
   exit_reason TEXT,
   what_went_well TEXT,
   improvements TEXT,
-  emotions TEXT[], -- array of emotion tags
+  emotions TEXT[],
   pre_mood VARCHAR(20),
   post_mood VARCHAR(20),
   mistakes TEXT[],
@@ -231,34 +292,31 @@ CREATE INDEX IF NOT EXISTS idx_trades_space_date ON trades(space_id, date DESC);
 -- ============================
 ALTER TABLE trades ENABLE ROW LEVEL SECURITY;
 
--- Users can view trades in spaces they belong to
+DROP POLICY IF EXISTS "Users can view trades in their spaces" ON trades;
+DROP POLICY IF EXISTS "Users can insert trades in their spaces" ON trades;
+DROP POLICY IF EXISTS "Users can update their own trades" ON trades;
+DROP POLICY IF EXISTS "Users can delete their own trades" ON trades;
+
 CREATE POLICY "Users can view trades in their spaces"
   ON trades FOR SELECT
   USING (
-    space_id IN (
-      SELECT space_id FROM space_members WHERE user_id = auth.uid()
-    )
+    public.is_space_member(space_id, (SELECT auth.uid()))
   );
 
--- Users can insert trades in spaces they belong to
 CREATE POLICY "Users can insert trades in their spaces"
   ON trades FOR INSERT
   WITH CHECK (
-    auth.uid() = user_id
-    AND space_id IN (
-      SELECT space_id FROM space_members WHERE user_id = auth.uid()
-    )
+    user_id = (SELECT auth.uid())
+    AND public.is_space_member(space_id, (SELECT auth.uid()))
   );
 
--- Users can update their own trades
 CREATE POLICY "Users can update their own trades"
   ON trades FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (user_id = (SELECT auth.uid()));
 
--- Users can delete their own trades
 CREATE POLICY "Users can delete their own trades"
   ON trades FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (user_id = (SELECT auth.uid()));
 
 -- ============================================================
 -- 6. Storage Bucket for Trade Screenshots (Optional)
