@@ -484,6 +484,62 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value
   }
 
+  /**
+   * Delete a space and purge its local storage and remote records
+   */
+  async function deleteSpace(spaceId: string): Promise<{ success: boolean; error?: string }> {
+    isLoading.value = true
+    try {
+      if (spaces.value.length <= 1) {
+        return { success: false, error: 'cannot_delete_last_space' }
+      }
+
+      // 1. Remove space from state
+      const targetIndex = spaces.value.findIndex(s => s.id === spaceId)
+      if (targetIndex === -1) {
+        return { success: false, error: 'Space not found' }
+      }
+
+      spaces.value.splice(targetIndex, 1)
+      localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+
+      // 2. Clean all specific localStorage keys for this space
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && (key.endsWith(`_${spaceId}`) || (key === 'spaceos_current_space_id' && localStorage.getItem(key) === spaceId))) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k))
+
+      // 3. Online deletion if applicable
+      if (user.value && user.value.id !== 'demo-user-123') {
+        try {
+          await supabase.from('spaces').delete().eq('id', spaceId)
+        } catch (e) {
+          console.warn('Supabase space delete note:', e)
+        }
+      }
+
+      // 4. If current space was deleted, select another remaining space
+      if (currentSpace.value?.id === spaceId) {
+        if (spaces.value.length > 0) {
+          await selectSpace(spaces.value[0].id)
+        } else {
+          currentSpace.value = null
+          localStorage.removeItem('spaceos_current_space_id')
+        }
+      }
+
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to delete space' }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   function clearError() {
     error.value = null
   }
@@ -503,6 +559,7 @@ export const useAuthStore = defineStore('auth', () => {
     initialize,
     switchPersonalMode,
     selectSpace,
+    deleteSpace,
     fetchProfile,
     fetchSpaces,
     getCurrentSpace,

@@ -436,16 +436,14 @@ export function useTrading() {
      ============================ */
   function loadFromLocalStorage(spaceId: string) {
     const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+    const isDefaultDemoSpace = spaceId === 'space-trader'
     try {
       const key = `spaceos_trades_${spaceId}`
       const saved = localStorage.getItem(key)
       if (saved) {
         trades.value = JSON.parse(saved)
-      } else if (isCleanSlate) {
-        trades.value = []
-        saveToLocalStorage(spaceId, [])
-      } else {
-        // Populate default demo trades customized for space
+      } else if (!isCleanSlate && isDefaultDemoSpace) {
+        // Populate default demo trades ONLY for space-trader
         const initial = DEMO_TRADES.map(t => ({
           ...t,
           space_id: spaceId,
@@ -453,10 +451,13 @@ export function useTrading() {
         }))
         trades.value = initial
         saveToLocalStorage(spaceId, initial)
+      } else {
+        trades.value = []
+        saveToLocalStorage(spaceId, [])
       }
       usingFallback.value = true
     } catch {
-      trades.value = isCleanSlate ? [] : [...DEMO_TRADES]
+      trades.value = []
       usingFallback.value = true
     }
   }

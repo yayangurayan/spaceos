@@ -456,14 +456,14 @@ export function useEvents() {
 
       if (savedEvts) {
         events.value = JSON.parse(savedEvts)
-      } else if (isCleanSlate) {
+      } else if (!isCleanSlate && spaceId === 'space-trader') {
+        seedLocalDefaults()
+        return
+      } else {
         events.value = []
         eventAttachments.value = []
         eventReviews.value = []
         saveToLocalStorage(spaceId)
-        return
-      } else {
-        seedLocalDefaults()
         return
       }
 

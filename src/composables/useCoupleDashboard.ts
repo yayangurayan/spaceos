@@ -160,9 +160,9 @@ export function useCoupleDashboard() {
         upcomingEvents.value = allEvents.slice(0, 3).map(e => ({
           id: e.id || 'ev-' + Math.random(),
           title: e.title || 'Event Bersama',
-          date: e.date || new Date().toISOString().split('T')[0],
-          icon: e.icon || '💕',
-          type: e.type || 'date',
+          date: e.start_time ? e.start_time.split('T')[0] : (e.date || new Date().toISOString().split('T')[0]),
+          icon: e.category === 'Anniversary' ? '🎂' : e.category === 'Date Night' ? '🥂' : e.category === 'Travel' ? '✈️' : '💕',
+          type: e.category || 'general',
         }))
       } else {
         upcomingEvents.value = []
@@ -173,9 +173,9 @@ export function useCoupleDashboard() {
           id: j.id || 'j-' + Math.random(),
           title: j.title || 'Catatan Bersama',
           preview: (j.content || '').slice(0, 100) + '...',
-          date: j.created_at ? j.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          date: j.published_at ? j.published_at.split('T')[0] : (j.created_at ? j.created_at.split('T')[0] : new Date().toISOString().split('T')[0]),
           mood: j.mood || '🥰',
-          author: j.author || 'Pasangan',
+          author: j.author_name || j.author || 'Pasangan',
         }))
       } else {
         recentJournals.value = []
@@ -184,9 +184,9 @@ export function useCoupleDashboard() {
       if (allPhotos.length > 0) {
         recentPhotos.value = allPhotos.slice(0, 4).map(p => ({
           id: p.id || 'p-' + Math.random(),
-          url: p.photo_url || p.url || '',
+          url: p.image_url || p.url || '',
           caption: p.caption || 'Momen Kita ✨',
-          date: p.date_taken || new Date().toISOString().split('T')[0],
+          date: p.taken_at ? p.taken_at.split('T')[0] : (p.date_taken || new Date().toISOString().split('T')[0]),
         }))
         onThisDay.value = recentPhotos.value[0] || null
       } else {

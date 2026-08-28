@@ -23,7 +23,7 @@
         <router-link
           to="/space-selector"
           class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          title="Ganti Space"
+          :title="t('switch_space_title')"
         >
           <Icon name="switch" :size="16" />
         </router-link>
@@ -100,17 +100,16 @@
         <span>{{ item.label }}</span>
       </router-link>
 
-      <!-- Theme Toggle -->
+      <!-- Language Toggle -->
       <button
-        @click="toggleTheme"
+        @click="toggleLang"
         class="nav-item group flex items-center gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all duration-200 w-full text-left"
+        :title="currentLang === 'id' ? t('switch_to_de') : t('switch_to_id')"
       >
-        <Icon
-          :name="isDarkMode ? 'moon' : 'sun'"
-          :size="18"
-          class="shrink-0 text-slate-500 group-hover:text-slate-300 transition-transform duration-200 group-hover:scale-110"
-        />
-        <span>{{ isDarkMode ? 'Dark Mode (Aktif)' : 'Light Mode' }}</span>
+        <span class="shrink-0 text-slate-500 group-hover:text-slate-300 transition-transform duration-200 group-hover:scale-110 text-lg">
+          {{ currentLang === 'id' ? '🇮🇩' : '🇩🇪' }}
+        </span>
+        <span>{{ currentLang === 'id' ? t('switch_to_de') : t('switch_to_id') }}</span>
       </button>
 
       <!-- Logout -->
@@ -123,7 +122,7 @@
           :size="18"
           class="shrink-0 text-slate-500 group-hover:text-rose-400 transition-transform duration-200 group-hover:scale-110"
         />
-        <span>Keluar (Sign Out)</span>
+        <span>{{ t('logout') }}</span>
       </button>
     </div>
   </aside>
@@ -132,28 +131,26 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useNavigation } from '@/composables/useNavigation'
 import Icon from '@/components/ui/Icon.vue'
+import { useI18n } from '@/composables/useI18n'
 
 defineEmits<{
   navigate: []
 }>()
 
 const router = useRouter()
-const appStore = useAppStore()
 const authStore = useAuthStore()
 const toast = useToastStore()
-const { isDarkMode } = storeToRefs(appStore)
 const { currentSpace } = storeToRefs(authStore)
-const { toggleTheme } = appStore
+const { currentLang, toggleLang, t } = useI18n()
 const { navigationSections, footerItems, isActive } = useNavigation()
 
 async function handleLogout() {
   await authStore.logout()
-  toast.info('Sampai Jumpa!', 'Anda telah keluar dari SpaceOS.')
+  toast.info(t('goodbye'), t('logged_out_desc'))
   router.push({ name: 'Login' })
 }
 </script>

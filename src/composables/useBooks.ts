@@ -492,13 +492,13 @@ export function useBooks() {
 
       if (savedBooks) {
         books.value = JSON.parse(savedBooks)
-      } else if (isCleanSlate) {
+      } else if (!isCleanSlate && spaceId === 'space-trader') {
+        seedLocalDefaults()
+        return
+      } else {
         books.value = []
         readingLogs.value = []
         saveToLocalStorage(spaceId)
-        return
-      } else {
-        seedLocalDefaults()
         return
       }
 

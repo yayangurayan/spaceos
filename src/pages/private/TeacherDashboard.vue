@@ -210,6 +210,9 @@ import StatCard from '@/components/ui/StatCard.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import { useTeacherDashboard } from '@/composables/useTeacherDashboard'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 const {
   isLoading,

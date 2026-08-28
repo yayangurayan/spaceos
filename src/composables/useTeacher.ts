@@ -684,7 +684,9 @@ export function useTeacher() {
         materials.value = JSON.parse(localStorage.getItem(mKey) || '[]')
         payments.value = JSON.parse(localStorage.getItem(pyKey) || '[]')
         usingFallback.value = true
-      } else if (isCleanSlate) {
+      } else if (!isCleanSlate && spaceId === 'space-teacher') {
+        seedLocalDefaults()
+      } else {
         students.value = []
         lessons.value = []
         lessonPlans.value = []
@@ -692,8 +694,6 @@ export function useTeacher() {
         payments.value = []
         saveToLocalStorage(spaceId)
         usingFallback.value = true
-      } else {
-        seedLocalDefaults()
       }
     } catch {
       students.value = []

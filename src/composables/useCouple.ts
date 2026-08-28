@@ -548,7 +548,9 @@ export function useCouple() {
         calendarEvents.value = JSON.parse(localStorage.getItem(cKey) || '[]')
         loveNotes.value = JSON.parse(localStorage.getItem(lKey) || '[]')
         usingFallback.value = true
-      } else if (isCleanSlate) {
+      } else if (!isCleanSlate && spaceId === 'space-couple') {
+        seedLocalDefaults()
+      } else {
         albums.value = []
         photos.value = []
         journalEntries.value = []
@@ -556,8 +558,6 @@ export function useCouple() {
         loveNotes.value = []
         saveToLocalStorage(spaceId)
         usingFallback.value = true
-      } else {
-        seedLocalDefaults()
       }
     } catch {
       albums.value = []

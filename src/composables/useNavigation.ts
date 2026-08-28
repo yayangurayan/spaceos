@@ -2,6 +2,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
+import { useI18n } from '@/composables/useI18n'
 import type { NavSection } from '@/types'
 
 /**
@@ -14,6 +15,7 @@ export function useNavigation() {
   const route = useRoute()
   const authStore = useAuthStore()
   const { currentSpace } = storeToRefs(authStore)
+  const { t, currentLang } = useI18n()
 
   /* ============================
      Mobile Sidebar
@@ -67,6 +69,8 @@ export function useNavigation() {
      Navigation Items by Space Type & Category
      ============================ */
   const navigationSections = computed((): NavSection[] => {
+    // Reference currentLang to ensure reactivity upon language switch
+    void currentLang.value
     const space = currentSpace.value
     const spaceType = space?.type
     const category = space?.category
@@ -75,13 +79,13 @@ export function useNavigation() {
     if (spaceType === 'couple') {
       return [
         {
-          title: 'Menu Couple Hub',
+          title: t('menu_couple_hub'),
           items: [
-            { label: 'Dashboard Couple', to: '/', icon: 'home' },
-            { label: 'Our Gallery', to: '/gallery', icon: 'images' },
-            { label: 'Shared Journal', to: '/journal', icon: 'book-heart' },
-            { label: 'Our Calendar', to: '/calendar', icon: 'calendar-heart' },
-            { label: 'Love Notes', to: '/love-notes', icon: 'message-heart' },
+            { label: t('dashboard_couple'), to: '/', icon: 'home' },
+            { label: t('our_gallery'), to: '/gallery', icon: 'images' },
+            { label: t('shared_journal'), to: '/journal', icon: 'book-heart' },
+            { label: t('our_calendar'), to: '/calendar', icon: 'calendar-heart' },
+            { label: t('love_notes'), to: '/love-notes', icon: 'message-heart' },
           ],
         },
       ]
@@ -91,15 +95,15 @@ export function useNavigation() {
     if (category === 'teacher' || name.includes('guru') || name.includes('les') || name.includes('bimbel') || name.includes('tutor') || name.includes('teach') || space?.id === 'space-teacher') {
       return [
         {
-          title: 'Menu Guru Les & Bimbel',
+          title: t('menu_teacher'),
           items: [
-            { label: 'Dashboard Tutor', to: '/', icon: 'home' },
-            { label: 'Students', to: '/students', icon: 'users' },
-            { label: 'Lessons', to: '/lessons', icon: 'graduation-cap' },
-            { label: 'Lesson Plans', to: '/lesson-plans', icon: 'clipboard' },
-            { label: 'Schedule', to: '/schedule', icon: 'calendar' },
-            { label: 'Materials', to: '/materials', icon: 'folder' },
-            { label: 'Income Tracker', to: '/income', icon: 'dollar-sign' },
+            { label: t('dashboard_tutor'), to: '/', icon: 'home' },
+            { label: t('students'), to: '/students', icon: 'users' },
+            { label: t('lessons'), to: '/lessons', icon: 'graduation-cap' },
+            { label: t('lesson_plans'), to: '/lesson-plans', icon: 'clipboard' },
+            { label: t('schedule'), to: '/schedule', icon: 'calendar' },
+            { label: t('materials'), to: '/materials', icon: 'folder' },
+            { label: t('income_tracker'), to: '/income', icon: 'dollar-sign' },
           ],
         },
       ]
@@ -108,25 +112,28 @@ export function useNavigation() {
     // Trader Space & General (default)
     return [
       {
-        title: 'Menu Trader & Habits',
+        title: t('menu_trader'),
         items: [
-          { label: 'Dashboard Trading', to: '/', icon: 'home' },
-          { label: 'Trading Journal', to: '/trading', icon: 'chart-line' },
-          { label: 'Finance Tracker', to: '/finance', icon: 'wallet' },
-          { label: 'Habit Tracker', to: '/habits', icon: 'target' },
-          { label: 'Book Library', to: '/books', icon: 'book' },
-          { label: 'Event Tracker', to: '/events', icon: 'calendar' },
-          { label: 'Weekly Review', to: '/review', icon: 'clipboard' },
+          { label: t('dashboard_trading'), to: '/', icon: 'home' },
+          { label: t('trading_journal'), to: '/trading', icon: 'chart-line' },
+          { label: t('finance_tracker'), to: '/finance', icon: 'wallet' },
+          { label: t('habit_tracker'), to: '/habits', icon: 'target' },
+          { label: t('book_library'), to: '/books', icon: 'book' },
+          { label: t('event_tracker'), to: '/events', icon: 'calendar' },
+          { label: t('weekly_review'), to: '/review', icon: 'clipboard' },
         ],
       },
     ]
   })
 
-  const footerItems = computed((): NavSection => ({
-    items: [
-      { label: 'Settings', to: '/settings', icon: 'settings' },
-    ],
-  }))
+  const footerItems = computed((): NavSection => {
+    void currentLang.value
+    return {
+      items: [
+        { label: t('settings'), to: '/settings', icon: 'settings' },
+      ],
+    }
+  })
 
   return {
     // Mobile

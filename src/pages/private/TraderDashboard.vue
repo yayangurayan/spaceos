@@ -5,25 +5,25 @@
       <div>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-2">
           <span>📈</span>
-          <span>Trading Dashboard</span>
+          <span>{{ t('dashboard_trading') }}</span>
         </h1>
-        <p class="text-slate-400 text-xs sm:text-sm">Overview performa trading, statistik win-rate, dan jurnal kamu.</p>
+        <p class="text-slate-400 text-xs sm:text-sm">{{ t('trading_habit') }}</p>
       </div>
 
       <router-link
         to="/trading"
         class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5"
       >
-        <span>➕ Catat Trade Baru</span>
+        <span>{{ t('add_new_trade') }}</span>
       </router-link>
     </div>
 
     <!-- Error State -->
     <div v-if="error" class="glass rounded-xl p-8 text-center animate-fade-in">
       <span class="text-4xl block mb-3">⚠️</span>
-      <p class="text-white font-medium mb-1">Gagal memuat data</p>
+      <p class="text-white font-medium mb-1">{{ t('failed_load_data') }}</p>
       <p class="text-sm text-slate-400 mb-4">{{ error }}</p>
-      <button class="btn-primary" @click="retry">Coba Lagi</button>
+      <button class="btn-primary" @click="retry">{{ t('try_again') }}</button>
     </div>
 
     <template v-else>
@@ -242,9 +242,11 @@ import StatCard from '@/components/ui/StatCard.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import { useTraderDashboard } from '@/composables/useTraderDashboard'
+import { useI18n } from '@/composables/useI18n'
 import type { TradeEntry } from '@/composables/useTraderDashboard'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const {
   isLoading,

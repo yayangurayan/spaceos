@@ -3,9 +3,9 @@
     <!-- Error State -->
     <div v-if="error" class="glass rounded-xl p-8 text-center animate-fade-in">
       <span class="text-4xl block mb-3">⚠️</span>
-      <p class="text-white font-medium mb-1">Gagal memuat data</p>
+      <p class="text-white font-medium mb-1">{{ t('failed_load_data') }}</p>
       <p class="text-sm text-slate-400 mb-4">{{ error }}</p>
-      <button class="btn-primary" @click="retry">Coba Lagi</button>
+      <button class="btn-primary" @click="retry">{{ t('try_again') }}</button>
     </div>
 
     <template v-else>
@@ -47,7 +47,7 @@
                 <p class="text-2xl font-bold text-white">
                   <AnimatedNumber :value="daysTogether" :duration="1500" />
                 </p>
-                <p class="text-xs text-slate-400">Hari bersama</p>
+                <p class="text-xs text-slate-400">{{ t('days_together') }}</p>
               </div>
             </div>
 
@@ -61,7 +61,7 @@
                   <AnimatedNumber :value="anniversaryCountdown.days" :duration="1500" />
                 </p>
                 <p class="text-xs text-slate-400">
-                  Hari menuju Anniversary ke-{{ anniversaryCountdown.years }}
+                  {{ t('days_to_anniversary', { years: anniversaryCountdown.years }) }}
                 </p>
               </div>
             </div>
@@ -79,13 +79,13 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-white">Akun Aktif: {{ currentUser?.full_name || 'Alex Morgan' }}</span>
+              <span class="text-xs font-bold text-white">{{ t('active_account', { name: currentUser?.full_name || 'Alex Morgan' }) }}</span>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/30">
-                {{ isPartnerSarah ? 'Akun Pasangan (Sarah)' : 'Akun Pemilik (Alex)' }}
+                {{ isPartnerSarah ? t('partner_account') : t('owner_account') }}
               </span>
             </div>
             <p class="text-xs text-slate-400 mt-0.5">
-              Kode Undangan Space: <strong class="text-pink-300 font-mono tracking-wider">{{ coupleInviteCode }}</strong>
+              {{ t('invite_code') }}: <strong class="text-pink-300 font-mono tracking-wider">{{ coupleInviteCode }}</strong>
             </p>
           </div>
         </div>
@@ -97,7 +97,7 @@
             class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 transition-colors"
           >
             <span>📋</span>
-            <span>Salin Kode Undangan</span>
+            <span>{{ t('copy_invite_code') }}</span>
           </button>
 
           <button
@@ -106,7 +106,7 @@
             class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-bold shadow-md shadow-pink-500/20 flex items-center gap-1.5 transition-all hover:scale-102"
           >
             <span>🎭</span>
-            <span>Simulasi Ganti Akun Pasangan</span>
+            <span>{{ t('simulate_partner') }}</span>
           </button>
         </div>
       </div>
@@ -115,7 +115,7 @@
            Memory Lane
            ============================ -->
       <div class="mb-8 animate-fade-in" :style="{ animationDelay: '200ms', opacity: 0 }">
-        <h2 class="text-lg font-semibold text-white mb-4">📸 Memory Lane</h2>
+        <h2 class="text-lg font-semibold text-white mb-4">{{ t('memory_lane') }}</h2>
 
         <SkeletonLoader v-if="isLoading" type="table" :rows="2" :columns="4" />
 
@@ -126,7 +126,7 @@
               📅
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-0.5">On This Day</p>
+              <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-0.5">{{ t('on_this_day') }}</p>
               <p class="text-sm text-white truncate">{{ onThisDay.caption }}</p>
               <p class="text-[11px] text-slate-500">{{ formatDate(onThisDay.date) }}</p>
             </div>
@@ -279,9 +279,11 @@ import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import { useCoupleDashboard } from '@/composables/useCoupleDashboard'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { useI18n } from '@/composables/useI18n'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { t } = useI18n()
 const { user: currentUser, currentSpace } = storeToRefs(authStore)
 
 const isPartnerSarah = computed(() => currentUser.value?.email === 'sarah.parker@spaceos.app')
@@ -289,14 +291,14 @@ const coupleInviteCode = computed(() => (currentSpace.value as any)?.invite_code
 
 function copyInviteCode() {
   navigator.clipboard.writeText(coupleInviteCode.value)
-  toast.success('Kode Undangan Disalin! 📋', `Kode "${coupleInviteCode.value}" siap dikirim ke pasangan Anda.`)
+  toast.success(t('copy_invite_code_success'), t('copy_invite_code_desc', { code: coupleInviteCode.value }))
 }
 
 function handleTogglePartnerAccount() {
   const newUser = authStore.switchPartnerAccount()
   toast.info(
-    'Beralih Akun Pasangan 🎭',
-    `Sekarang login sebagai: ${newUser.full_name} (${newUser.email}). Anda tetap mengakses Couple Space yang sama!`
+    t('switch_partner_account'),
+    t('switch_partner_account_desc', { name: newUser.full_name, email: newUser.email })
   )
 }
 
