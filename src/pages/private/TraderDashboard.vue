@@ -81,7 +81,7 @@
       <!-- Recent Trades Table -->
       <div class="mb-8 animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-white">Trades Terakhir</h2>
+          <h2 class="text-lg font-semibold text-white">{{ t('trades_last') }}</h2>
           <button @click="router.push('/trading')" class="text-accent text-sm hover:underline transition-colors">
             Lihat Semua →
           </button>
@@ -94,11 +94,11 @@
         <div v-else class="glass rounded-xl overflow-hidden">
           <!-- Header -->
           <div class="hidden sm:grid grid-cols-5 gap-4 px-5 py-3 border-b border-slate-700/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            <span>Date</span>
-            <span>Pair</span>
-            <span>Position</span>
-            <span class="text-right">P&L</span>
-            <span class="text-right">Status</span>
+            <span>{{ t('date') }}</span>
+            <span>{{ t('pair') }}</span>
+            <span>{{ t('position') }}</span>
+            <span class="text-right">{{ t('pnl') }}</span>
+            <span class="text-right">{{ t('status') }}</span>
           </div>
 
           <!-- Rows -->
@@ -110,17 +110,17 @@
           >
             <!-- Date -->
             <div class="text-sm text-slate-300">
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block">Date</span>
+              <span class="sm:hidden text-[10px] text-slate-500 uppercase block">{{ t('date') }}</span>
               {{ formatTradeDate(trade.date) }}
             </div>
             <!-- Pair -->
             <div class="text-sm text-white font-medium">
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block">Pair</span>
+              <span class="sm:hidden text-[10px] text-slate-500 uppercase block">{{ t('pair') }}</span>
               {{ trade.pair }}
             </div>
             <!-- Position -->
             <div>
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block mb-0.5">Position</span>
+              <span class="sm:hidden text-[10px] text-slate-500 uppercase block mb-0.5">{{ t('position') }}</span>
               <span
                 class="text-xs font-semibold px-2.5 py-1 rounded-full"
                 :class="trade.position === 'Long'
@@ -134,12 +134,12 @@
             <div class="text-sm font-mono font-semibold text-right"
               :class="trade.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'"
             >
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block font-sans font-normal">P&L</span>
+              <span class="sm:hidden text-[10px] text-slate-500 uppercase block font-sans font-normal">{{ t('pnl') }}</span>
               {{ trade.pnl >= 0 ? '+' : '' }}${{ trade.pnl.toFixed(2) }}
             </div>
             <!-- Status -->
             <div class="text-right">
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block mb-0.5 text-left">Status</span>
+              <span class="sm:hidden text-[10px] text-slate-500 uppercase block mb-0.5 text-left">{{ t('status') }}</span>
               <span
                 class="text-xs font-semibold px-2.5 py-1 rounded-full"
                 :class="trade.status === 'Win'
@@ -157,21 +157,21 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Quick Actions -->
         <div class="animate-fade-in" :style="{ animationDelay: '450ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+          <h2 class="text-lg font-semibold text-white mb-4">{{ t('quick_actions') }}</h2>
           <div class="flex flex-col sm:flex-row gap-3">
             <button
               @click="router.push('/trading')"
               class="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
             >
               <span class="text-lg">📝</span>
-              Add New Trade
+              {{ t('add_new_trade') }}
             </button>
             <button
               @click="router.push('/trading')"
               class="flex-1 glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5"
             >
               <span class="text-lg mr-2">📋</span>
-              View All Trades
+              {{ t('open_trading_journal') }}
             </button>
           </div>
         </div>
@@ -179,9 +179,9 @@
         <!-- Habit Progress (Week View) -->
         <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-white">Habit Progress</h2>
+            <h2 class="text-lg font-semibold text-white">{{ t('habit_progress') }}</h2>
             <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400">
-              🔥 {{ habitStreak }} hari streak
+              🔥 {{ t('streak_days', { days: habitStreak }) }}
             </span>
           </div>
 
@@ -215,7 +215,7 @@
                   :class="day.habits[habitIdx - 1]?.completed
                     ? 'bg-emerald-500/20 text-emerald-400'
                     : 'bg-slate-700/30 text-slate-600'"
-                  :title="`${day.habits[habitIdx - 1]?.name}: ${day.habits[habitIdx - 1]?.completed ? 'Completed' : 'Not done'}`"
+                  :title="`${day.habits[habitIdx - 1]?.name}: ${day.habits[habitIdx - 1]?.completed ? t('completed_short') : t('not_done')}`"
                 >
                   {{ day.habits[habitIdx - 1]?.icon }}
                 </div>

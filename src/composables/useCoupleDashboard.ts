@@ -1,4 +1,7 @@
 import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
+import { supabase } from '@/utils/supabase'
 
 /* ============================
    Types
@@ -31,12 +34,14 @@ export interface CouplePhoto {
    Composable
    ============================ */
 export function useCoupleDashboard() {
+  const authStore = useAuthStore()
+  const { currentSpace } = storeToRefs(authStore)
   const isLoading = ref(true)
   const error = ref<string | null>(null)
 
   // Couple info
-  const coupleNames = ref('Alex & Sarah')
-  const togetherSince = ref('2023-02-14')
+  const coupleNames = computed(() => currentSpace.value?.name || 'Couple Space')
+  const togetherSince = ref(new Date().toISOString().split('T')[0])
 
   const upcomingEvents = ref<CoupleEvent[]>([])
   const recentJournals = ref<JournalEntry[]>([])
@@ -48,10 +53,10 @@ export function useCoupleDashboard() {
    */
   const greeting = computed(() => {
     const hour = new Date().getHours()
-    if (hour < 11) return 'Selamat Pagi'
-    if (hour < 15) return 'Selamat Siang'
-    if (hour < 18) return 'Selamat Sore'
-    return 'Selamat Malam'
+    if (hour < 11) return 'greeting_morning'
+    if (hour < 15) return 'greeting_afternoon'
+    if (hour < 18) return 'greeting_evening'
+    return 'greeting_night'
   })
 
   /**
@@ -106,55 +111,41 @@ export function useCoupleDashboard() {
     try {
       await new Promise(resolve => setTimeout(resolve, 300))
 
+      const spaceId = currentSpace.value?.id
       const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+      const readList = (prefix: string) => {
+        if (!spaceId || isCleanSlate) return []
+        try {
+          const value = JSON.parse(localStorage.getItem(`${prefix}_${spaceId}`) || '[]')
+          return Array.isArray(value) ? value : []
+        } catch {
+          return []
+        }
+      }
 
       let allEvents: any[] = []
       let allJournals: any[] = []
       let allPhotos: any[] = []
 
-      if (!isCleanSlate) {
-        // Read couple events
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key && (key === 'spaceos_couple_events' || key.startsWith('spaceos_couple_events_'))) {
-            try {
-              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                allEvents = parsed
-                break
-              }
-            } catch {}
-          }
-        }
+      if (spaceId && !isCleanSlate) {
+        const [eventsResult, journalsResult, photosResult] = await Promise.all([
+          supabase.from('calendar_events').select('*').eq('space_id', spaceId).order('start_time', { ascending: true }),
+          supabase.from('journal_entries').select('*').eq('space_id', spaceId).order('created_at', { ascending: false }),
+          supabase.from('photos').select('*').eq('space_id', spaceId).order('taken_at', { ascending: false }),
+        ])
 
-        // Read couple journals
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key && (key === 'spaceos_couple_journals' || key.startsWith('spaceos_couple_journals_'))) {
-            try {
-              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                allJournals = parsed
-                break
-              }
-            } catch {}
-          }
-        }
-
-        // Read couple photos
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key && (key === 'spaceos_couple_photos' || key.startsWith('spaceos_couple_photos_'))) {
-            try {
-              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                allPhotos = parsed
-                break
-              }
-            } catch {}
-          }
+        if (!eventsResult.error && !journalsResult.error && !photosResult.error) {
+          allEvents = eventsResult.data || []
+          allJournals = journalsResult.data || []
+          allPhotos = photosResult.data || []
+        } else {
+          allEvents = readList('spaceos_couple_events')
+          allJournals = readList('spaceos_couple_journals')
+          allPhotos = readList('spaceos_couple_photos')
         }
       }
+      const savedTogetherSince = spaceId ? localStorage.getItem(`spaceos_couple_together_since_${spaceId}`) : null
+      togetherSince.value = savedTogetherSince || currentSpace.value?.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
 
       if (allEvents.length > 0) {
         upcomingEvents.value = allEvents.slice(0, 3).map(e => ({

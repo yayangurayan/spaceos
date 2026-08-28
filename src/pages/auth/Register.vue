@@ -1,14 +1,14 @@
 <template>
   <div class="animate-fade-in">
-    <h2 class="text-xl font-semibold text-white mb-1">Create your account</h2>
-    <p class="text-sm text-slate-400 mb-6">Start your journey with SpaceOS</p>
+    <h2 class="text-xl font-semibold text-white mb-1">{{ t('create_account') }}</h2>
+    <p class="text-sm text-slate-400 mb-6">{{ t('start_spaceos_journey') }}</p>
 
     <!-- Register Form -->
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <!-- Full Name -->
       <div>
         <label for="reg-name" class="block text-sm font-medium text-slate-300 mb-1.5">
-          Full name
+          {{ t('full_name_label') }}
         </label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -33,7 +33,7 @@
       <!-- Email -->
       <div>
         <label for="reg-email" class="block text-sm font-medium text-slate-300 mb-1.5">
-          Email address
+          {{ t('email_address') }}
         </label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -58,7 +58,7 @@
       <!-- Password -->
       <div>
         <label for="reg-password" class="block text-sm font-medium text-slate-300 mb-1.5">
-          Password
+          {{ t('password') }}
         </label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -111,7 +111,7 @@
       <!-- Confirm Password -->
       <div>
         <label for="reg-confirm" class="block text-sm font-medium text-slate-300 mb-1.5">
-          Confirm password
+          {{ t('confirm_password') }}
         </label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -142,10 +142,10 @@
             class="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-800 text-accent focus:ring-accent focus:ring-offset-0 focus:ring-offset-dark cursor-pointer"
           />
           <span class="text-sm text-slate-400 group-hover:text-slate-300 transition-colors leading-tight">
-            I agree to the
-            <a href="#" class="text-accent hover:underline">Terms of Service</a>
-            and
-            <a href="#" class="text-accent hover:underline">Privacy Policy</a>
+            {{ t('agree_to') }}
+            <a href="#" class="text-accent hover:underline">{{ t('terms_service') }}</a>
+            {{ currentLang === 'de' ? 'und' : 'dan' }}
+            <a href="#" class="text-accent hover:underline">{{ t('privacy_policy') }}</a>
           </span>
         </label>
         <p v-if="errors.acceptTerms" class="mt-1 text-xs text-red-400 ml-6">{{ errors.acceptTerms }}</p>
@@ -157,7 +157,7 @@
         :disabled="isLoading"
         class="btn-primary w-full relative"
       >
-        <span :class="{ 'opacity-0': isLoading }">Create account</span>
+        <span :class="{ 'opacity-0': isLoading }">{{ t('create_account') }}</span>
         <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center">
           <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
         </div>
@@ -166,9 +166,9 @@
 
     <!-- Sign in link -->
     <p class="mt-6 text-center text-sm text-slate-400">
-      Already have an account?
+      {{ t('has_account') }}
       <router-link to="/auth/login" class="text-accent hover:text-accent/80 font-medium transition-colors">
-        Sign in
+        {{ t('sign_in') }}
       </router-link>
     </p>
   </div>
@@ -179,10 +179,12 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { useI18n } from '@/composables/useI18n'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { currentLang, t } = useI18n()
 
 const isLoading = ref(false)
 const showPassword = ref(false)

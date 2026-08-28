@@ -29,16 +29,6 @@
 
       <button
         type="button"
-        @click="activeTab = 'spaces'"
-        class="px-4 py-2 rounded-xl transition-all flex items-center gap-2"
-        :class="activeTab === 'spaces' ? 'bg-accent text-dark font-bold shadow-md shadow-accent/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'"
-      >
-        <span>🪐</span>
-        <span>{{ t('tab_spaces') }}</span>
-      </button>
-
-      <button
-        type="button"
         @click="activeTab = 'ai'"
         class="px-4 py-2 rounded-xl transition-all flex items-center gap-2"
         :class="activeTab === 'ai' ? 'bg-accent text-dark font-bold shadow-md shadow-accent/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'"
@@ -127,89 +117,7 @@
       </div>
     </div>
 
-    <!-- 4. TAB 2: SPACES MANAGEMENT (HAPUS & KELOLA SPACE) -->
-    <div v-else-if="activeTab === 'spaces'" class="glass rounded-3xl p-6 sm:p-8 border border-slate-700/60 space-y-6 animate-fade-in">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div>
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <span>🪐</span>
-            <span>{{ t('spaces_management_title') }}</span>
-          </h2>
-          <p class="text-xs text-slate-400 mt-0.5">
-            {{ t('spaces_management_desc') }}
-          </p>
-        </div>
-
-        <router-link
-          to="/space-selector"
-          class="btn-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          <span>🚀</span>
-          <span>{{ t('create_new_space_btn') }}</span>
-        </router-link>
-      </div>
-
-      <!-- Spaces List Cards -->
-      <div class="space-y-3">
-        <div
-          v-for="space in spaces"
-          :key="space.id"
-          class="p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          :class="currentSpace?.id === space.id
-            ? 'bg-cyan-500/10 border-cyan-500/40 ring-1 ring-cyan-500/20'
-            : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'"
-        >
-          <div class="flex items-center gap-3.5 min-w-0">
-            <div
-              class="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 shadow-md"
-              :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
-            >
-              {{ space.type === 'couple' ? '💑' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-bold text-white truncate">{{ space.name }}</h3>
-                <span
-                  v-if="currentSpace?.id === space.id"
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
-                >
-                  {{ t('active') }}
-                </span>
-              </div>
-              <p class="text-xs text-slate-400 mt-0.5">
-                {{ space.type === 'couple' ? t('couple_space') : (space.category === 'teacher' || space.id === 'space-teacher') ? t('personal_teacher') : t('personal_trader') }}
-                <span class="text-slate-600 mx-1">•</span>
-                <span class="text-slate-500 text-[11px]">{{ space.role === 'owner' ? t('space_role_owner') : space.role === 'partner' ? t('space_role_partner') : t('space_role_member') }}</span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Actions: Switch / Delete -->
-          <div class="flex items-center gap-2 self-end sm:self-auto">
-            <button
-              v-if="currentSpace?.id !== space.id"
-              type="button"
-              @click="handleSelectSpace(space.id)"
-              class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
-            >
-              {{ t('switch_to_this_space') }}
-            </button>
-
-            <button
-              type="button"
-              @click="promptDeleteSpace(space)"
-              class="px-3 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition-all flex items-center gap-1"
-              :title="t('delete_space')"
-            >
-              <span>🗑️</span>
-              <span>{{ t('delete_space_btn') }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. TAB 3: AI CONFIGURATION -->
+    <!-- 4. TAB 2: AI CONFIGURATION -->
     <div v-else-if="activeTab === 'ai'" class="glass rounded-3xl p-6 sm:p-8 border border-slate-700/60 space-y-6 animate-fade-in">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div>
@@ -450,50 +358,6 @@
       </div>
     </div>
 
-    <!-- Confirmation Modal: Delete Space -->
-    <teleport to="body">
-      <transition name="modal">
-        <div
-          v-if="spaceToDelete"
-          class="fixed inset-0 z-[110] flex items-center justify-center p-4"
-        >
-          <div class="absolute inset-0 bg-black/80 backdrop-blur-md" @click="spaceToDelete = null"></div>
-          <div class="relative z-10 w-full max-w-md glass rounded-3xl p-6 sm:p-8 border border-rose-500/50 shadow-2xl space-y-5 bg-slate-950/95 animate-slide-in">
-            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-3xl mx-auto shadow-lg">
-              🗑️
-            </div>
-
-            <div class="text-center space-y-1.5">
-              <h3 class="text-lg font-extrabold text-white">
-                {{ t('confirm_delete_space') }}
-              </h3>
-              <p class="text-xs text-slate-300 leading-relaxed">
-                {{ t('confirm_delete_space_desc', { name: spaceToDelete.name }) }}
-              </p>
-            </div>
-
-            <div class="flex gap-3 pt-2">
-              <button
-                type="button"
-                @click="spaceToDelete = null"
-                class="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
-              >
-                {{ t('cancel') }}
-              </button>
-
-              <button
-                type="button"
-                @click="confirmDeleteSpace"
-                class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white shadow-lg shadow-rose-600/30 transition-all"
-              >
-                {{ t('yes_delete_space') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </transition>
-    </teleport>
-
     <!-- Confirmation Modal: Clean Slate Reset -->
     <teleport to="body">
       <transition name="modal">
@@ -546,25 +410,22 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useI18n } from '@/composables/useI18n'
 import { useAI, type AIProvider } from '@/composables/useAI'
-import type { SpaceWithMeta } from '@/types'
+import { supabase } from '@/utils/supabase'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToastStore()
 const { t } = useI18n()
 const { getSettings, saveSettings } = useAI()
-const { spaces, currentSpace, user } = storeToRefs(authStore)
+const { spaces, user } = storeToRefs(authStore)
 
-const activeTab = ref<'profile' | 'spaces' | 'ai' | 'notifications' | 'backup' | 'danger'>('profile')
+const activeTab = ref<'profile' | 'ai' | 'notifications' | 'backup' | 'danger'>('profile')
 const showApiKey = ref(false)
 const showResetModal = ref(false)
-const spaceToDelete = ref<SpaceWithMeta | null>(null)
 
 const profileForm = reactive({
   fullName: user.value?.full_name || 'Alex Morgan',
@@ -591,34 +452,6 @@ function saveProfile() {
     localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
   }
   toast.success(t('profile_updated'), t('profile_saved_desc'))
-}
-
-async function handleSelectSpace(spaceId: string) {
-  const res = await authStore.selectSpace(spaceId)
-  if (res.success) {
-    toast.success(t('space_switched'), t('space_switched_desc'))
-    router.push('/')
-  }
-}
-
-function promptDeleteSpace(space: SpaceWithMeta) {
-  if (spaces.value.length <= 1) {
-    toast.warning(t('cannot_delete_last_space'), t('cannot_delete_last_space_desc'))
-    return
-  }
-  spaceToDelete.value = space
-}
-
-async function confirmDeleteSpace() {
-  if (!spaceToDelete.value) return
-  const target = spaceToDelete.value
-  const res = await authStore.deleteSpace(target.id)
-  spaceToDelete.value = null
-  if (res.success) {
-    toast.success(t('delete_space_success'), t('delete_space_success_desc', { name: target.name }))
-  } else {
-    toast.error('Gagal menghapus space', res.error || 'Terjadi kesalahan.')
-  }
 }
 
 function saveAISettings() {
@@ -666,8 +499,25 @@ function openResetConfirmModal() {
   showResetModal.value = true
 }
 
-function executeCleanSlateReset() {
+async function executeCleanSlateReset() {
+  const spaceIds = spaces.value.map(space => space.id)
+  if (user.value?.id !== 'demo-user-123' && spaceIds.length > 0) {
+    const tables = [
+      'trades', 'transactions', 'budgets', 'habits', 'books', 'events',
+      'students', 'lessons', 'lesson_plans', 'materials', 'payments',
+      'albums', 'photos', 'journal_entries', 'calendar_events', 'love_notes',
+    ] as const
+    const results = await Promise.all(tables.map(table => supabase.from(table).delete().in('space_id', spaceIds)))
+    const remoteError = results.find(result => result.error)?.error
+    if (remoteError) {
+      toast.error(t('reset_failed'), remoteError.message)
+      return
+    }
+  }
+
   localStorage.setItem('spaceos_clean_slate', 'true')
+  const savedSpaces = localStorage.getItem('spaceos_spaces')
+  const savedCurrentSpaceId = localStorage.getItem('spaceos_current_space_id')
 
   // Identify all application data keys and purge them
   const keysToRemove: string[] = []
@@ -678,7 +528,10 @@ function executeCleanSlateReset() {
         key !== 'spaceos_clean_slate' &&
         key !== 'spaceos_auth_user' &&
         key !== 'spaceos_ai_settings' &&
-        key !== 'spaceos_lang'
+        key !== 'spaceos_lang' &&
+        key !== 'spaceos_spaces' &&
+        key !== 'spaceos_current_space_id' &&
+        key !== 'spaceos_pending_spaces'
       ) {
         keysToRemove.push(key)
       }
@@ -688,6 +541,8 @@ function executeCleanSlateReset() {
   keysToRemove.forEach(k => {
     localStorage.removeItem(k)
   })
+  if (savedSpaces) localStorage.setItem('spaceos_spaces', savedSpaces)
+  if (savedCurrentSpaceId) localStorage.setItem('spaceos_current_space_id', savedCurrentSpaceId)
 
   showResetModal.value = false
   toast.success(t('clean_slate_success'), t('clean_slate_success_desc'))
@@ -699,6 +554,8 @@ function executeCleanSlateReset() {
 
 function restoreDemoPresets() {
   localStorage.removeItem('spaceos_clean_slate')
+  const savedSpaces = localStorage.getItem('spaceos_spaces')
+  const savedCurrentSpaceId = localStorage.getItem('spaceos_current_space_id')
 
   // Purge data keys so composables re-seed sample presets fresh
   const keysToRemove: string[] = []
@@ -708,7 +565,9 @@ function restoreDemoPresets() {
       if (
         key !== 'spaceos_auth_user' &&
         key !== 'spaceos_ai_settings' &&
-        key !== 'spaceos_lang'
+        key !== 'spaceos_lang' &&
+        key !== 'spaceos_spaces' &&
+        key !== 'spaceos_current_space_id'
       ) {
         keysToRemove.push(key)
       }
@@ -718,6 +577,8 @@ function restoreDemoPresets() {
   keysToRemove.forEach(k => {
     localStorage.removeItem(k)
   })
+  if (savedSpaces) localStorage.setItem('spaceos_spaces', savedSpaces)
+  if (savedCurrentSpaceId) localStorage.setItem('spaceos_current_space_id', savedCurrentSpaceId)
 
   toast.success(t('demo_data_restored'), t('demo_data_restored_desc'))
   setTimeout(() => {

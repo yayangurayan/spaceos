@@ -370,6 +370,7 @@ export function useHabits() {
     const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
     try {
       const savedHabits = localStorage.getItem(`spaceos_habits_${spaceId}`)
+      const savedLogs = localStorage.getItem(`spaceos_logs_${spaceId}`)
       const isDefaultDemoSpace = spaceId === 'space-trader' || spaceId === 'space-teacher'
       if (savedHabits) {
         habits.value = JSON.parse(savedHabits)

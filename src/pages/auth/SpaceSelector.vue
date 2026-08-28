@@ -456,7 +456,7 @@ function formatTimeAgo(dateStr: string): string {
   if (minutes < 60) return `${minutes}m`
   if (hours < 24) return `${hours}h`
   if (days < 7) return `${days}d`
-  return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
+  return date.toLocaleDateString(currentLang.value === 'de' ? 'de-DE' : 'id-ID', { month: 'short', day: 'numeric' })
 }
 
 async function handleSelectSpace(spaceId: string, event: MouseEvent) {
@@ -483,7 +483,7 @@ async function handleSelectSpace(spaceId: string, event: MouseEvent) {
     toast.success(t('entering_space'), t('opening_space_desc'))
     router.push('/')
   } else {
-    toast.error('Error', 'Gagal memilih space.')
+    toast.error(t('error_title'), t('select_space_failed'))
   }
 }
 
@@ -509,7 +509,7 @@ async function confirmDeleteSpace() {
 
 async function handleCreateSpace() {
   if (!newSpace.name.trim()) {
-    toast.error('Error', 'Nama space harus diisi.')
+    toast.error(t('error_title'), t('space_name_required'))
     return
   }
 
@@ -555,8 +555,7 @@ async function handleCreateSpace() {
 
     // 3. Optional online sync
     if (authStore.user && authStore.user.id !== 'demo-user-123') {
-      try {
-        await supabase
+      const { error: insertError } = await supabase
           .from('spaces')
           .insert({
             id: createdSpace.id,
@@ -566,8 +565,12 @@ async function handleCreateSpace() {
             icon: createdSpace.icon,
             owner_id: userId,
           })
-      } catch (err) {
-        console.warn('Supabase space sync note:', err)
+      if (insertError) {
+        const pending = JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]
+        localStorage.setItem('spaceos_pending_spaces', JSON.stringify([createdSpace, ...pending]))
+      } else {
+        const pending = (JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]).filter(space => space.id !== createdSpace.id)
+        localStorage.setItem('spaceos_pending_spaces', JSON.stringify(pending))
       }
     }
 
@@ -582,7 +585,7 @@ async function handleCreateSpace() {
     await authStore.selectSpace(createdSpace.id)
     router.push('/')
   } catch (err: any) {
-    toast.error('Gagal membuat space', err?.message || 'Silakan coba lagi.')
+    toast.error(t('create_space_failed'), err?.message || t('try_again'))
   } finally {
     createLoading.value = false
   }

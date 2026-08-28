@@ -11,7 +11,6 @@ import ToastContainer from '@/components/ToastContainer.vue'
 const appStore = useAppStore()
 
 onMounted(() => {
-  // Ensure theme class is applied on initial mount
-  appStore.applyTheme(appStore.theme)
+  appStore.applyTheme()
 })
 </script>

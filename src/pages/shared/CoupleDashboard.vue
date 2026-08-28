@@ -31,7 +31,7 @@
 
         <div class="relative z-10">
           <!-- Greeting -->
-          <p class="text-rose-400/80 text-sm font-medium mb-1">{{ greeting }} 💕</p>
+          <p class="text-rose-400/80 text-sm font-medium mb-1">{{ t(greeting) }} 💕</p>
           <h1 class="text-2xl sm:text-3xl font-bold text-white mb-4">
             {{ coupleNames }}
           </h1>
@@ -161,7 +161,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Upcoming Events -->
         <div class="animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">📅 Upcoming Events</h2>
+          <h2 class="text-lg font-semibold text-white mb-4">{{ t('upcoming_events') }}</h2>
 
           <SkeletonLoader v-if="isLoading" type="circle" />
 
@@ -202,7 +202,7 @@
 
         <!-- Recent Journal Entries -->
         <div class="animate-fade-in" :style="{ animationDelay: '450ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">📖 Journal Terakhir</h2>
+          <h2 class="text-lg font-semibold text-white mb-4">{{ t('recent_journals') }}</h2>
 
           <SkeletonLoader v-if="isLoading" type="text" />
 
@@ -242,7 +242,7 @@
            Quick Actions
            ============================ -->
       <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
-        <h2 class="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+        <h2 class="text-lg font-semibold text-white mb-4">{{ t('quick_actions') }}</h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <router-link
             to="/gallery"
@@ -283,7 +283,7 @@ import { useI18n } from '@/composables/useI18n'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
-const { t } = useI18n()
+const { currentLang, t } = useI18n()
 const { user: currentUser, currentSpace } = storeToRefs(authStore)
 
 const isPartnerSarah = computed(() => currentUser.value?.email === 'sarah.parker@spaceos.app')
@@ -317,11 +317,11 @@ const {
 } = useCoupleDashboard()
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString(currentLang.value === 'de' ? 'de-DE' : 'id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function formatFullDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('id-ID', {
+  return new Date(dateStr).toLocaleDateString(currentLang.value === 'de' ? 'de-DE' : 'id-ID', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -333,9 +333,9 @@ function daysUntil(dateStr: string): string {
   const now = new Date()
   const target = new Date(dateStr)
   const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  if (diff === 0) return 'Hari ini'
-  if (diff === 1) return 'Besok'
-  return `${diff} hari lagi`
+  if (diff === 0) return t('today')
+  if (diff === 1) return t('tomorrow')
+  return t('days_left', { days: diff })
 }
 </script>
 

@@ -130,8 +130,10 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       console.warn('Auth initialization fallback note:', err)
       user.value = { ...DEFAULT_DEMO_USER }
-      spaces.value = [...DEFAULT_SPACES]
-      currentSpace.value = DEFAULT_SPACES[0]
+      const cachedSpaces = localStorage.getItem('spaceos_spaces')
+      spaces.value = cachedSpaces ? JSON.parse(cachedSpaces) : [...DEFAULT_SPACES]
+      const cachedSpaceId = localStorage.getItem('spaceos_current_space_id')
+      currentSpace.value = spaces.value.find(space => space.id === cachedSpaceId) || spaces.value[0] || null
     } finally {
       _initialized.value = true
       isLoading.value = false
@@ -250,15 +252,18 @@ export const useAuthStore = defineStore('auth', () => {
         const customSpacesStr = localStorage.getItem('spaceos_spaces')
         spaces.value = customSpacesStr ? JSON.parse(customSpacesStr) : [...DEFAULT_SPACES]
       } else {
-        spaces.value = data.map((item: any) => ({
+        const remoteSpaces = data.map((item: any) => ({
           ...item.spaces,
           role: item.role,
           last_accessed: new Date().toISOString(),
         }))
+        const pendingSpaces = JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]
+        spaces.value = [...remoteSpaces, ...pendingSpaces.filter(space => !remoteSpaces.some(remote => remote.id === space.id))]
         localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
       }
     } catch {
-      spaces.value = [...DEFAULT_SPACES]
+      const cachedSpaces = localStorage.getItem('spaceos_spaces')
+      spaces.value = cachedSpaces ? JSON.parse(cachedSpaces) : [...DEFAULT_SPACES]
     } finally {
       isLoading.value = false
     }
@@ -494,33 +499,30 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: 'cannot_delete_last_space' }
       }
 
-      // 1. Remove space from state
       const targetIndex = spaces.value.findIndex(s => s.id === spaceId)
       if (targetIndex === -1) {
         return { success: false, error: 'Space not found' }
       }
 
+      // Purge remote data first so a failed request cannot leave local state misleadingly deleted.
+      if (user.value && user.value.id !== 'demo-user-123') {
+        const { error: deleteError } = await supabase.from('spaces').delete().eq('id', spaceId)
+        if (deleteError) return { success: false, error: deleteError.message }
+      }
+
       spaces.value.splice(targetIndex, 1)
       localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
 
-      // 2. Clean all specific localStorage keys for this space
       const keysToRemove: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
-        if (key && (key.endsWith(`_${spaceId}`) || (key === 'spaceos_current_space_id' && localStorage.getItem(key) === spaceId))) {
+        const isSpaceKey = key?.endsWith(`_${spaceId}`)
+        const isLegacyCoupleKey = spaceId === 'space-couple' && !!key?.match(/^spaceos_couple_(albums|photos|journals|events|notes)$/)
+        if (key && (isSpaceKey || isLegacyCoupleKey || (key === 'spaceos_current_space_id' && localStorage.getItem(key) === spaceId))) {
           keysToRemove.push(key)
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k))
-
-      // 3. Online deletion if applicable
-      if (user.value && user.value.id !== 'demo-user-123') {
-        try {
-          await supabase.from('spaces').delete().eq('id', spaceId)
-        } catch (e) {
-          console.warn('Supabase space delete note:', e)
-        }
-      }
 
       // 4. If current space was deleted, select another remaining space
       if (currentSpace.value?.id === spaceId) {

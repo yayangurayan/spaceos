@@ -6,11 +6,11 @@
         <div class="flex items-center gap-2.5">
           <span class="text-2xl sm:text-3xl">📚</span>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Book Library
+            {{ t('book_library_title') }}
           </h1>
         </div>
         <p class="text-xs sm:text-sm text-slate-400 mt-1">
-          Koleksi bacaan, catatan pembelajaran, dan pelacak konsistensi membaca di SpaceOS.
+          {{ t('book_library_desc') }}
         </p>
       </div>
 
@@ -24,7 +24,7 @@
             ? 'bg-slate-700 text-white border-slate-600'
             : 'bg-dark/60 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'"
         >
-          <span>{{ showStats ? '📕 Tutup Statistik' : '📊 Statistik & Heatmap' }}</span>
+          <span>{{ showStats ? '📕 ' + t('close_statistics') : '📊 ' + t('stats_heatmap') }}</span>
         </button>
 
         <button
@@ -33,7 +33,7 @@
           class="btn-primary flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
         >
           <Icon name="plus" :size="16" />
-          <span>Tambah Buku</span>
+          <span>{{ t('add_book') }}</span>
         </button>
       </div>
     </div>
@@ -44,60 +44,60 @@
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">✅</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Total</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">{{ t('total_trades') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-emerald-400">
           <AnimatedNumber :value="libraryStats.totalRead" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Buku Selesai</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('books_finished') }}</p>
       </div>
 
       <!-- Currently Reading -->
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">📖</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400">Aktif</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400">{{ t('active') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-cyan-300">
           <AnimatedNumber :value="libraryStats.currentlyReading" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Sedang Dibaca</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('currently_reading') }}</p>
       </div>
 
       <!-- Books This Year -->
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">🗓️</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300">Tahun Ini</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300">{{ t('this_year') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-white">
           <AnimatedNumber :value="libraryStats.booksThisYear" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Buku di {{ currentYear }}</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('books_this_year') }} {{ currentYear }}</p>
       </div>
 
       <!-- Reading Streak -->
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">🔥</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Streak</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">{{ t('streak') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-amber-400">
           <AnimatedNumber :value="libraryStats.readingStreak" suffix=" Hari" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Konsistensi Membaca</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('reading_consistency') }}</p>
       </div>
 
       <!-- Pages Read This Month -->
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5 col-span-2 sm:col-span-1">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">📄</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300">Bulan Ini</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300">{{ t('this_month') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-accent">
           <AnimatedNumber :value="libraryStats.pagesReadThisMonth" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Halaman Dibaca</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('pages_read') }}</p>
       </div>
     </div>
 
@@ -128,7 +128,7 @@
               : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
           >
             <span>📖</span>
-            <span>Sedang Baca</span>
+            <span>{{ t('currently_reading') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
               :class="selectedShelf === 'reading' ? 'bg-dark/30 text-dark' : 'bg-slate-800 text-slate-400'"
@@ -147,7 +147,7 @@
               : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
           >
             <span>✅</span>
-            <span>Selesai</span>
+            <span>{{ t('completed') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
               :class="selectedShelf === 'completed' ? 'bg-dark/30 text-dark' : 'bg-slate-800 text-slate-400'"
@@ -166,7 +166,7 @@
               : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
           >
             <span>📚</span>
-            <span>Ingin Dibaca</span>
+            <span>{{ t('want_to_read') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
               :class="selectedShelf === 'want_to_read' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'"
@@ -185,7 +185,7 @@
               : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
           >
             <span>⭐</span>
-            <span>Favorit</span>
+            <span>{{ t('favorite') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
               :class="selectedShelf === 'favorites' ? 'bg-dark/30 text-dark' : 'bg-slate-800 text-slate-400'"
@@ -225,16 +225,16 @@
     <!-- 5. Books Grid -->
     <div v-if="filteredBooks.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-3">
       <span class="text-4xl block mb-1">📖</span>
-      <h3 class="text-base font-bold text-white">Tidak ada buku di rak ini</h3>
+      <h3 class="text-base font-bold text-white">{{ t('no_books_on_shelf') }}</h3>
       <p class="text-xs text-slate-500 max-w-sm mx-auto">
-        {{ searchQuery || selectedGenre !== 'all' ? 'Coba ubah kata kunci pencarian atau filter genre.' : 'Mulai tambahkan buku untuk mengisi rak ini.' }}
+        {{ searchQuery || selectedGenre !== 'all' ? t('change_search_filter') : t('add_book_to_shelf') }}
       </p>
       <button
         type="button"
         @click="openAddModal"
         class="btn-primary mt-2 px-5 py-2 text-xs font-bold rounded-xl"
       >
-        + Tambah Buku Sekarang
+        + {{ t('add_book_now') }}
       </button>
     </div>
 
@@ -293,6 +293,7 @@ import ReadingProgressModal from '@/components/books/ReadingProgressModal.vue'
 import BookStatsCharts from '@/components/books/BookStatsCharts.vue'
 import BookDetailModal from '@/components/books/BookDetailModal.vue'
 import { useBooks, GENRE_OPTIONS } from '@/composables/useBooks'
+import { useI18n } from '@/composables/useI18n'
 import type { Book, BookFormData, BookShelfStatus } from '@/types'
 
 const {
@@ -316,6 +317,7 @@ const {
   updateProgress,
   deleteReadingLog,
 } = useBooks()
+const { t } = useI18n()
 
 const showStats = ref(false)
 const availableGenres = GENRE_OPTIONS

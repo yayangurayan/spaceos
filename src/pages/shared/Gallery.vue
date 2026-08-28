@@ -6,11 +6,11 @@
         <div class="flex items-center gap-2.5">
           <span class="text-2xl sm:text-3xl">📸</span>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Galeri Kenangan (Our Gallery)
+            {{ t('gallery_title') }}
           </h1>
         </div>
         <p class="text-xs sm:text-sm text-slate-400 mt-1">
-          Koleksi foto liburan, kencan, dan setiap momen berharga yang kita lewati berdua.
+          {{ t('gallery_desc') }}
         </p>
       </div>
 
@@ -22,7 +22,7 @@
           class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:text-white border border-slate-700 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors"
         >
           <Icon name="upload" :size="14" />
-          <span>Unggah Foto</span>
+          <span>{{ t('upload_photo') }}</span>
         </button>
 
         <button
@@ -31,7 +31,7 @@
           class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2 transition-all"
         >
           <Icon name="plus" :size="16" />
-          <span>Buat Album Baru</span>
+          <span>{{ t('create_album') }}</span>
         </button>
       </div>
     </div>
@@ -48,7 +48,7 @@
             :class="currentView === 'albums' ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-md' : 'text-slate-400 hover:text-white'"
           >
             <span>📁</span>
-            <span>Album ({{ albums.length }})</span>
+            <span>{{ t('album_count', { count: albums.length }) }}</span>
           </button>
 
           <button
@@ -58,7 +58,7 @@
             :class="currentView === 'timeline' ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-md' : 'text-slate-400 hover:text-white'"
           >
             <span>⏱️</span>
-            <span>Linimasa / Timeline ({{ photos.length }})</span>
+            <span>{{ t('timeline_count', { count: photos.length }) }}</span>
           </button>
         </div>
       </div>
@@ -79,14 +79,14 @@
     <div v-if="currentView === 'albums'" class="space-y-6">
       <div v-if="filteredAlbums.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-3">
         <span class="text-4xl block">📁</span>
-        <h3 class="text-base font-bold text-white">Belum ada album yang cocok</h3>
+        <h3 class="text-base font-bold text-white">{{ t('no_matching_albums') }}</h3>
         <p class="text-xs text-slate-500">Mulai buat album pertama untuk mengabadikan momen perjalanan kalian.</p>
         <button
           type="button"
           @click="openCreateAlbum"
           class="px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-md mt-2"
         >
-          + Buat Album Kenangan
+          + {{ t('create_memory_album') }}
         </button>
       </div>
 
@@ -106,7 +106,7 @@
     <div v-else class="space-y-8">
       <div v-if="groupedTimelinePhotos.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-2">
         <span class="text-4xl block">📸</span>
-        <p class="text-base font-bold text-white">Belum ada foto yang diunggah</p>
+        <p class="text-base font-bold text-white">{{ t('no_uploaded_photos') }}</p>
         <p class="text-xs text-slate-500">Klik "Unggah Foto" untuk menambahkan foto kenangan kalian.</p>
       </div>
 
@@ -192,9 +192,11 @@ import AlbumFormModal from '@/components/gallery/AlbumFormModal.vue'
 import PhotoUploadModal from '@/components/gallery/PhotoUploadModal.vue'
 import PhotoLightbox from '@/components/gallery/PhotoLightbox.vue'
 import { useCouple } from '@/composables/useCouple'
+import { useI18n } from '@/composables/useI18n'
 import type { Album, AlbumFormData, Photo, PhotoFormData } from '@/types'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const {
   albums,

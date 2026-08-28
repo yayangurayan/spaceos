@@ -1,7 +1,7 @@
 <template>
   <div class="animate-fade-in">
-    <h2 class="text-xl font-semibold text-white mb-1">Sign in to your account</h2>
-    <p class="text-sm text-slate-400 mb-6">Welcome back to SpaceOS</p>
+    <h2 class="text-xl font-semibold text-white mb-1">{{ t('sign_in_account') }}</h2>
+    <p class="text-sm text-slate-400 mb-6">{{ t('welcome_spaceos') }}</p>
 
     <!-- Social Login -->
     <div class="grid grid-cols-2 gap-3 mb-6">
@@ -38,7 +38,7 @@
         <div class="w-full border-t border-slate-700"></div>
       </div>
       <div class="relative flex justify-center text-xs">
-        <span class="bg-surface px-3 text-slate-500">or continue with email</span>
+        <span class="bg-surface px-3 text-slate-500">{{ t('or_continue_email') }}</span>
       </div>
     </div>
 
@@ -47,7 +47,7 @@
       <!-- Email -->
       <div>
         <label for="login-email" class="block text-sm font-medium text-slate-300 mb-1.5">
-          Email address
+          {{ t('email_address') }}
         </label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -73,14 +73,14 @@
       <div>
         <div class="flex items-center justify-between mb-1.5">
           <label for="login-password" class="block text-sm font-medium text-slate-300">
-            Password
+            {{ t('password') }}
           </label>
           <button
             type="button"
             class="text-xs text-accent hover:text-accent/80 transition-colors"
             @click="showForgotPassword = true"
           >
-            Forgot password?
+            {{ t('forgot_password') }}
           </button>
         </div>
         <div class="relative">
@@ -122,7 +122,7 @@
         :disabled="isLoading"
         class="btn-primary w-full relative"
       >
-        <span :class="{ 'opacity-0': isLoading }">Sign in</span>
+        <span :class="{ 'opacity-0': isLoading }">{{ t('sign_in') }}</span>
         <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center">
           <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
         </div>
@@ -131,9 +131,9 @@
 
     <!-- Sign up link -->
     <p class="mt-6 text-center text-sm text-slate-400">
-      Don't have an account?
+      {{ t('no_account') }}
       <router-link to="/auth/register" class="text-accent hover:text-accent/80 font-medium transition-colors">
-        Sign up
+        {{ t('sign_up') }}
       </router-link>
     </p>
 
@@ -146,8 +146,8 @@
         >
           <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showForgotPassword = false"></div>
           <div class="relative z-10 w-full max-w-sm glass rounded-2xl p-6 animate-slide-in">
-            <h3 class="text-lg font-semibold text-white mb-2">Reset your password</h3>
-            <p class="text-sm text-slate-400 mb-4">Enter your email and we'll send you a reset link.</p>
+            <h3 class="text-lg font-semibold text-white mb-2">{{ t('reset_password') }}</h3>
+            <p class="text-sm text-slate-400 mb-4">{{ t('reset_password_desc') }}</p>
             <form @submit.prevent="handleForgotPassword">
               <input
                 v-model="forgotEmail"
@@ -162,14 +162,14 @@
                   class="flex-1 px-4 py-2.5 rounded-lg border border-slate-600 text-sm text-slate-300 hover:bg-slate-700/50 transition-colors"
                   @click="showForgotPassword = false"
                 >
-                  Cancel
+                  {{ t('cancel') }}
                 </button>
                 <button
                   type="submit"
                   :disabled="forgotLoading"
                   class="btn-primary flex-1 relative"
                 >
-                  <span :class="{ 'opacity-0': forgotLoading }">Send link</span>
+                  <span :class="{ 'opacity-0': forgotLoading }">{{ t('send_link') }}</span>
                   <div v-if="forgotLoading" class="absolute inset-0 flex items-center justify-center">
                     <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   </div>
@@ -189,10 +189,12 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { supabase } from '@/utils/supabase'
+import { useI18n } from '@/composables/useI18n'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { t } = useI18n()
 
 const isLoading = ref(false)
 const showPassword = ref(false)

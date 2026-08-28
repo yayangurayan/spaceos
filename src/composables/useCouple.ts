@@ -363,6 +363,7 @@ export function useCouple() {
       if (aData && aData.length > 0) {
         albums.value = aData
         usingFallback.value = false
+        localStorage.setItem(`spaceos_couple_seeded_${spaceId}`, 'true')
 
         // Fetch photos, journals, comments, calendar events, love notes
         const [phRes, jRes, calRes, lnRes] = await Promise.all([
@@ -378,7 +379,8 @@ export function useCouple() {
         if (lnRes.data) loveNotes.value = lnRes.data
       } else {
         const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-        if (isCleanSlate) {
+        const hasBeenSeeded = localStorage.getItem(`spaceos_couple_seeded_${spaceId}`) === 'true'
+        if (isCleanSlate || hasBeenSeeded) {
           albums.value = []
           photos.value = []
           journalEntries.value = []
@@ -467,6 +469,7 @@ export function useCouple() {
       if (jRes.data) journalEntries.value = jRes.data
       if (calRes.data) calendarEvents.value = calRes.data
       if (lnRes.data) loveNotes.value = lnRes.data
+      localStorage.setItem(`spaceos_couple_seeded_${spaceId}`, 'true')
     } catch {
       seedLocalDefaults()
     }

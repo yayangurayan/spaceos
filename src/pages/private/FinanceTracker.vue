@@ -6,11 +6,11 @@
         <div class="flex items-center gap-2.5">
           <span class="text-2xl sm:text-3xl">💵</span>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Finance Tracker
+            {{ t('finance_tracker_title') }}
           </h1>
         </div>
         <p class="text-xs sm:text-sm text-slate-400 mt-1">
-          Pantau arus kas, kepatuhan anggaran belanja, dan tingkat tabungan kamu.
+          {{ t('finance_tracker_desc') }}
         </p>
       </div>
 
@@ -22,7 +22,7 @@
           class="flex-1 sm:flex-none glass rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-white hover:border-accent/40 flex items-center justify-center gap-2 transition-all"
         >
           <span>📥</span>
-          <span>Export CSV</span>
+          <span>{{ t('export_csv') }}</span>
         </button>
 
         <button
@@ -31,7 +31,7 @@
           class="flex-1 sm:flex-none btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
         >
           <span class="text-base leading-none">+</span>
-          <span>Catat Transaksi</span>
+          <span>{{ t('record_transaction') }}</span>
         </button>
       </div>
     </div>
@@ -59,7 +59,7 @@
         <div>
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <span>📑</span>
-            <span>Riwayat Transaksi</span>
+            <span>{{ t('transaction_history') }}</span>
           </h2>
           <p class="text-xs text-slate-400">
             Menampilkan {{ paginatedTransactions.length }} dari {{ filteredTransactions.length }} transaksi
@@ -76,7 +76,7 @@
               class="px-3 py-1.5 rounded-md font-medium transition-all"
               :class="filters.type === 'all' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
             >
-              Semua
+              {{ t('all') }}
             </button>
             <button
               type="button"
@@ -84,7 +84,7 @@
               class="px-3 py-1.5 rounded-md font-medium transition-all"
               :class="filters.type === 'income' ? 'bg-emerald-500/20 text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'"
             >
-              + Pemasukan
+              + {{ t('income') }}
             </button>
             <button
               type="button"
@@ -92,7 +92,7 @@
               class="px-3 py-1.5 rounded-md font-medium transition-all"
               :class="filters.type === 'expense' ? 'bg-rose-500/20 text-rose-400 font-bold' : 'text-slate-400 hover:text-slate-200'"
             >
-              - Pengeluaran
+              - {{ t('expense') }}
             </button>
           </div>
 
@@ -104,7 +104,7 @@
               class="px-2.5 py-1.5 rounded-md font-medium transition-all"
               :class="viewMode === 'table' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
             >
-              📑 Tabel
+              📑 {{ t('table') }}
             </button>
             <button
               type="button"
@@ -112,7 +112,7 @@
               class="px-2.5 py-1.5 rounded-md font-medium transition-all"
               :class="viewMode === 'card' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
             >
-              🗂️ Kartu
+              🗂️ {{ t('card') }}
             </button>
           </div>
         </div>
@@ -130,7 +130,7 @@
         </div>
         <div>
           <select v-model="filters.category" class="input-field text-xs h-9">
-            <option value="all">Semua Kategori</option>
+            <option value="all">{{ t('all_categories') }}</option>
             <option v-for="cat in availableCategories" :key="cat.id" :value="cat.name">
               {{ cat.icon }} {{ cat.name }}
             </option>
@@ -138,12 +138,12 @@
         </div>
         <div>
           <select v-model="filters.dateRange" class="input-field text-xs h-9">
-            <option value="this_month">Bulan Ini</option>
-            <option value="last_month">Bulan Lalu</option>
-            <option value="this_week">Minggu Ini</option>
-            <option value="today">Hari Ini</option>
-            <option value="last_30_days">30 Hari Terakhir</option>
-            <option value="all">Semua Waktu</option>
+            <option value="this_month">{{ t('this_month') }}</option>
+            <option value="last_month">{{ t('last_month') }}</option>
+            <option value="this_week">{{ t('this_week') }}</option>
+            <option value="today">{{ t('today') }}</option>
+            <option value="last_30_days">{{ t('last_30_days') }}</option>
+            <option value="all">{{ t('all_time') }}</option>
           </select>
         </div>
       </div>
@@ -151,8 +151,8 @@
       <!-- Empty State -->
       <div v-if="filteredTransactions.length === 0" class="py-12 text-center text-slate-400 space-y-2">
         <span class="text-4xl block mb-1">💸</span>
-        <h4 class="text-sm font-bold text-white">Tidak ada transaksi</h4>
-        <p class="text-xs text-slate-500">Tidak ada data yang cocok dengan kriteria filter saat ini.</p>
+        <h4 class="text-sm font-bold text-white">{{ t('no_transactions') }}</h4>
+        <p class="text-xs text-slate-500">{{ t('no_matching_transactions') }}</p>
         <button
           type="button"
           @click="openAddModal"
@@ -332,6 +332,7 @@ import FinanceCharts from '@/components/finance/FinanceCharts.vue'
 import BudgetTracker from '@/components/finance/BudgetTracker.vue'
 import TransactionForm from '@/components/finance/TransactionForm.vue'
 import { useFinance } from '@/composables/useFinance'
+import { useI18n } from '@/composables/useI18n'
 import type { Transaction, TransactionFormData } from '@/types'
 
 const {
@@ -352,6 +353,7 @@ const {
   setBudget,
   exportTransactionsCSV,
 } = useFinance()
+const { t } = useI18n()
 
 const viewMode = ref<'table' | 'card'>('table')
 const showModal = ref(false)
