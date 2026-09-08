@@ -1,4 +1,6 @@
 import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
 /* ============================
    Types
@@ -38,6 +40,7 @@ export interface TraderStats {
    Composable
    ============================ */
 export function useTraderDashboard() {
+  const { currentSpace } = storeToRefs(useAuthStore())
   const isLoading = ref(true)
   const error = ref<string | null>(null)
 
@@ -68,23 +71,19 @@ export function useTraderDashboard() {
 
       const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
 
-      // 1. Fetch trades
-      let allTrades: any[] = []
-      if (!isCleanSlate) {
-        // Find trades in localStorage
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key && (key === 'spaceos_trades' || key.startsWith('spaceos_trades_'))) {
-            try {
-              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                allTrades = parsed
-                break
-              }
-            } catch {}
-          }
+      const spaceId = currentSpace.value?.id || 'space-private'
+      const readList = (prefix: string) => {
+        if (isCleanSlate) return []
+        try {
+          const parsed = JSON.parse(localStorage.getItem(`${prefix}_${spaceId}`) || '[]')
+          return Array.isArray(parsed) ? parsed : []
+        } catch {
+          return []
         }
       }
+
+      // Keep dashboard metrics scoped to the active workspace.
+      const allTrades = readList('spaceos_trades')
 
       // Compute trade statistics
       if (allTrades.length > 0) {
@@ -147,21 +146,7 @@ export function useTraderDashboard() {
       }
 
       // 2. Fetch habits
-      let savedHabits: any[] = []
-      if (!isCleanSlate) {
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key && (key === 'spaceos_habits' || key.startsWith('spaceos_habits_'))) {
-            try {
-              const parsed = JSON.parse(localStorage.getItem(key) || '[]')
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                savedHabits = parsed
-                break
-              }
-            } catch {}
-          }
-        }
-      }
+      const savedHabits = readList('spaceos_habits')
 
       const today = new Date()
       const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']

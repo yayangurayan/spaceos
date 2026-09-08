@@ -5,9 +5,9 @@
       <div>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-2">
           <span>📈</span>
-          <span>{{ t('dashboard_trading') }}</span>
+          <span>{{ currentSpace?.category === 'private' ? t('private_dashboard') : t('dashboard_trading') }}</span>
         </h1>
-        <p class="text-slate-400 text-xs sm:text-sm">{{ t('trading_habit') }}</p>
+        <p class="text-slate-400 text-xs sm:text-sm">{{ currentSpace?.category === 'private' ? t('private_space_subtitle') : t('trading_habit') }}</p>
       </div>
 
       <router-link
@@ -244,9 +244,12 @@ import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import { useTraderDashboard } from '@/composables/useTraderDashboard'
 import { useI18n } from '@/composables/useI18n'
 import type { TradeEntry } from '@/composables/useTraderDashboard'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const { t } = useI18n()
+const { currentSpace } = storeToRefs(useAuthStore())
 
 const {
   isLoading,

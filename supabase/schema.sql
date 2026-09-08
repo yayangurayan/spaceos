@@ -22,10 +22,32 @@ CREATE TABLE IF NOT EXISTS spaces (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('personal', 'couple')),
+  category TEXT NOT NULL DEFAULT 'private' CHECK (category IN ('private', 'trader', 'teacher', 'general')),
   icon TEXT,
   owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE spaces ADD COLUMN IF NOT EXISTS category TEXT;
+UPDATE spaces
+SET category = CASE
+  WHEN type = 'couple' THEN 'general'
+  WHEN lower(name) LIKE '%guru%' OR lower(name) LIKE '%les%' OR lower(name) LIKE '%teacher%' THEN 'teacher'
+  WHEN lower(name) LIKE '%trad%' OR lower(name) LIKE '%trader%' THEN 'trader'
+  ELSE 'private'
+END
+WHERE category IS NULL;
+ALTER TABLE spaces ALTER COLUMN category SET DEFAULT 'private';
+ALTER TABLE spaces ALTER COLUMN category SET NOT NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'spaces_category_check'
+  ) THEN
+    ALTER TABLE spaces ADD CONSTRAINT spaces_category_check
+      CHECK (category IN ('private', 'trader', 'teacher', 'general'));
+  END IF;
+END $$;
 
 -- ============================
 -- 3. Space Members Table

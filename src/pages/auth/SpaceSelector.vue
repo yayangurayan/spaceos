@@ -129,9 +129,9 @@
               <!-- Space Icon -->
               <div
                 class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-transform duration-150 group-hover:scale-110 shadow-md"
-                :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
+                :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : space.category === 'private' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
               >
-                {{ space.type === 'couple' ? '💑' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
+                {{ space.type === 'couple' ? '💑' : space.category === 'private' ? '🔒' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
               </div>
               <!-- Space Info -->
               <div class="flex-1 min-w-0">
@@ -142,11 +142,13 @@
                   class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
                   :class="space.type === 'couple'
                     ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
+                    : space.category === 'private'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     : (space.category === 'teacher' || space.id === 'space-teacher')
                     ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                     : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'"
                 >
-                  {{ space.type === 'couple' ? t('couple_space') : (space.category === 'teacher' || space.id === 'space-teacher') ? t('personal_teacher') : t('personal_trader') }}
+                  {{ space.type === 'couple' ? t('couple_space') : space.category === 'private' ? t('private_space') : (space.category === 'teacher' || space.id === 'space-teacher') ? t('personal_teacher') : t('personal_trader') }}
                 </span>
               </div>
               
@@ -201,7 +203,23 @@
               <!-- Space Category / Template -->
               <div>
                 <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ t('choose_category_type') }}</label>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <!-- Private Personal Space -->
+                  <button
+                    type="button"
+                    @click="setSpaceTemplate('personal', 'private', '🔒', 'My Private Space')"
+                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
+                    :class="newSpace.category === 'private'
+                      ? 'border-emerald-500 bg-emerald-500/15 text-white shadow-lg shadow-emerald-500/10 scale-102 ring-1 ring-emerald-500'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
+                  >
+                    <span class="text-2xl mb-1 block">🔒</span>
+                    <div>
+                      <span class="text-xs font-bold text-white block">{{ t('private_space_title') }}</span>
+                      <span class="text-[10px] text-slate-400 leading-tight">{{ t('private_space_desc') }}</span>
+                    </div>
+                  </button>
+
                   <!-- Option 1: Trading & Habits -->
                   <button
                     type="button"
@@ -422,15 +440,15 @@ async function handleJoinSpace() {
 const newSpace = reactive({
   name: 'My Trading Space',
   type: 'personal' as SpaceType,
-  category: 'trader' as SpaceCategory,
-  icon: '📈',
+  category: 'private' as SpaceCategory,
+  icon: '🔒',
 })
 
 function setSpaceTemplate(type: SpaceType, category: SpaceCategory, icon: string, defaultName: string) {
   newSpace.type = type
   newSpace.category = category
   newSpace.icon = icon
-  if (!newSpace.name || newSpace.name === 'My Trading Space' || newSpace.name === 'Bimbingan Belajar' || newSpace.name === 'Our Romantic Space 💕') {
+  if (!newSpace.name || newSpace.name === 'My Private Space' || newSpace.name === 'My Trading Space' || newSpace.name === 'Bimbingan Belajar' || newSpace.name === 'Our Romantic Space 💕') {
     newSpace.name = defaultName
   }
 }
@@ -576,10 +594,10 @@ async function handleCreateSpace() {
 
     toast.success(t('space_created_success'), t('space_created_ready', { name: createdSpace.name }))
     showCreateModal.value = false
-    newSpace.name = 'My Trading Space'
+    newSpace.name = 'My Private Space'
     newSpace.type = 'personal'
-    newSpace.category = 'trader'
-    newSpace.icon = '📈'
+    newSpace.category = 'private'
+    newSpace.icon = '🔒'
 
     // Automatically enter the new empty space
     await authStore.selectSpace(createdSpace.id)

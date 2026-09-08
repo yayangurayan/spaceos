@@ -78,6 +78,16 @@ const routes: RouteRecordRaw[] = [
         name: 'Review',
         component: () => import('@/pages/private/WeeklyReview.vue'),
       },
+      {
+        path: 'diary',
+        name: 'PrivateDiary',
+        component: () => import('@/pages/private/PrivateDiary.vue'),
+      },
+      {
+        path: 'personal-calendar',
+        name: 'PrivateCalendar',
+        component: () => import('@/pages/private/PrivateCalendar.vue'),
+      },
       // Personal Space (Guru Les / Teacher) routes
       {
         path: 'students',

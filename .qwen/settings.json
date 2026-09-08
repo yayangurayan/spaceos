@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "spaceos-filesystem": {
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\Kerjaan Web\\SpaceOS"
+      ],
+      "timeout": 30000,
+      "trust": false
+    }
+  },
+  "$version": 4
+}

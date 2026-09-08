@@ -5,22 +5,11 @@ import type { Profile, SpaceWithMeta } from '@/types'
 
 const DEFAULT_SPACES: SpaceWithMeta[] = [
   {
-    id: 'space-trader',
-    name: 'Personal — Trading & Habits',
+    id: 'space-private',
+    name: 'Personal — Private Space',
     type: 'personal',
-    category: 'trader',
+    category: 'private',
     icon: '📈',
-    owner_id: 'demo-user',
-    role: 'owner',
-    last_accessed: new Date().toISOString(),
-    created_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'space-teacher',
-    name: 'Personal — Guru Les & Bimbel',
-    type: 'personal',
-    category: 'teacher',
-    icon: '🎓',
     owner_id: 'demo-user',
     role: 'owner',
     last_accessed: new Date().toISOString(),
@@ -32,6 +21,17 @@ const DEFAULT_SPACES: SpaceWithMeta[] = [
     type: 'couple',
     category: 'general',
     icon: '💑',
+    owner_id: 'demo-user',
+    role: 'owner',
+    last_accessed: new Date().toISOString(),
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'space-teacher',
+    name: 'Personal — Guru Les & Bimbel',
+    type: 'personal',
+    category: 'teacher',
+    icon: '🎓',
     owner_id: 'demo-user',
     role: 'owner',
     last_accessed: new Date().toISOString(),
@@ -141,7 +141,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Switch between Personal Trader and Personal Teacher mode
+  * Switch legacy personal modes without changing the new Private Space model.
    */
   async function switchPersonalMode(mode: 'trading' | 'teacher') {
     const targetSpaceId = mode === 'teacher' ? 'space-teacher' : 'space-trader'
@@ -150,7 +150,9 @@ export const useAuthStore = defineStore('auth', () => {
     let target = spaces.value.find(s => s.id === targetSpaceId || (mode === 'teacher' && (s.category === 'teacher' || s.name.toLowerCase().includes('guru'))))
     
     if (!target) {
-      target = mode === 'teacher' ? DEFAULT_SPACES[1] : DEFAULT_SPACES[0]
+      target = mode === 'teacher'
+        ? DEFAULT_SPACES.find(space => space.category === 'teacher') || DEFAULT_SPACES[0]
+        : DEFAULT_SPACES.find(space => space.category === 'private') || DEFAULT_SPACES[0]
       spaces.value.unshift(target)
       localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
     }
@@ -240,6 +242,7 @@ export const useAuthStore = defineStore('auth', () => {
             id,
             name,
             type,
+            category,
             icon,
             owner_id,
             created_at

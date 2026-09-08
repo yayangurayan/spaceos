@@ -19,6 +19,10 @@ const activeDashboard = computed(() => {
 
   if (!space) return TraderDashboard
 
+  if (space.category === 'private') {
+    return TraderDashboard
+  }
+
   // Couple space
   if (space.type === 'couple') {
     return CoupleDashboard

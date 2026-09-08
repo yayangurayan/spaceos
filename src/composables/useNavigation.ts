@@ -91,6 +91,25 @@ export function useNavigation() {
       ]
     }
 
+    if (category === 'private') {
+      return [
+        {
+          title: t('menu_private_space'),
+          items: [
+            { label: t('private_dashboard'), to: '/', icon: 'home' },
+            { label: t('trading_journal'), to: '/trading', icon: 'chart-line' },
+            { label: t('finance_tracker'), to: '/finance', icon: 'wallet' },
+            { label: t('habit_tracker'), to: '/habits', icon: 'target' },
+            { label: t('book_library'), to: '/books', icon: 'book' },
+            { label: t('private_diary'), to: '/diary', icon: 'book-heart' },
+            { label: t('private_calendar'), to: '/personal-calendar', icon: 'calendar' },
+            { label: t('event_tracker'), to: '/events', icon: 'calendar' },
+            { label: t('weekly_review'), to: '/review', icon: 'clipboard' },
+          ],
+        },
+      ]
+    }
+
     // Teacher / Guru Les Space
     if (category === 'teacher' || name.includes('guru') || name.includes('les') || name.includes('bimbel') || name.includes('tutor') || name.includes('teach') || space?.id === 'space-teacher') {
       return [
