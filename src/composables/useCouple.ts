@@ -226,29 +226,34 @@ export const DEFAULT_LOVE_NOTES_PRESETS = [
   },
 ]
 
+// ============================================================
+// Module-level Singleton State for Couple Space
+// Ensures live sync across all components in the application
+// ============================================================
+const albums = ref<Album[]>([])
+const photos = ref<Photo[]>([])
+const journalEntries = ref<JournalEntry[]>([])
+const calendarEvents = ref<CoupleCalendarEvent[]>([])
+const loveNotes = ref<LoveNote[]>([])
+
+const isLoading = ref(false)
+const isSaving = ref(false)
+const error = ref<string | null>(null)
+const usingFallback = ref(false)
+
+// Lightbox State
+const activeLightboxIndex = ref<number | null>(null)
+const lightboxPhotos = ref<Photo[]>([])
+const isSlideshowActive = ref(false)
+
+// Realtime Channel Tracker
+let activeChannelSpaceId: string | null = null
+let currentRealtimeChannel: any = null
+
 export function useCouple() {
   const authStore = useAuthStore()
   const toast = useToastStore()
   const { currentSpace, user } = storeToRefs(authStore)
-
-  /* ============================
-     State
-     ============================ */
-  const albums = ref<Album[]>([])
-  const photos = ref<Photo[]>([])
-  const journalEntries = ref<JournalEntry[]>([])
-  const calendarEvents = ref<CoupleCalendarEvent[]>([])
-  const loveNotes = ref<LoveNote[]>([])
-
-  const isLoading = ref(false)
-  const isSaving = ref(false)
-  const error = ref<string | null>(null)
-  const usingFallback = ref(false)
-
-  // Lightbox State
-  const activeLightboxIndex = ref<number | null>(null)
-  const lightboxPhotos = ref<Photo[]>([])
-  const isSlideshowActive = ref(false)
 
   /* ============================
      Computed: Albums with Photo Count
@@ -331,9 +336,149 @@ export function useCouple() {
   }
 
   /* ============================
+     Setup Supabase Realtime
+     ============================ */
+  function setupRealtime(spaceId: string) {
+    if (!spaceId || spaceId === 'space-couple' || spaceId.startsWith('demo-')) return
+
+    if (activeChannelSpaceId === spaceId && currentRealtimeChannel) {
+      return
+    }
+
+    if (currentRealtimeChannel) {
+      try {
+        supabase.removeChannel(currentRealtimeChannel)
+      } catch (err) {
+        console.warn('Realtime cleanup note:', err)
+      }
+      currentRealtimeChannel = null
+    }
+
+    activeChannelSpaceId = spaceId
+
+    currentRealtimeChannel = supabase
+      .channel(`couple_space_${spaceId}`)
+      // 1. Journal entries live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'journal_entries', filter: `space_id=eq.${spaceId}` },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as any
+            if (!journalEntries.value.some(j => j.id === newRow.id)) {
+              let authorName = newRow.author_id === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasangan'
+              if (newRow.author_id && newRow.author_id !== user.value?.id) {
+                const { data: prof } = await supabase.from('profiles').select('full_name, email').eq('id', newRow.author_id).single()
+                if (prof) authorName = prof.full_name || prof.email || authorName
+              }
+              journalEntries.value.unshift({
+                ...newRow,
+                author_name: authorName,
+                comments: [],
+                reactions: {},
+              })
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedRow = payload.new as any
+            const idx = journalEntries.value.findIndex(j => j.id === updatedRow.id)
+            if (idx !== -1) {
+              journalEntries.value[idx] = { ...journalEntries.value[idx], ...updatedRow }
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as any
+            journalEntries.value = journalEntries.value.filter(j => j.id !== oldRow.id)
+          }
+        }
+      )
+      // 2. Calendar events live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'calendar_events', filter: `space_id=eq.${spaceId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as any
+            if (!calendarEvents.value.some(e => e.id === newRow.id)) {
+              calendarEvents.value.push(newRow)
+              calendarEvents.value.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedRow = payload.new as any
+            const idx = calendarEvents.value.findIndex(e => e.id === updatedRow.id)
+            if (idx !== -1) calendarEvents.value[idx] = { ...calendarEvents.value[idx], ...updatedRow }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as any
+            calendarEvents.value = calendarEvents.value.filter(e => e.id !== oldRow.id)
+          }
+        }
+      )
+      // 3. Love notes live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'love_notes', filter: `space_id=eq.${spaceId}` },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as any
+            if (!loveNotes.value.some(n => n.id === newRow.id)) {
+              let fromName = newRow.from_user === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasanganmu 💕'
+              if (newRow.from_user && newRow.from_user !== user.value?.id) {
+                const { data: prof } = await supabase.from('profiles').select('full_name, email').eq('id', newRow.from_user).single()
+                if (prof) fromName = prof.full_name || prof.email || fromName
+              }
+              loveNotes.value.unshift({ ...newRow, from_name: fromName })
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedRow = payload.new as any
+            const idx = loveNotes.value.findIndex(n => n.id === updatedRow.id)
+            if (idx !== -1) loveNotes.value[idx] = { ...loveNotes.value[idx], ...updatedRow }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as any
+            loveNotes.value = loveNotes.value.filter(n => n.id !== oldRow.id)
+          }
+        }
+      )
+      // 4. Photos live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'photos', filter: `space_id=eq.${spaceId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as any
+            if (!photos.value.some(p => p.id === newRow.id)) photos.value.unshift(newRow)
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedRow = payload.new as any
+            const idx = photos.value.findIndex(p => p.id === updatedRow.id)
+            if (idx !== -1) photos.value[idx] = { ...photos.value[idx], ...updatedRow }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as any
+            photos.value = photos.value.filter(p => p.id !== oldRow.id)
+          }
+        }
+      )
+      // 5. Albums live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'albums', filter: `space_id=eq.${spaceId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as any
+            if (!albums.value.some(a => a.id === newRow.id)) albums.value.unshift(newRow)
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedRow = payload.new as any
+            const idx = albums.value.findIndex(a => a.id === updatedRow.id)
+            if (idx !== -1) albums.value[idx] = { ...albums.value[idx], ...updatedRow }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as any
+            albums.value = albums.value.filter(a => a.id !== oldRow.id)
+          }
+        }
+      )
+      .subscribe()
+  }
+
+  /* ============================
      Fetch Data (Supabase + LocalStorage Fallback)
      ============================ */
-  async function fetchCoupleData() {
+  async function fetchCoupleData(_force = false) {
     isLoading.value = true
     error.value = null
 
@@ -341,55 +486,57 @@ export function useCouple() {
       const spaceId = currentSpace.value?.id
 
       if (!spaceId) {
-        seedLocalDefaults()
-        usingFallback.value = true
+        albums.value = []
+        photos.value = []
+        journalEntries.value = []
+        calendarEvents.value = []
+        loveNotes.value = []
         return
       }
 
-      // 1. Fetch albums
-      const { data: aData, error: aErr } = await supabase
-        .from('albums')
-        .select('*')
-        .eq('space_id', spaceId)
-        .order('created_at', { ascending: false })
+      const isRealUser = user.value && !user.value.id.startsWith('demo-user')
+      const isLegacyDemoSpace = spaceId === 'space-couple'
 
-      if (aErr) {
-        console.warn('Couple fetch notice, fallback to local:', aErr.message)
-        loadFromLocalStorage(spaceId)
-        usingFallback.value = true
-        return
-      }
-
-      if (aData && aData.length > 0) {
-        albums.value = aData
-        usingFallback.value = false
-        localStorage.setItem(`spaceos_couple_seeded_${spaceId}`, 'true')
-
-        // Fetch photos, journals, comments, calendar events, love notes
-        const [phRes, jRes, calRes, lnRes] = await Promise.all([
+      if (isRealUser && spaceId) {
+        // Fetch ALL couple entities independently so an empty album NEVER wipes journals or events!
+        const [aRes, phRes, jRes, calRes, lnRes] = await Promise.all([
+          supabase.from('albums').select('*').eq('space_id', spaceId).order('created_at', { ascending: false }),
           supabase.from('photos').select('*').eq('space_id', spaceId).order('taken_at', { ascending: false }),
-          supabase.from('journal_entries').select('*').eq('space_id', spaceId).order('created_at', { ascending: false }),
+          supabase.from('journal_entries').select('*, profiles:author_id(full_name, email, avatar_url)').eq('space_id', spaceId).order('created_at', { ascending: false }),
           supabase.from('calendar_events').select('*').eq('space_id', spaceId).order('start_time', { ascending: true }),
-          supabase.from('love_notes').select('*').eq('space_id', spaceId).order('is_pinned', { ascending: false }),
+          supabase.from('love_notes').select('*, sender:from_user(full_name, email)').eq('space_id', spaceId).order('is_pinned', { ascending: false }),
         ])
 
-        if (phRes.data) photos.value = phRes.data
-        if (jRes.data) journalEntries.value = jRes.data
-        if (calRes.data) calendarEvents.value = calRes.data
-        if (lnRes.data) loveNotes.value = lnRes.data
-      } else {
-        const isLegacyDemoSpace = spaceId === 'space-couple'
-        const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-        const hasBeenSeeded = localStorage.getItem(`spaceos_couple_seeded_${spaceId}`) === 'true'
-        if (isCleanSlate || hasBeenSeeded || !isLegacyDemoSpace) {
-          albums.value = []
-          photos.value = []
-          journalEntries.value = []
-          calendarEvents.value = []
-          loveNotes.value = []
-        } else {
-          await seedPresetsToDb(spaceId)
+        if (!aRes.error && aRes.data) albums.value = aRes.data
+        if (!phRes.error && phRes.data) photos.value = phRes.data
+        if (!jRes.error && jRes.data) {
+          journalEntries.value = jRes.data.map((j: any) => ({
+            ...j,
+            author_name: j.profiles?.full_name || j.profiles?.email || (j.author_id === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasangan'),
+            comments: j.comments || [],
+            reactions: j.reactions || {},
+          }))
         }
+        if (!calRes.error && calRes.data) calendarEvents.value = calRes.data
+        if (!lnRes.error && lnRes.data) {
+          loveNotes.value = lnRes.data.map((n: any) => ({
+            ...n,
+            from_name: n.sender?.full_name || n.sender?.email || (n.from_user === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasanganmu 💕'),
+          }))
+        }
+
+        usingFallback.value = false
+        setupRealtime(spaceId)
+        return
+      }
+
+      // If legacy demo space and unseeded, seed defaults; otherwise load clean local storage
+      const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+      const hasBeenSeeded = localStorage.getItem(`spaceos_couple_seeded_${spaceId}`) === 'true'
+      if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
+        seedLocalDefaults()
+      } else {
+        loadFromLocalStorage(spaceId)
       }
     } catch (err: any) {
       console.error('fetchCoupleData error:', err)
@@ -399,82 +546,8 @@ export function useCouple() {
     }
   }
 
-  /* ============================
-     Seed Database
-     ============================ */
-  async function seedPresetsToDb(spaceId: string) {
-    const userId = user.value?.id || null
 
-    try {
-      const toInsertAlbums = DEFAULT_ALBUM_PRESETS.map(a => ({
-        ...a,
-        space_id: spaceId,
-        created_by: userId,
-      }))
 
-      const { data: seededAlbums, error: aErr } = await supabase
-        .from('albums')
-        .insert(toInsertAlbums)
-        .select()
-
-      if (aErr || !seededAlbums) {
-        seedLocalDefaults()
-        return
-      }
-
-      albums.value = seededAlbums
-
-      // Seed photos linked to albums
-      const toInsertPhotos = DEFAULT_PHOTO_PRESETS.map(p => ({
-        space_id: spaceId,
-        album_id: seededAlbums[p.albumIdx]?.id || seededAlbums[0].id,
-        image_url: p.image_url,
-        caption: p.caption,
-        taken_at: p.taken_at,
-        location: p.location,
-        tagged_partner: p.tagged_partner,
-        created_by: userId,
-      }))
-
-      const toInsertJournals = DEFAULT_JOURNAL_PRESETS.map(j => ({
-        space_id: spaceId,
-        author_id: userId,
-        title: j.title,
-        content: j.content,
-        mood: j.mood,
-        tags: j.tags,
-        is_published: j.is_published,
-        published_at: j.published_at,
-      }))
-
-      const toInsertEvents = DEFAULT_CALENDAR_PRESETS.map(e => ({
-        ...e,
-        space_id: spaceId,
-        created_by: userId,
-      }))
-
-      const toInsertNotes = DEFAULT_LOVE_NOTES_PRESETS.map(n => ({
-        ...n,
-        space_id: spaceId,
-        from_user: userId,
-      }))
-
-      const [phRes, jRes, calRes, lnRes] = await Promise.all([
-        supabase.from('photos').insert(toInsertPhotos).select(),
-        supabase.from('journal_entries').insert(toInsertJournals).select(),
-        supabase.from('calendar_events').insert(toInsertEvents).select(),
-        supabase.from('love_notes').insert(toInsertNotes).select(),
-      ])
-
-      if (phRes.data) photos.value = phRes.data
-      if (jRes.data) journalEntries.value = jRes.data
-      if (calRes.data) calendarEvents.value = calRes.data
-      if (lnRes.data) loveNotes.value = lnRes.data
-      localStorage.setItem(`spaceos_couple_seeded_${spaceId}`, 'true')
-    } catch {
-      seedLocalDefaults()
-    }
-  }
 
   function seedLocalDefaults() {
     const spaceId = currentSpace.value?.id || 'couple-demo'
@@ -809,16 +882,26 @@ export function useCouple() {
         const { data, error: err } = await supabase
           .from('journal_entries')
           .insert([payload])
-          .select()
+          .select('*, profiles:author_id(full_name, email, avatar_url)')
           .single()
 
         if (err) throw err
-        if (data) journalEntries.value.unshift(data)
+        if (data) {
+          const entryWithMeta: JournalEntry = {
+            ...data,
+            author_name: data.profiles?.full_name || data.profiles?.email || (user.value?.full_name || 'Kamu'),
+            comments: [],
+            reactions: {},
+          }
+          if (!journalEntries.value.some(j => j.id === entryWithMeta.id)) {
+            journalEntries.value.unshift(entryWithMeta)
+          }
+        }
       } else {
         const mockEntry: JournalEntry = {
           ...payload,
           id: 'jr-' + Date.now(),
-          author_name: 'Kamu',
+          author_name: user.value?.full_name || 'Kamu',
           created_at: new Date().toISOString(),
           comments: [],
           reactions: {},
@@ -826,6 +909,7 @@ export function useCouple() {
         journalEntries.value.unshift(mockEntry)
         saveToLocalStorage(spaceId)
       }
+
 
       if (formData.is_published) {
         triggerHeartBurst()
@@ -917,6 +1001,18 @@ export function useCouple() {
       j.userReaction = emoji
       if (usingFallback.value) saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
     }
+
+    if (!usingFallback.value && user.value && !user.value.id.startsWith('demo-user')) {
+      try {
+        await supabase
+          .from('journal_reactions')
+          .upsert({
+            entry_id: entryId,
+            user_id: user.value.id,
+            emoji,
+          }, { onConflict: 'entry_id,user_id' })
+      } catch {}
+    }
   }
 
   async function addJournalComment(entryId: string, content: string, parentId?: string) {
@@ -937,8 +1033,22 @@ export function useCouple() {
     j.comments.push(newComment)
     if (usingFallback.value) saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
 
+    if (!usingFallback.value && user.value && !user.value.id.startsWith('demo-user')) {
+      try {
+        await supabase
+          .from('journal_comments')
+          .insert({
+            entry_id: entryId,
+            author_id: user.value.id,
+            content: content.trim(),
+            parent_id: parentId || null,
+          })
+      } catch {}
+    }
+
     toast.success('Komentar Terkirim', 'Pesan kamu berhasil ditambahkan.')
   }
+
 
   /* ============================
      CRUD: Calendar Events & ICS
@@ -972,7 +1082,12 @@ export function useCouple() {
           .single()
 
         if (err) throw err
-        if (data) calendarEvents.value.push(data)
+        if (data) {
+          if (!calendarEvents.value.some(e => e.id === data.id)) {
+            calendarEvents.value.push(data)
+            calendarEvents.value.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+          }
+        }
       } else {
         const mockEvt: CoupleCalendarEvent = {
           ...payload,
@@ -982,6 +1097,7 @@ export function useCouple() {
         calendarEvents.value.push(mockEvt)
         saveToLocalStorage(spaceId)
       }
+
 
       triggerHeartBurst()
       toast.success('Event Terjadwal 💕', `"${formData.title}" berhasil ditambahkan ke kalender.`)
@@ -1111,11 +1227,19 @@ export function useCouple() {
         const { data, error: err } = await supabase
           .from('love_notes')
           .insert([payload])
-          .select()
+          .select('*, sender:from_user(full_name, email)')
           .single()
 
         if (err) throw err
-        if (data) loveNotes.value.unshift(data)
+        if (data) {
+          const noteWithSender: LoveNote = {
+            ...data,
+            from_name: data.sender?.full_name || data.sender?.email || (user.value?.full_name || 'Kamu 💕'),
+          }
+          if (!loveNotes.value.some(n => n.id === noteWithSender.id)) {
+            loveNotes.value.unshift(noteWithSender)
+          }
+        }
       } else {
         const mockNote: LoveNote = {
           ...payload,
@@ -1126,6 +1250,7 @@ export function useCouple() {
         loveNotes.value.unshift(mockNote)
         saveToLocalStorage(spaceId)
       }
+
 
       triggerHeartBurst()
       toast.success('Love Note Dikirim 💌', 'Pesan manis berhasil ditempelkan di board!')

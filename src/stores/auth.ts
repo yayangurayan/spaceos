@@ -49,11 +49,53 @@ const DEFAULT_DEMO_USER: Profile = {
 
 export const useAuthStore = defineStore('auth', () => {
   /* ============================
-     State
+     Synchronous Hydration Helpers
      ============================ */
-  const user = ref<Profile | null>(null)
-  const currentSpace = ref<SpaceWithMeta | null>(null)
-  const spaces = ref<SpaceWithMeta[]>([])
+  function getInitialUser(): Profile | null {
+    try {
+      const cached = localStorage.getItem('spaceos_auth_user')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed && parsed.id) return parsed
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  function getInitialSpaces(): SpaceWithMeta[] {
+    try {
+      const customSpacesStr = localStorage.getItem('spaceos_spaces')
+      if (customSpacesStr) {
+        const parsed = JSON.parse(customSpacesStr)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+      return []
+    } catch {
+      return []
+    }
+  }
+
+  function getInitialCurrentSpace(initialSpaces: SpaceWithMeta[]): SpaceWithMeta | null {
+    try {
+      const cachedSpaceId = localStorage.getItem('spaceos_current_space_id')
+      if (cachedSpaceId && initialSpaces.length > 0) {
+        return initialSpaces.find(s => s.id === cachedSpaceId) || initialSpaces[0] || null
+      }
+      return initialSpaces[0] || null
+    } catch {
+      return null
+    }
+  }
+
+  /* ============================
+     State (Pre-hydrated from localStorage)
+     ============================ */
+  const initialSpacesList = getInitialSpaces()
+  const user = ref<Profile | null>(getInitialUser())
+  const spaces = ref<SpaceWithMeta[]>(initialSpacesList)
+  const currentSpace = ref<SpaceWithMeta | null>(getInitialCurrentSpace(initialSpacesList))
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const _initialized = ref(false)
@@ -63,7 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
      ============================ */
   const isAuthenticated = computed(() => !!user.value)
   const hasSelectedSpace = computed(() => !!currentSpace.value)
-  const userName = computed(() => user.value?.full_name || user.value?.email || 'Alex Morgan')
+  const userName = computed(() => user.value?.full_name || user.value?.email || 'User')
   const isPersonalSpace = computed(() => currentSpace.value?.type === 'personal')
   const currentPersonalMode = computed<'trading' | 'teacher'>(() => {
     if (!currentSpace.value) return 'trading'
@@ -84,49 +126,33 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
     try {
       // 1. Check active Supabase session
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionErr } = await supabase.auth.getSession()
 
       if (session?.user) {
         await fetchProfile(session.user.id)
         await fetchSpaces()
         await getCurrentSpace()
-      } else {
-        // 2. No active session — check if there's a cached authenticated user (not demo)
-        const cachedUserStr = localStorage.getItem('spaceos_auth_user')
-        if (cachedUserStr) {
-          try {
-            const cached = JSON.parse(cachedUserStr)
-            // Only restore if it was a real authenticated user (not demo)
-            if (cached && cached.id && cached.id !== 'demo-user-123' && !cached.id.startsWith('demo-user-')) {
-              user.value = cached
-              const customSpacesStr = localStorage.getItem('spaceos_spaces')
-              if (customSpacesStr) {
-                try { spaces.value = JSON.parse(customSpacesStr) } catch { spaces.value = [] }
-              }
-              const cachedSpaceId = localStorage.getItem('spaceos_current_space_id')
-              const matched = spaces.value.find(s => s.id === cachedSpaceId)
-              currentSpace.value = matched || spaces.value[0] || null
-            } else {
-              // Was a demo user — clear and force login
-              localStorage.removeItem('spaceos_auth_user')
-              user.value = null
-            }
-          } catch {
-            user.value = null
+      } else if (!sessionErr) {
+        // No remote session: check if cached user is valid
+        const cachedUser = getInitialUser()
+        if (cachedUser) {
+          user.value = cachedUser
+          if (spaces.value.length === 0) {
+            spaces.value = getInitialSpaces()
           }
-        } else {
-          // No cached user at all — user must log in
-          user.value = null
+          if (!currentSpace.value) {
+            await getCurrentSpace()
+          }
         }
       }
     } catch (err) {
-      console.warn('Auth initialization error:', err)
-      user.value = null
+      console.warn('Auth initialization note:', err)
     } finally {
       _initialized.value = true
       isLoading.value = false
     }
   }
+
 
   /**
   * Switch legacy personal modes without changing the new Private Space model.
@@ -203,15 +229,43 @@ export const useAuthStore = defineStore('auth', () => {
         .eq('id', userId)
         .single()
 
-      if (fetchError) throw fetchError
-      user.value = data as Profile
+      if (!fetchError && data) {
+        user.value = data as Profile
+        localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
+        return
+      }
+
+      // If profile record missing in table, get auth user metadata and upsert
+      const { data: authData } = await supabase.auth.getUser()
+      const authUser = authData?.user
+      const fallbackName = authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || user.value?.full_name || 'User'
+      const fallbackEmail = authUser?.email || user.value?.email || ''
+      const fallbackAvatar = authUser?.user_metadata?.avatar_url || user.value?.avatar_url || null
+
+      const newProfile: Profile = {
+        id: userId,
+        email: fallbackEmail,
+        full_name: fallbackName,
+        avatar_url: fallbackAvatar,
+        created_at: authUser?.created_at || new Date().toISOString(),
+      }
+
+      await supabase.from('profiles').upsert(newProfile, { onConflict: 'id' })
+      user.value = newProfile
       localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
     } catch {
       if (!user.value) {
-        user.value = { ...DEFAULT_DEMO_USER, id: userId }
+        user.value = {
+          id: userId,
+          email: '',
+          full_name: 'User',
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+        }
       }
     }
   }
+
 
   /**
    * Fetch spaces

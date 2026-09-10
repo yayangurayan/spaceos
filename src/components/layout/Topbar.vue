@@ -160,8 +160,8 @@ const { currentSpace, spaces, user } = storeToRefs(authStore)
 const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 
-const userName = computed(() => user.value?.full_name || user.value?.email || 'Alex Morgan')
-const userEmail = computed(() => user.value?.email || 'alex.morgan@spaceos.app')
+const userName = computed(() => user.value?.full_name || user.value?.email?.split('@')[0] || 'Pengguna')
+const userEmail = computed(() => user.value?.email || '')
 const userInitials = computed(() => {
   const name = userName.value
   const parts = name.split(' ')

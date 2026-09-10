@@ -14,7 +14,18 @@
   </head>
   <body class="bg-[#0f172a]">
     <div id="app"></div>
+    <script>
+      // Restore path if redirected from static 404.html fallback
+      (function() {
+        var redirect = sessionStorage.getItem('spaceos_redirect_path');
+        if (redirect) {
+          sessionStorage.removeItem('spaceos_redirect_path');
+          window.history.replaceState(null, '', redirect);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
+
     <script>
       // Fix refresh 404: Unregister any service workers on localhost/dev server
       if ('serviceWorker' in navigator) {

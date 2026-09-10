@@ -38,12 +38,19 @@ self.addEventListener('fetch', (event) => {
   if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return
   if (url.pathname.startsWith('/@') || url.pathname.startsWith('/src/')) return
 
-  // Handle SPA navigation requests
+  // Handle SPA navigation requests - fallback to index.html if network returns 404 or fails
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/index.html')
-      })
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (!networkResponse || networkResponse.status === 404) {
+            return caches.match('/index.html').then((cached) => cached || fetch('/index.html'))
+          }
+          return networkResponse
+        })
+        .catch(() => {
+          return caches.match('/index.html').then((cached) => cached || fetch('/index.html'))
+        })
     )
     return
   }
@@ -63,3 +70,4 @@ self.addEventListener('fetch', (event) => {
     })
   )
 })
+

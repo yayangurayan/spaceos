@@ -470,7 +470,7 @@ async function copyInviteCode() {
 }
 
 const profileForm = reactive({
-  fullName: user.value?.full_name || 'Alex Morgan',
+  fullName: user.value?.full_name || user.value?.email?.split('@')[0] || '',
   avatarUrl: user.value?.avatar_url || '',
 })
 

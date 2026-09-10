@@ -79,9 +79,9 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-white">{{ t('active_account', { name: currentUser?.full_name || 'Alex Morgan' }) }}</span>
+              <span class="text-xs font-bold text-white">{{ t('active_account', { name: currentUser?.full_name || currentUser?.email?.split('@')[0] || 'Akun Anda' }) }}</span>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/30">
-                {{ isPartnerSarah ? t('partner_account') : t('owner_account') }}
+                {{ isSpaceOwner ? 'Pemilik Ruang' : 'Pasangan' }}
               </span>
             </div>
             <p class="text-xs text-slate-400 mt-0.5">
@@ -102,11 +102,11 @@
 
           <button
             type="button"
-            @click="handleTogglePartnerAccount"
+            @click="copyInviteLink"
             class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-bold shadow-md shadow-pink-500/20 flex items-center gap-1.5 transition-all hover:scale-102"
           >
-            <span>🎭</span>
-            <span>{{ t('simulate_partner') }}</span>
+            <span>🔗</span>
+            <span>Bagi Link Undangan</span>
           </button>
         </div>
       </div>
@@ -122,8 +122,9 @@
         <template v-else>
           <!-- On This Day -->
           <div v-if="onThisDay" class="glass rounded-xl p-4 mb-4 flex items-center gap-4">
-            <div class="w-16 h-16 rounded-lg on-this-day-gradient shrink-0 flex items-center justify-center text-2xl">
-              📅
+            <div class="w-16 h-16 rounded-lg on-this-day-gradient shrink-0 flex items-center justify-center text-2xl overflow-hidden">
+              <img v-if="onThisDay.url" :src="onThisDay.url" class="w-full h-full object-cover rounded-lg" />
+              <span v-else>📅</span>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-0.5">{{ t('on_this_day') }}</p>
@@ -133,24 +134,43 @@
           </div>
 
           <!-- Photo grid -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div v-if="recentPhotos.length > 0" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div
-              v-for="(photo, idx) in recentPhotos"
+              v-for="photo in recentPhotos"
               :key="photo.id"
-              class="photo-card rounded-xl overflow-hidden aspect-square relative group cursor-pointer"
-              :class="`photo-gradient-${(idx % 4) + 1}`"
+              class="photo-card rounded-xl overflow-hidden aspect-square relative group cursor-pointer bg-slate-900 border border-slate-800"
             >
-              <!-- Gradient placeholder (since no real photos) -->
-              <div class="absolute inset-0 flex items-center justify-center text-3xl">
-                {{ ['🌅', '☕', '🏔️', '🎬'][idx % 4] }}
+              <img
+                v-if="photo.url"
+                :src="photo.url"
+                :alt="photo.caption"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center text-3xl bg-pink-950/20">
+                📷
               </div>
 
               <!-- Caption overlay -->
-              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                <p class="text-xs text-white font-medium">{{ photo.caption }}</p>
-                <p class="text-[10px] text-slate-300">{{ formatDate(photo.date) }}</p>
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <p class="text-xs text-white font-medium truncate">{{ photo.caption }}</p>
+                <p class="text-[10px] text-pink-300">{{ formatDate(photo.date) }}</p>
               </div>
             </div>
+          </div>
+
+          <!-- Empty state if no photos yet -->
+          <div v-else class="glass rounded-xl p-8 text-center border border-dashed border-pink-500/20">
+            <span class="text-3xl block mb-2">📸</span>
+            <p class="text-sm font-medium text-white mb-1">Belum Ada Foto Kenangan</p>
+            <p class="text-xs text-slate-400 mb-4">Abadikan momen pertama kalian bersama di Galeri Ruang Cinta.</p>
+            <router-link
+              to="/gallery"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-semibold shadow-md shadow-pink-500/20 transition-all hover:scale-102"
+            >
+              <span>+</span>
+              <span>Tambah Foto Pertama</span>
+            </router-link>
           </div>
         </template>
       </div>
@@ -286,20 +306,28 @@ const toast = useToastStore()
 const { currentLang, t } = useI18n()
 const { user: currentUser, currentSpace } = storeToRefs(authStore)
 
-const isPartnerSarah = computed(() => currentUser.value?.email === 'sarah.parker@spaceos.app')
-const coupleInviteCode = computed(() => (currentSpace.value as any)?.invite_code || 'COUPLE-8888')
+const isSpaceOwner = computed(() => {
+  return currentSpace.value?.owner_id === currentUser.value?.id || !currentSpace.value?.owner_id
+})
+
+const coupleInviteCode = computed(() => {
+  const code = (currentSpace.value as any)?.invite_code
+  if (code && code !== 'COUPLE-8888') return code
+  if (currentSpace.value?.id) {
+    return `COUPLE-${currentSpace.value.id.slice(0, 6).toUpperCase()}`
+  }
+  return 'COUPLE-SPACE'
+})
 
 function copyInviteCode() {
   navigator.clipboard.writeText(coupleInviteCode.value)
   toast.success(t('copy_invite_code_success'), t('copy_invite_code_desc', { code: coupleInviteCode.value }))
 }
 
-function handleTogglePartnerAccount() {
-  const newUser = authStore.switchPartnerAccount()
-  toast.info(
-    t('switch_partner_account'),
-    t('switch_partner_account_desc', { name: newUser.full_name, email: newUser.email })
-  )
+function copyInviteLink() {
+  const joinUrl = `${window.location.origin}/space-selector?join=${coupleInviteCode.value}`
+  navigator.clipboard.writeText(joinUrl)
+  toast.success('Link Undangan Disalin', 'Kirimkan tautan ini ke pasanganmu untuk bergabung.')
 }
 
 const {

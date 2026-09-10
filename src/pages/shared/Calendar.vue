@@ -44,7 +44,7 @@
           💕
         </div>
         <div>
-          <p class="text-2xl font-bold font-mono text-white">775 Hari</p>
+          <p class="text-2xl font-bold font-mono text-white">{{ daysTogether }} Hari</p>
           <p class="text-xs text-rose-300/80">Hari Bahagia Bersama</p>
         </div>
       </div>
@@ -55,10 +55,11 @@
           🎂
         </div>
         <div>
-          <p class="text-2xl font-bold font-mono text-pink-400">331 Hari</p>
-          <p class="text-xs text-slate-400">Menuju Anniversary ke-3</p>
+          <p class="text-2xl font-bold font-mono text-pink-400">{{ anniversaryCountdown.days }} Hari</p>
+          <p class="text-xs text-slate-400">Menuju Anniversary ke-{{ anniversaryCountdown.years }}</p>
         </div>
       </div>
+
 
       <!-- Events this month -->
       <div class="glass rounded-2xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-950/30 to-slate-900 flex items-center gap-3.5">
@@ -254,10 +255,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import Icon from '@/components/ui/Icon.vue'
 import CoupleEventModal from '@/components/calendar/CoupleEventModal.vue'
 import { useCouple } from '@/composables/useCouple'
+import { useAuthStore } from '@/stores/auth'
 import type { CoupleCalendarEvent, CoupleEventFormData } from '@/types'
+
+const authStore = useAuthStore()
+const { currentSpace } = storeToRefs(authStore)
 
 const {
   calendarEvents,
@@ -267,6 +273,44 @@ const {
   deleteCalendarEvent,
   exportToICS,
 } = useCouple()
+
+const togetherSince = computed(() => {
+  const spaceId = currentSpace.value?.id
+  const saved = spaceId ? localStorage.getItem(`spaceos_couple_together_since_${spaceId}`) : null
+  return saved || currentSpace.value?.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
+})
+
+const daysTogether = computed(() => {
+  const start = new Date(togetherSince.value)
+  const now = new Date()
+  const diff = now.getTime() - start.getTime()
+  return Math.max(1, Math.floor(diff / (1000 * 60 * 60 * 24)))
+})
+
+const anniversaryCountdown = computed(() => {
+  const start = new Date(togetherSince.value)
+  const now = new Date()
+
+  const nextAnniversary = new Date(
+    now.getFullYear(),
+    start.getMonth(),
+    start.getDate()
+  )
+
+  if (nextAnniversary <= now) {
+    nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1)
+  }
+
+  const diff = nextAnniversary.getTime() - now.getTime()
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+  const yearsTogether = Math.max(1, nextAnniversary.getFullYear() - start.getFullYear())
+
+  return {
+    days,
+    years: yearsTogether,
+  }
+})
+
 
 const currentView = ref<'month' | 'list'>('month')
 const currentDate = ref(new Date())

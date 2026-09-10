@@ -1,7 +1,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
-import { supabase } from '@/utils/supabase'
+import { useCouple } from '@/composables/useCouple'
 
 /* ============================
    Types
@@ -36,17 +36,18 @@ export interface CouplePhoto {
 export function useCoupleDashboard() {
   const authStore = useAuthStore()
   const { currentSpace } = storeToRefs(authStore)
-  const isLoading = ref(true)
-  const error = ref<string | null>(null)
+  const {
+    isLoading,
+    error,
+    photos,
+    journalEntries,
+    calendarEvents,
+    fetchCoupleData,
+  } = useCouple()
 
   // Couple info
   const coupleNames = computed(() => currentSpace.value?.name || 'Couple Space')
   const togetherSince = ref(new Date().toISOString().split('T')[0])
-
-  const upcomingEvents = ref<CoupleEvent[]>([])
-  const recentJournals = ref<JournalEntry[]>([])
-  const recentPhotos = ref<CouplePhoto[]>([])
-  const onThisDay = ref<CouplePhoto | null>(null)
 
   /**
    * Dynamic greeting based on time of day
@@ -102,102 +103,81 @@ export function useCoupleDashboard() {
   })
 
   /**
-   * Load real couple data dynamically
+   * Upcoming Events mapped from calendarEvents
    */
-  async function fetchData() {
-    isLoading.value = true
-    error.value = null
+  const upcomingEvents = computed<CoupleEvent[]>(() => {
+    const sorted = [...calendarEvents.value].sort((a, b) => {
+      const timeA = a.start_time ? new Date(a.start_time).getTime() : 0
+      const timeB = b.start_time ? new Date(b.start_time).getTime() : 0
+      return timeA - timeB
+    })
+    return sorted.slice(0, 3).map(e => ({
+      id: e.id,
+      title: e.title || 'Agenda Bersama',
+      date: e.start_time ? e.start_time.split('T')[0] : new Date().toISOString().split('T')[0],
+      icon: e.category === 'Anniversary' ? '🎂' : e.category === 'Date Night' ? '🥂' : e.category === 'Travel' ? '✈️' : '💕',
+      type: (e.category === 'Date Night' ? 'date' : e.category === 'Travel' ? 'trip' : e.category === 'Anniversary' ? 'anniversary' : 'general') as any,
+    }))
+  })
 
-    try {
-      await new Promise(resolve => setTimeout(resolve, 300))
+  /**
+   * Recent Journals mapped from journalEntries
+   */
+  const recentJournals = computed<JournalEntry[]>(() => {
+    const sorted = [...journalEntries.value].sort((a, b) => {
+      const timeA = new Date(a.published_at || a.created_at || 0).getTime()
+      const timeB = new Date(b.published_at || b.created_at || 0).getTime()
+      return timeB - timeA
+    })
+    return sorted.slice(0, 3).map(j => ({
+      id: j.id,
+      title: j.title || 'Catatan Bersama',
+      preview: (j.content || '').slice(0, 100) + ((j.content || '').length > 100 ? '...' : ''),
+      date: j.published_at ? j.published_at.split('T')[0] : (j.created_at ? j.created_at.split('T')[0] : new Date().toISOString().split('T')[0]),
+      mood: j.mood === 'Loving' ? '🥰' : j.mood === 'Excited' ? '🎉' : j.mood === 'Thoughtful' ? '💭' : j.mood === 'Sad' ? '🥺' : '😊',
+      author: (j as any).author_name || (j.author_id === authStore.user?.id ? (authStore.user?.full_name || 'Kamu') : 'Pasangan'),
+    }))
+  })
 
-      const spaceId = currentSpace.value?.id
-      const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-      const readList = (prefix: string) => {
-        if (!spaceId || isCleanSlate) return []
-        try {
-          const value = JSON.parse(localStorage.getItem(`${prefix}_${spaceId}`) || '[]')
-          return Array.isArray(value) ? value : []
-        } catch {
-          return []
-        }
-      }
+  /**
+   * Recent Photos mapped from photos
+   */
+  const recentPhotos = computed<CouplePhoto[]>(() => {
+    const sorted = [...photos.value].sort((a, b) => {
+      const timeA = new Date(a.taken_at || a.created_at || 0).getTime()
+      const timeB = new Date(b.taken_at || b.created_at || 0).getTime()
+      return timeB - timeA
+    })
+    return sorted.slice(0, 4).map(p => ({
+      id: p.id,
+      url: p.image_url,
+      caption: p.caption || 'Momen Kita ✨',
+      date: p.taken_at ? p.taken_at.split('T')[0] : (p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0]),
+    }))
+  })
 
-      let allEvents: any[] = []
-      let allJournals: any[] = []
-      let allPhotos: any[] = []
+  /**
+   * On this day photo
+   */
+  const onThisDay = computed<CouplePhoto | null>(() => {
+    return recentPhotos.value[0] || null
+  })
 
-      if (spaceId && !isCleanSlate) {
-        const [eventsResult, journalsResult, photosResult] = await Promise.all([
-          supabase.from('calendar_events').select('*').eq('space_id', spaceId).order('start_time', { ascending: true }),
-          supabase.from('journal_entries').select('*').eq('space_id', spaceId).order('created_at', { ascending: false }),
-          supabase.from('photos').select('*').eq('space_id', spaceId).order('taken_at', { ascending: false }),
-        ])
-
-        if (!eventsResult.error && !journalsResult.error && !photosResult.error) {
-          allEvents = eventsResult.data || []
-          allJournals = journalsResult.data || []
-          allPhotos = photosResult.data || []
-        } else {
-          allEvents = readList('spaceos_couple_events')
-          allJournals = readList('spaceos_couple_journals')
-          allPhotos = readList('spaceos_couple_photos')
-        }
-      }
-      const savedTogetherSince = spaceId ? localStorage.getItem(`spaceos_couple_together_since_${spaceId}`) : null
+  async function loadData() {
+    const spaceId = currentSpace.value?.id
+    if (spaceId) {
+      const savedTogetherSince = localStorage.getItem(`spaceos_couple_together_since_${spaceId}`)
       togetherSince.value = savedTogetherSince || currentSpace.value?.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
-
-      if (allEvents.length > 0) {
-        upcomingEvents.value = allEvents.slice(0, 3).map(e => ({
-          id: e.id || 'ev-' + Math.random(),
-          title: e.title || 'Event Bersama',
-          date: e.start_time ? e.start_time.split('T')[0] : (e.date || new Date().toISOString().split('T')[0]),
-          icon: e.category === 'Anniversary' ? '🎂' : e.category === 'Date Night' ? '🥂' : e.category === 'Travel' ? '✈️' : '💕',
-          type: e.category || 'general',
-        }))
-      } else {
-        upcomingEvents.value = []
-      }
-
-      if (allJournals.length > 0) {
-        recentJournals.value = allJournals.slice(0, 3).map(j => ({
-          id: j.id || 'j-' + Math.random(),
-          title: j.title || 'Catatan Bersama',
-          preview: (j.content || '').slice(0, 100) + '...',
-          date: j.published_at ? j.published_at.split('T')[0] : (j.created_at ? j.created_at.split('T')[0] : new Date().toISOString().split('T')[0]),
-          mood: j.mood || '🥰',
-          author: j.author_name || j.author || 'Pasangan',
-        }))
-      } else {
-        recentJournals.value = []
-      }
-
-      if (allPhotos.length > 0) {
-        recentPhotos.value = allPhotos.slice(0, 4).map(p => ({
-          id: p.id || 'p-' + Math.random(),
-          url: p.image_url || p.url || '',
-          caption: p.caption || 'Momen Kita ✨',
-          date: p.taken_at ? p.taken_at.split('T')[0] : (p.date_taken || new Date().toISOString().split('T')[0]),
-        }))
-        onThisDay.value = recentPhotos.value[0] || null
-      } else {
-        recentPhotos.value = []
-        onThisDay.value = null
-      }
-
-    } catch (err: any) {
-      error.value = err?.message || 'Failed to load couple dashboard data.'
-    } finally {
-      isLoading.value = false
     }
+    await fetchCoupleData()
   }
 
   function retry() {
-    fetchData()
+    fetchCoupleData(true)
   }
 
   onMounted(() => {
-    fetchData()
+    loadData()
   })
 
   return {

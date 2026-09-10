@@ -153,7 +153,7 @@ CREATE TRIGGER on_couple_space_created
   AFTER INSERT ON public.spaces
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_couple_space();
 
--- Check if user is a member of a space
+-- Check if user is a member of a space (includes owner check for robustness)
 CREATE OR REPLACE FUNCTION public.is_space_member(_space_id UUID, _user_id UUID DEFAULT auth.uid())
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -166,6 +166,11 @@ AS $$
     FROM public.space_members
     WHERE space_id = _space_id
       AND user_id = _user_id
+  ) OR EXISTS (
+    SELECT 1
+    FROM public.spaces
+    WHERE id = _space_id
+      AND owner_id = _user_id
   );
 $$;
 
@@ -183,8 +188,14 @@ AS $$
     WHERE space_id = _space_id
       AND user_id = _user_id
       AND role IN ('owner', 'admin')
+  ) OR EXISTS (
+    SELECT 1
+    FROM public.spaces
+    WHERE id = _space_id
+      AND owner_id = _user_id
   );
 $$;
+
 
 -- ============================================================
 -- Auto-add Space Owner to space_members (trigger)
@@ -1429,6 +1440,59 @@ CREATE POLICY "Users can update love notes in their spaces"
 CREATE POLICY "Users can delete love notes in their spaces"
   ON love_notes FOR DELETE
   USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- ============================================================
+-- 13. Supabase Realtime Publication
+-- Enables live sync for Couple Space & Shared modules
+-- ============================================================
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.journal_entries;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.journal_comments;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.journal_reactions;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.calendar_events;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.event_attendees;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.love_notes;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.albums;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.photos;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.photo_reactions;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.spaces;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.space_members;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+END $$;
+
 
 
 

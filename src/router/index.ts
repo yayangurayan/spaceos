@@ -221,8 +221,13 @@ router.beforeEach(async (to, _from, next) => {
 
   // requiresSpace: redirect to space selector if no space selected
   if (to.meta.requiresSpace && isAuthenticated && !hasSpace) {
+    await authStore.getCurrentSpace()
+    if (authStore.hasSelectedSpace) {
+      return next()
+    }
     return next({ name: 'SpaceSelector' })
   }
+
 
   next()
 })

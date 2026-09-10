@@ -435,7 +435,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -444,6 +444,7 @@ import { supabase } from '@/utils/supabase'
 import type { SpaceType, SpaceCategory, SpaceWithMeta } from '@/types'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const toast = useToastStore()
 const { t, currentLang, toggleLang } = useI18n()
@@ -533,6 +534,11 @@ const firstName = computed(() => {
 
 onMounted(async () => {
   await authStore.fetchSpaces()
+  const joinParam = route.query.join as string
+  if (joinParam) {
+    inviteCodeInput.value = joinParam.trim().toUpperCase()
+    showJoinModal.value = true
+  }
 })
 
 function formatTimeAgo(dateStr: string): string {
@@ -681,6 +687,31 @@ async function handleCreateSpace() {
         const pending = JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]
         localStorage.setItem('spaceos_pending_spaces', JSON.stringify([createdSpace, ...pending]))
       } else {
+        // Explicitly ensure space_members has owner record
+        try {
+          await supabase
+            .from('space_members')
+            .upsert({
+              space_id: createdSpace.id,
+              user_id: userId,
+              role: 'owner',
+            }, { onConflict: 'space_id,user_id' })
+        } catch {}
+
+        // Explicitly ensure profiles has owner record
+        if (authStore.user) {
+          try {
+            await supabase
+              .from('profiles')
+              .upsert({
+                id: userId,
+                email: authStore.user.email || '',
+                full_name: authStore.user.full_name || '',
+                avatar_url: authStore.user.avatar_url || null,
+              }, { onConflict: 'id' })
+          } catch {}
+        }
+
         // If Supabase generated/returned an invite_code (via trigger), use that
         if (insertedSpace?.invite_code && createdSpace.type === 'couple') {
           ;(createdSpace as any).invite_code = insertedSpace.invite_code
@@ -690,6 +721,7 @@ async function handleCreateSpace() {
         const pending = (JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]).filter(space => space.id !== createdSpace.id)
         localStorage.setItem('spaceos_pending_spaces', JSON.stringify(pending))
       }
+
     }
 
     toast.success(t('space_created_success'), t('space_created_ready', { name: createdSpace.name }))
