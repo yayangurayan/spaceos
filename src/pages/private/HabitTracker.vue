@@ -6,11 +6,11 @@
         <div class="flex items-center gap-2.5">
           <span class="text-2xl sm:text-3xl">🔥</span>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Habit Tracker
+            {{ t('habit_tracker_title') }}
           </h1>
         </div>
         <p class="text-xs sm:text-sm text-slate-400 mt-1">
-          Bentuk konsistensi, jaga streak harian, dan pantau kemajuan kebiasaan kamu.
+          {{ t('habit_tracker_desc') }}
         </p>
       </div>
 
@@ -22,7 +22,7 @@
           class="btn-primary flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
         >
           <span class="text-base leading-none">+</span>
-          <span>Buat Habit Baru</span>
+          <span>{{ t('new_habit') }}</span>
         </button>
       </div>
     </div>
@@ -38,20 +38,20 @@
         <p class="text-2xl font-bold font-mono text-white">
           <AnimatedNumber :value="streakOverview.totalActiveHabits" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Habit Aktif</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('habit_active_count') }}</p>
       </div>
 
       <!-- Today's Completion -->
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">✅</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Hari Ini</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">{{ t('habit_today_label') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-emerald-400">
           <AnimatedNumber :value="streakOverview.todayCompletionRate" suffix="%" />
         </p>
         <p class="text-[11px] text-slate-400 mt-0.5">
-          {{ streakOverview.completedTodayCount }} / {{ streakOverview.totalActiveHabits }} Selesai
+          {{ streakOverview.completedTodayCount }} / {{ streakOverview.totalActiveHabits }} {{ t('today_completion_label') }}
         </p>
       </div>
 
@@ -59,24 +59,24 @@
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">🔥</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Rekor</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">{{ t('habit_streak_record') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-amber-400">
-          <AnimatedNumber :value="streakOverview.longestStreak" suffix=" Hari" />
+          <AnimatedNumber :value="streakOverview.longestStreak" :suffix="t('days_suffix')" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Streak Terpanjang</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('streak_record_label') }}</p>
       </div>
 
       <!-- 30-Day Average Rate -->
       <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xl">📈</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300">30 Hari</span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300">{{ t('habit_30d_label') }}</span>
         </div>
         <p class="text-2xl font-bold font-mono text-accent">
           <AnimatedNumber :value="streakOverview.averageCompletionRate" suffix="%" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Rata-rata Konsistensi</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('consistency_30d_label') }}</p>
       </div>
     </div>
 
@@ -91,7 +91,7 @@
       <div class="flex items-center gap-2">
         <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
           <span>📋</span>
-          <span>Daftar Kebiasaan & Evaluasi</span>
+          <span>{{ t('habit_list_title') }}</span>
         </h2>
       </div>
 
@@ -102,7 +102,7 @@
           class="px-3 py-1.5 rounded-md font-medium transition-all"
           :class="activeView === 'cards' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
         >
-          🗂️ Kartu Habit
+          {{ t('habit_cards_view') }}
         </button>
         <button
           type="button"
@@ -110,7 +110,7 @@
           class="px-3 py-1.5 rounded-md font-medium transition-all"
           :class="activeView === 'calendar' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
         >
-          📅 Kalender
+          {{ t('habit_calendar_view') }}
         </button>
       </div>
     </div>
@@ -119,16 +119,16 @@
     <div v-if="activeView === 'cards'">
       <div v-if="habitsWithStats.length === 0" class="glass rounded-xl p-12 text-center text-slate-400 space-y-3">
         <span class="text-4xl block mb-1">🌱</span>
-        <h4 class="text-base font-bold text-white">Belum ada habit yang dibuat</h4>
+        <h4 class="text-base font-bold text-white">{{ t('no_habits_yet') }}</h4>
         <p class="text-xs text-slate-500 max-w-sm mx-auto">
-          Mulai bangun rutinitas positif dengan menambahkan kebiasaan pertama kamu.
+          {{ t('no_habits_desc') }}
         </p>
         <button
           type="button"
           @click="openAddModal"
           class="btn-primary mt-2 px-5 py-2 text-xs font-bold rounded-xl"
         >
-          + Buat Habit Sekarang
+          {{ t('create_habit_now') }}
         </button>
       </div>
 
@@ -172,7 +172,10 @@ import HabitHeatmap from '@/components/habits/HabitHeatmap.vue'
 import HabitCalendarView from '@/components/habits/HabitCalendarView.vue'
 import HabitForm from '@/components/habits/HabitForm.vue'
 import { useHabits } from '@/composables/useHabits'
+import { useI18n } from '@/composables/useI18n'
 import type { Habit, HabitWithStats, HabitFormData } from '@/types'
+
+const { t } = useI18n()
 
 const {
   habitsWithStats,
@@ -220,7 +223,7 @@ async function handleToggle(habitId: string, date: string) {
 
 async function confirmDelete(habitId: string) {
   const h = habitsWithStats.value.find(item => item.id === habitId)
-  if (confirm(`Hapus habit "${h?.name || 'ini'}" beserta riwayatnya?`)) {
+  if (confirm(t('confirm_delete_habit', { name: h?.name || '' }))) {
     await deleteHabit(habitId)
   }
 }
@@ -234,3 +237,4 @@ onMounted(() => {
   fetchHabitsData()
 })
 </script>
+

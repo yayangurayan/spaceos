@@ -395,13 +395,15 @@ export function useBooks() {
           readingLogs.value = logsData
         }
       } else {
+        // Only auto-seed for legacy demo space, not for newly created user spaces
+        const isLegacyDemoSpace = spaceId === 'space-trader' || spaceId === 'space-private'
         const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-        if (isCleanSlate) {
+        const hasBeenSeeded = localStorage.getItem(`spaceos_books_seeded_${spaceId}`) === 'true'
+        if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
+          await seedPresetsToDb(spaceId)
+        } else {
           books.value = []
           readingLogs.value = []
-        } else {
-          // First time space load: auto-seed presets
-          await seedPresetsToDb(spaceId)
         }
       }
     } catch (err: any) {
@@ -435,6 +437,7 @@ export function useBooks() {
       } else {
         books.value = data
         generateSampleLogs(data)
+        localStorage.setItem(`spaceos_books_seeded_${spaceId}`, 'true')
       }
     } catch {
       seedLocalDefaults()
@@ -452,6 +455,7 @@ export function useBooks() {
     books.value = generated
     generateSampleLogs(generated)
     saveToLocalStorage(spaceId)
+    localStorage.setItem(`spaceos_books_seeded_${spaceId}`, 'true')
   }
 
   function generateSampleLogs(bookList: Book[]) {
@@ -484,6 +488,8 @@ export function useBooks() {
      ============================ */
   function loadFromLocalStorage(spaceId: string) {
     const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+    const isLegacyDemoSpace = spaceId === 'space-trader' || spaceId === 'space-private'
+    const hasBeenSeeded = localStorage.getItem(`spaceos_books_seeded_${spaceId}`) === 'true'
     try {
       const bKey = `spaceos_books_${spaceId}`
       const lKey = `spaceos_reading_logs_${spaceId}`
@@ -492,7 +498,7 @@ export function useBooks() {
 
       if (savedBooks) {
         books.value = JSON.parse(savedBooks)
-      } else if (!isCleanSlate && spaceId === 'space-trader') {
+      } else if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
         seedLocalDefaults()
         return
       } else {

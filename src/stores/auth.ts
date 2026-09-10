@@ -91,49 +91,37 @@ export const useAuthStore = defineStore('auth', () => {
         await fetchSpaces()
         await getCurrentSpace()
       } else {
-        // 2. Demo / Offline fallback session
+        // 2. No active session — check if there's a cached authenticated user (not demo)
         const cachedUserStr = localStorage.getItem('spaceos_auth_user')
         if (cachedUserStr) {
           try {
-            user.value = JSON.parse(cachedUserStr)
+            const cached = JSON.parse(cachedUserStr)
+            // Only restore if it was a real authenticated user (not demo)
+            if (cached && cached.id && cached.id !== 'demo-user-123' && !cached.id.startsWith('demo-user-')) {
+              user.value = cached
+              const customSpacesStr = localStorage.getItem('spaceos_spaces')
+              if (customSpacesStr) {
+                try { spaces.value = JSON.parse(customSpacesStr) } catch { spaces.value = [] }
+              }
+              const cachedSpaceId = localStorage.getItem('spaceos_current_space_id')
+              const matched = spaces.value.find(s => s.id === cachedSpaceId)
+              currentSpace.value = matched || spaces.value[0] || null
+            } else {
+              // Was a demo user — clear and force login
+              localStorage.removeItem('spaceos_auth_user')
+              user.value = null
+            }
           } catch {
-            user.value = { ...DEFAULT_DEMO_USER }
+            user.value = null
           }
         } else {
-          user.value = { ...DEFAULT_DEMO_USER }
-          localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
-        }
-
-        // Load custom or default spaces
-        const customSpacesStr = localStorage.getItem('spaceos_spaces')
-        if (customSpacesStr) {
-          try {
-            spaces.value = JSON.parse(customSpacesStr)
-          } catch {
-            spaces.value = [...DEFAULT_SPACES]
-          }
-        } else {
-          spaces.value = [...DEFAULT_SPACES]
-          localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
-        }
-
-        // Restore active space from cache or default to space-trader
-        const cachedSpaceId = localStorage.getItem('spaceos_current_space_id')
-        const matched = spaces.value.find(s => s.id === cachedSpaceId)
-        if (matched) {
-          currentSpace.value = matched
-        } else {
-          currentSpace.value = spaces.value[0] || DEFAULT_SPACES[0]
-          localStorage.setItem('spaceos_current_space_id', currentSpace.value.id)
+          // No cached user at all — user must log in
+          user.value = null
         }
       }
     } catch (err) {
-      console.warn('Auth initialization fallback note:', err)
-      user.value = { ...DEFAULT_DEMO_USER }
-      const cachedSpaces = localStorage.getItem('spaceos_spaces')
-      spaces.value = cachedSpaces ? JSON.parse(cachedSpaces) : [...DEFAULT_SPACES]
-      const cachedSpaceId = localStorage.getItem('spaceos_current_space_id')
-      currentSpace.value = spaces.value.find(space => space.id === cachedSpaceId) || spaces.value[0] || null
+      console.warn('Auth initialization error:', err)
+      user.value = null
     } finally {
       _initialized.value = true
       isLoading.value = false
@@ -313,21 +301,6 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: true }
     } catch (err: any) {
-      // Allow demo login fallback if offline
-      if (email && password) {
-        user.value = {
-          id: 'demo-user-123',
-          email,
-          full_name: email.split('@')[0],
-          avatar_url: DEFAULT_DEMO_USER.avatar_url,
-          created_at: new Date().toISOString(),
-        }
-        localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
-        spaces.value = [...DEFAULT_SPACES]
-        currentSpace.value = DEFAULT_SPACES[0]
-        localStorage.setItem('spaceos_current_space_id', currentSpace.value.id)
-        return { success: true }
-      }
       const message = err?.message || 'Login failed.'
       error.value = message
       return { success: false, error: message }
@@ -414,8 +387,11 @@ export const useAuthStore = defineStore('auth', () => {
       await supabase.auth.signOut().catch(() => {})
       user.value = null
       currentSpace.value = null
+      spaces.value = []
       localStorage.removeItem('spaceos_auth_user')
       localStorage.removeItem('spaceos_current_space_id')
+      localStorage.removeItem('spaceos_spaces')
+      localStorage.removeItem('spaceos_pending_spaces')
     } finally {
       isLoading.value = false
     }

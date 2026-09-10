@@ -431,8 +431,8 @@ export function useFinance() {
       const spaceId = currentSpace.value?.id
 
       if (!spaceId) {
-        transactions.value = [...DEMO_TRANSACTIONS]
-        budgets.value = [...DEMO_BUDGETS]
+        transactions.value = []
+        budgets.value = []
         usingFallback.value = true
         return
       }
@@ -484,7 +484,8 @@ export function useFinance() {
 
   function loadFromLocalStorage(spaceId: string) {
     const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-    const isDefaultDemoSpace = spaceId === 'space-trader'
+    const isLegacyDemoSpace = spaceId === 'space-trader'
+    const hasBeenSeeded = localStorage.getItem(`spaceos_finance_seeded_${spaceId}`) === 'true'
     try {
       const txKey = `spaceos_tx_${spaceId}`
       const bgKey = `spaceos_bg_${spaceId}`
@@ -493,13 +494,14 @@ export function useFinance() {
 
       if (savedTx) {
         transactions.value = JSON.parse(savedTx)
-      } else if (!isCleanSlate && isDefaultDemoSpace) {
+      } else if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
         const initial = DEMO_TRANSACTIONS.map(t => ({
           ...t,
           space_id: spaceId,
         }))
         transactions.value = initial
         saveToLocalStorage(spaceId)
+        localStorage.setItem(`spaceos_finance_seeded_${spaceId}`, 'true')
       } else {
         transactions.value = []
         saveToLocalStorage(spaceId)
@@ -507,7 +509,7 @@ export function useFinance() {
 
       if (savedBg) {
         budgets.value = JSON.parse(savedBg)
-      } else if (!isCleanSlate && isDefaultDemoSpace) {
+      } else if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
         const initialBg = DEMO_BUDGETS.map(b => ({
           ...b,
           space_id: spaceId,

@@ -346,14 +346,16 @@ export function useEvents() {
         if (attRes.data) eventAttachments.value = attRes.data
         if (revRes.data) eventReviews.value = revRes.data
       } else {
+        // Only auto-seed for legacy demo spaces
+        const isLegacyDemoSpace = spaceId === 'space-trader'
         const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-        if (isCleanSlate) {
+        const hasBeenSeeded = localStorage.getItem(`spaceos_events_seeded_${spaceId}`) === 'true'
+        if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
+          await seedPresetsToDb(spaceId)
+        } else {
           events.value = []
           eventAttachments.value = []
           eventReviews.value = []
-        } else {
-          // Auto-seed presets for first time load
-          await seedPresetsToDb(spaceId)
         }
       }
     } catch (err: any) {
@@ -410,6 +412,7 @@ export function useEvents() {
           }
           await supabase.from('event_reviews').insert([revData])
         }
+        localStorage.setItem(`spaceos_events_seeded_${spaceId}`, 'true')
       }
     } catch {
       seedLocalDefaults()
@@ -456,7 +459,7 @@ export function useEvents() {
 
       if (savedEvts) {
         events.value = JSON.parse(savedEvts)
-      } else if (!isCleanSlate && spaceId === 'space-trader') {
+      } else if (!isCleanSlate && spaceId === 'space-trader' && !localStorage.getItem(`spaceos_events_seeded_${spaceId}`)) {
         seedLocalDefaults()
         return
       } else {

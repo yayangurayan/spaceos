@@ -395,8 +395,7 @@ export function useTrading() {
       const spaceId = currentSpace.value?.id
 
       if (!spaceId) {
-        // If not in a space, load demo data for preview
-        trades.value = [...DEMO_TRADES]
+        trades.value = []
         usingFallback.value = true
         return
       }
@@ -409,7 +408,6 @@ export function useTrading() {
 
       if (dbError) {
         console.warn('[SpaceOS] Failed to query trades table:', dbError.message)
-        // If table doesn't exist yet, fallback to demo/local storage
         loadFromLocalStorage(spaceId)
         usingFallback.value = true
         return
@@ -419,7 +417,6 @@ export function useTrading() {
         trades.value = data.map(formatDbRowToTrade)
         usingFallback.value = false
       } else {
-        // Space has 0 trades yet, check local storage or init with demo
         loadFromLocalStorage(spaceId)
       }
     } catch (err: any) {
@@ -436,14 +433,15 @@ export function useTrading() {
      ============================ */
   function loadFromLocalStorage(spaceId: string) {
     const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-    const isDefaultDemoSpace = spaceId === 'space-trader'
+    const isLegacyDemoSpace = spaceId === 'space-trader'
+    const hasBeenSeeded = localStorage.getItem(`spaceos_trades_seeded_${spaceId}`) === 'true'
     try {
       const key = `spaceos_trades_${spaceId}`
       const saved = localStorage.getItem(key)
       if (saved) {
         trades.value = JSON.parse(saved)
-      } else if (!isCleanSlate && isDefaultDemoSpace) {
-        // Populate default demo trades ONLY for space-trader
+      } else if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
+        // Populate default demo trades ONLY for legacy space-trader
         const initial = DEMO_TRADES.map(t => ({
           ...t,
           space_id: spaceId,
@@ -451,6 +449,7 @@ export function useTrading() {
         }))
         trades.value = initial
         saveToLocalStorage(spaceId, initial)
+        localStorage.setItem(`spaceos_trades_seeded_${spaceId}`, 'true')
       } else {
         trades.value = []
         saveToLocalStorage(spaceId, [])

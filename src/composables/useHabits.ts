@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import confetti from 'canvas-confetti'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { useI18n } from '@/composables/useI18n'
 import { supabase } from '@/utils/supabase'
 import type {
   Habit,
@@ -36,6 +37,7 @@ export const DEFAULT_HABITS_PRESETS = {
 export function useHabits() {
   const authStore = useAuthStore()
   const toast = useToastStore()
+  const { t } = useI18n()
   const { currentSpace, user } = storeToRefs(authStore)
 
   /* ============================
@@ -263,13 +265,16 @@ export function useHabits() {
           habitLogs.value = logsData
         }
       } else {
+        // Only auto-seed for legacy demo spaces, not for newly created user spaces
+        const isLegacyDemoSpace = spaceId === 'space-trader' || spaceId === 'space-teacher' || spaceId === 'space-private'
         const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-        if (isCleanSlate) {
-          habits.value = []
-          habitLogs.value = []
-        } else {
+        const hasBeenSeeded = localStorage.getItem(`spaceos_habits_seeded_${spaceId}`) === 'true'
+        if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
           const isTeacher = currentSpace.value?.category === 'teacher' || currentSpace.value?.name?.toLowerCase().includes('guru')
           await seedPresetToDb(spaceId, isTeacher ? 'teacher' : 'trader')
+        } else {
+          habits.value = []
+          habitLogs.value = []
         }
       }
     } catch (err: any) {
@@ -312,6 +317,7 @@ export function useHabits() {
         habits.value = data
         // Generate simulated completed logs for past week
         generateSampleLogs(data)
+        localStorage.setItem(`spaceos_habits_seeded_${spaceId}`, 'true')
       }
     } catch {
       seedLocalPreset(type)
@@ -319,10 +325,11 @@ export function useHabits() {
   }
 
   function seedLocalPreset(type: 'trader' | 'teacher') {
+    const spaceId = currentSpace.value?.id || 'demo-space'
     const preset = DEFAULT_HABITS_PRESETS[type]
     const generated: Habit[] = preset.map((p, idx) => ({
       id: 'h-' + (idx + 1),
-      space_id: currentSpace.value?.id || 'demo-space',
+      space_id: spaceId,
       name: p.name,
       icon: p.icon,
       frequency: p.frequency as any,
@@ -337,7 +344,8 @@ export function useHabits() {
 
     habits.value = generated
     generateSampleLogs(generated)
-    saveToLocalStorage(currentSpace.value?.id || 'demo-space')
+    saveToLocalStorage(spaceId)
+    localStorage.setItem(`spaceos_habits_seeded_${spaceId}`, 'true')
     usingFallback.value = true
   }
 
@@ -368,14 +376,15 @@ export function useHabits() {
 
   function loadFromLocalStorage(spaceId: string) {
     const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+    const isLegacyDemoSpace = spaceId === 'space-trader' || spaceId === 'space-teacher' || spaceId === 'space-private'
+    const hasBeenSeeded = localStorage.getItem(`spaceos_habits_seeded_${spaceId}`) === 'true'
     try {
       const savedHabits = localStorage.getItem(`spaceos_habits_${spaceId}`)
       const savedLogs = localStorage.getItem(`spaceos_logs_${spaceId}`)
-      const isDefaultDemoSpace = spaceId === 'space-trader' || spaceId === 'space-teacher'
       if (savedHabits) {
         habits.value = JSON.parse(savedHabits)
         habitLogs.value = savedLogs ? JSON.parse(savedLogs) : []
-      } else if (!isCleanSlate && isDefaultDemoSpace) {
+      } else if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
         const isTeacher = spaceId === 'space-teacher'
         seedLocalPreset(isTeacher ? 'teacher' : 'trader')
       } else {
@@ -422,7 +431,7 @@ export function useHabits() {
 
     if (newCompleted) {
       triggerCelebration()
-      toast.success('Habit Selesai! 🔥', 'Pertahankan streak konsistensi kamu.')
+      toast.success(t('habit_done_toast'), t('habit_done_desc'))
     }
 
     // Persist to Supabase or LocalStorage
@@ -485,10 +494,10 @@ export function useHabits() {
       habits.value = [...habits.value, created]
       if (spaceId) saveToLocalStorage(spaceId)
 
-      toast.success('Habit Baru Dibuat! 🎯', `${created.icon} ${created.name}`)
+      toast.success(t('habit_created_toast'), `${created.icon} ${created.name}`)
       return { success: true, data: created }
     } catch (err: any) {
-      toast.error('Gagal Membuat Habit', err?.message || 'Terjadi kesalahan.')
+      toast.error(t('habit_create_fail'), err?.message || t('error_title'))
       return { success: false }
     } finally {
       isSaving.value = false
@@ -515,10 +524,10 @@ export function useHabits() {
       if (idx !== -1) habits.value[idx] = updated
       if (spaceId) saveToLocalStorage(spaceId)
 
-      toast.success('Habit Diperbarui', 'Detail kebiasaan berhasil disimpan.')
+      toast.success(t('habit_updated_toast'), t('habit_updated_desc'))
       return { success: true }
     } catch (err: any) {
-      toast.error('Gagal Update', err?.message || 'Terjadi kesalahan.')
+      toast.error(t('habit_update_fail'), err?.message || t('error_title'))
       return { success: false }
     } finally {
       isSaving.value = false
@@ -539,10 +548,10 @@ export function useHabits() {
       habitLogs.value = habitLogs.value.filter(l => l.habit_id !== id)
       if (spaceId) saveToLocalStorage(spaceId)
 
-      toast.info('Habit Dihapus', 'Kebiasaan telah dihapus dari daftar.')
+      toast.info(t('habit_deleted_toast'), t('habit_deleted_desc'))
       return { success: true }
     } catch (err: any) {
-      toast.error('Gagal Hapus', err?.message || 'Terjadi kesalahan.')
+      toast.error(t('habit_delete_fail'), err?.message || t('error_title'))
       return { success: false }
     }
   }

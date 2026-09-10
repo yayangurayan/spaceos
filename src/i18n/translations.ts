@@ -358,6 +358,52 @@ export const translations = {
     'want_to_read': 'Ingin Dibaca',
     'favorite': 'Favorit',
     'add_book_to_shelf': 'Mulai tambahkan buku untuk mengisi rak ini.',
+
+    // Habit Tracker Page
+    'habit_tracker_title': 'Habit Tracker',
+    'habit_tracker_desc': 'Bentuk konsistensi, jaga streak harian, dan pantau kemajuan kebiasaan kamu.',
+    'new_habit': 'Buat Habit Baru',
+    'create_habit_now': '+ Buat Habit Sekarang',
+    'habit_active_count': 'Habit Aktif',
+    'habit_today_label': 'Hari Ini',
+    'habit_streak_record': 'Rekor',
+    'habit_30d_label': '30 Hari',
+    'habit_list_title': 'Daftar Kebiasaan & Evaluasi',
+    'habit_cards_view': '🗂️ Kartu Habit',
+    'habit_calendar_view': '📅 Kalender',
+    'no_habits_yet': 'Belum ada habit yang dibuat',
+    'no_habits_desc': 'Mulai bangun rutinitas positif dengan menambahkan kebiasaan pertama kamu.',
+    'today_completion_label': 'Selesai Hari Ini',
+    'streak_record_label': 'Streak Terpanjang',
+    'consistency_30d_label': 'Rata-rata Konsistensi',
+    'habit_done_toast': 'Habit Selesai! 🔥',
+    'habit_done_desc': 'Pertahankan streak konsistensi kamu.',
+    'habit_created_toast': 'Habit Baru Dibuat! 🎯',
+    'habit_updated_toast': 'Habit Diperbarui',
+    'habit_updated_desc': 'Detail kebiasaan berhasil disimpan.',
+    'habit_deleted_toast': 'Habit Dihapus',
+    'habit_deleted_desc': 'Kebiasaan telah dihapus dari daftar.',
+    'habit_create_fail': 'Gagal Membuat Habit',
+    'habit_update_fail': 'Gagal Update',
+    'habit_delete_fail': 'Gagal Hapus',
+    'confirm_delete_habit': 'Hapus habit "{name}" beserta riwayatnya?',
+    'days_suffix': ' Hari',
+
+    // Event Tracker
+    'event_tracker_title': 'Event Tracker',
+    'event_tracker_desc': 'Catat, rencanakan, dan evaluasi seminar, konferensi, dan momen penting hidupmu.',
+    'add_event': '+ Tambah Event',
+    'no_events_yet': 'Belum ada event yang dicatat.',
+    'no_events_desc': 'Mulai catat seminar, konferensi, atau momen penting hidupmu.',
+
+    // Weekly Review
+    'weekly_review_title': 'Weekly Review',
+    'weekly_review_desc': 'Evaluasi mingguan trading, habit, dan progress target hidup kamu.',
+
+    // Trader Dashboard extra
+    'no_recent_trades': 'Belum ada trade yang dicatat.',
+    'dashboard_trader_title': 'Dashboard Trading',
+    'dashboard_trader_desc': 'Pantau performa trading, habit harian, dan progress target keuangan kamu.',
   },
 
   de: {
@@ -719,5 +765,51 @@ export const translations = {
     'want_to_read': 'Möchte ich lesen',
     'favorite': 'Favoriten',
     'add_book_to_shelf': 'Fügen Sie ein Buch hinzu, um dieses Regal zu füllen.',
+
+    // Habit Tracker Page
+    'habit_tracker_title': 'Gewohnheits-Tracker',
+    'habit_tracker_desc': 'Aufbau von Konsistenz, tägliche Serien und Fortschrittsverfolgung.',
+    'new_habit': 'Neue Gewohnheit erstellen',
+    'create_habit_now': '+ Jetzt Gewohnheit erstellen',
+    'habit_active_count': 'Aktive Gewohnheiten',
+    'habit_today_label': 'Heute',
+    'habit_streak_record': 'Rekord',
+    'habit_30d_label': '30 Tage',
+    'habit_list_title': 'Gewohnheitsliste & Auswertung',
+    'habit_cards_view': '🗂️ Karten',
+    'habit_calendar_view': '📅 Kalender',
+    'no_habits_yet': 'Noch keine Gewohnheiten erstellt',
+    'no_habits_desc': 'Beginnen Sie mit dem Aufbau positiver Routinen, indem Sie Ihre erste Gewohnheit hinzufügen.',
+    'today_completion_label': 'Heute erledigt',
+    'streak_record_label': 'Längste Serie',
+    'consistency_30d_label': 'Ø Konsistenz',
+    'habit_done_toast': 'Gewohnheit erledigt! 🔥',
+    'habit_done_desc': 'Halten Sie Ihre Konsistenz aufrecht.',
+    'habit_created_toast': 'Neue Gewohnheit erstellt! 🎯',
+    'habit_updated_toast': 'Gewohnheit aktualisiert',
+    'habit_updated_desc': 'Gewohnheitsdetails wurden gespeichert.',
+    'habit_deleted_toast': 'Gewohnheit gelöscht',
+    'habit_deleted_desc': 'Die Gewohnheit wurde aus der Liste entfernt.',
+    'habit_create_fail': 'Fehler beim Erstellen',
+    'habit_update_fail': 'Aktualisierung fehlgeschlagen',
+    'habit_delete_fail': 'Löschen fehlgeschlagen',
+    'confirm_delete_habit': 'Gewohnheit "{name}" und Verlauf löschen?',
+    'days_suffix': ' Tage',
+
+    // Event Tracker
+    'event_tracker_title': 'Ereignis-Tracker',
+    'event_tracker_desc': 'Erfassen, planen und evaluieren Sie Seminare, Konferenzen und wichtige Lebensereignisse.',
+    'add_event': '+ Ereignis hinzufügen',
+    'no_events_yet': 'Noch keine Ereignisse erfasst.',
+    'no_events_desc': 'Beginnen Sie mit der Aufzeichnung von Seminaren, Konferenzen oder wichtigen Momenten.',
+
+    // Weekly Review
+    'weekly_review_title': 'Wöchentliche Überprüfung',
+    'weekly_review_desc': 'Wöchentliche Auswertung von Handel, Gewohnheiten und Lebenszielen.',
+
+    // Trader Dashboard extra
+    'no_recent_trades': 'Noch keine Trades aufgezeichnet.',
+    'dashboard_trader_title': 'Handels-Dashboard',
+    'dashboard_trader_desc': 'Überwachen Sie Handelsleistung, tägliche Gewohnheiten und finanzielle Ziele.',
   }
 }

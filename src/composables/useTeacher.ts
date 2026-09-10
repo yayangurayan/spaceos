@@ -492,8 +492,19 @@ export function useTeacher() {
         if (matRes.data) materials.value = matRes.data
         if (payRes.data) payments.value = payRes.data
       } else {
-        // Auto-seed presets for teacher space
-        await seedPresetsToDb(spaceId)
+        // Only auto-seed for legacy demo space-teacher, not new user spaces
+        const isLegacyDemoSpace = spaceId === 'space-teacher'
+        const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
+        const hasBeenSeeded = localStorage.getItem(`spaceos_teacher_seeded_${spaceId}`) === 'true'
+        if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
+          await seedPresetsToDb(spaceId)
+        } else {
+          students.value = []
+          lessons.value = []
+          lessonPlans.value = []
+          materials.value = []
+          payments.value = []
+        }
       }
     } catch (err: any) {
       console.error('fetchTeacherData error:', err)
@@ -587,6 +598,7 @@ export function useTeacher() {
       if (pRes.data) lessonPlans.value = pRes.data
       if (mRes.data) materials.value = mRes.data
       if (pyRes.data) payments.value = pyRes.data
+      localStorage.setItem(`spaceos_teacher_seeded_${spaceId}`, 'true')
     } catch {
       seedLocalDefaults()
     }
@@ -665,6 +677,7 @@ export function useTeacher() {
     }))
 
     saveToLocalStorage(spaceId)
+    localStorage.setItem(`spaceos_teacher_seeded_${spaceId}`, 'true')
   }
 
   function loadFromLocalStorage(spaceId: string) {
@@ -684,7 +697,7 @@ export function useTeacher() {
         materials.value = JSON.parse(localStorage.getItem(mKey) || '[]')
         payments.value = JSON.parse(localStorage.getItem(pyKey) || '[]')
         usingFallback.value = true
-      } else if (!isCleanSlate && spaceId === 'space-teacher') {
+      } else if (!isCleanSlate && spaceId === 'space-teacher' && !localStorage.getItem(`spaceos_teacher_seeded_${spaceId}`)) {
         seedLocalDefaults()
       } else {
         students.value = []

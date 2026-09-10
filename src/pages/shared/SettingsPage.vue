@@ -515,34 +515,46 @@ async function executeCleanSlateReset() {
     }
   }
 
-  localStorage.setItem('spaceos_clean_slate', 'true')
+  // Preserve only essential keys
   const savedSpaces = localStorage.getItem('spaceos_spaces')
   const savedCurrentSpaceId = localStorage.getItem('spaceos_current_space_id')
+  const savedAuthUser = localStorage.getItem('spaceos_auth_user')
+  const savedAiSettings = localStorage.getItem('spaceos_ai_settings')
+  const savedLang = localStorage.getItem('spaceos_lang')
 
-  // Identify all application data keys and purge them
+  // Clear all spaceos_ keys completely
   const keysToRemove: string[] = []
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
     if (key && key.startsWith('spaceos_')) {
-      if (
-        key !== 'spaceos_clean_slate' &&
-        key !== 'spaceos_auth_user' &&
-        key !== 'spaceos_ai_settings' &&
-        key !== 'spaceos_lang' &&
-        key !== 'spaceos_spaces' &&
-        key !== 'spaceos_current_space_id' &&
-        key !== 'spaceos_pending_spaces'
-      ) {
-        keysToRemove.push(key)
-      }
+      keysToRemove.push(key)
     }
   }
+  keysToRemove.forEach(k => localStorage.removeItem(k))
 
-  keysToRemove.forEach(k => {
-    localStorage.removeItem(k)
-  })
+  // Restore only essential non-data keys
+  if (savedAuthUser) localStorage.setItem('spaceos_auth_user', savedAuthUser)
+  if (savedAiSettings) localStorage.setItem('spaceos_ai_settings', savedAiSettings)
+  if (savedLang) localStorage.setItem('spaceos_lang', savedLang)
   if (savedSpaces) localStorage.setItem('spaceos_spaces', savedSpaces)
   if (savedCurrentSpaceId) localStorage.setItem('spaceos_current_space_id', savedCurrentSpaceId)
+  // Set clean slate flag AFTER restoring so modules know to start empty
+  localStorage.setItem('spaceos_clean_slate', 'true')
+  // Also mark all existing spaces as "seeded" so no auto demo data appears
+  if (savedSpaces) {
+    try {
+      const parsedSpaces = JSON.parse(savedSpaces)
+      parsedSpaces.forEach((space: any) => {
+        localStorage.setItem(`spaceos_trades_seeded_${space.id}`, 'true')
+        localStorage.setItem(`spaceos_finance_seeded_${space.id}`, 'true')
+        localStorage.setItem(`spaceos_habits_seeded_${space.id}`, 'true')
+        localStorage.setItem(`spaceos_books_seeded_${space.id}`, 'true')
+        localStorage.setItem(`spaceos_events_seeded_${space.id}`, 'true')
+        localStorage.setItem(`spaceos_teacher_seeded_${space.id}`, 'true')
+        localStorage.setItem(`spaceos_couple_seeded_${space.id}`, 'true')
+      })
+    } catch { /* ignore */ }
+  }
 
   showResetModal.value = false
   toast.success(t('clean_slate_success'), t('clean_slate_success_desc'))

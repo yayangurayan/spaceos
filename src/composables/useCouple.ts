@@ -378,9 +378,10 @@ export function useCouple() {
         if (calRes.data) calendarEvents.value = calRes.data
         if (lnRes.data) loveNotes.value = lnRes.data
       } else {
+        const isLegacyDemoSpace = spaceId === 'space-couple'
         const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
         const hasBeenSeeded = localStorage.getItem(`spaceos_couple_seeded_${spaceId}`) === 'true'
-        if (isCleanSlate || hasBeenSeeded) {
+        if (isCleanSlate || hasBeenSeeded || !isLegacyDemoSpace) {
           albums.value = []
           photos.value = []
           journalEntries.value = []
@@ -551,7 +552,7 @@ export function useCouple() {
         calendarEvents.value = JSON.parse(localStorage.getItem(cKey) || '[]')
         loveNotes.value = JSON.parse(localStorage.getItem(lKey) || '[]')
         usingFallback.value = true
-      } else if (!isCleanSlate && spaceId === 'space-couple') {
+      } else if (!isCleanSlate && spaceId === 'space-couple' && !localStorage.getItem(`spaceos_couple_seeded_${spaceId}`)) {
         seedLocalDefaults()
       } else {
         albums.value = []
