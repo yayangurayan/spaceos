@@ -390,7 +390,69 @@ export function useCouple() {
           }
         }
       )
-      // 2. Calendar events live sync
+      // 2. Journal comments live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'journal_comments' },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as any
+            const entry = journalEntries.value.find(j => j.id === newRow.entry_id)
+            if (entry) {
+              if (!entry.comments) entry.comments = []
+              if (!entry.comments.some(c => c.id === newRow.id)) {
+                let authorName = newRow.author_id === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasangan'
+                if (newRow.author_id && newRow.author_id !== user.value?.id) {
+                  const { data: prof } = await supabase.from('profiles').select('full_name, email').eq('id', newRow.author_id).single()
+                  if (prof) authorName = prof.full_name || prof.email || authorName
+                }
+                entry.comments.push({
+                  id: newRow.id,
+                  entry_id: newRow.entry_id,
+                  author_name: authorName,
+                  content: newRow.content,
+                  parent_id: newRow.parent_id,
+                  created_at: newRow.created_at,
+                })
+              }
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as any
+            for (const j of journalEntries.value) {
+              if (j.comments) {
+                j.comments = j.comments.filter(c => c.id !== oldRow.id)
+              }
+            }
+          }
+        }
+      )
+      // 3. Journal reactions live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'journal_reactions' },
+        async (payload) => {
+          const entryId = (payload.new as any)?.entry_id || (payload.old as any)?.entry_id
+          if (!entryId) return
+          const entry = journalEntries.value.find(j => j.id === entryId)
+          if (entry) {
+            const { data: rList } = await supabase
+              .from('journal_reactions')
+              .select('*')
+              .eq('entry_id', entryId)
+            if (rList) {
+              const counts: Record<string, number> = {}
+              let userReaction: string | undefined = undefined
+              rList.forEach((r: any) => {
+                counts[r.emoji] = (counts[r.emoji] || 0) + 1
+                if (r.user_id === user.value?.id) userReaction = r.emoji
+              })
+              entry.reactions = counts
+              entry.userReaction = userReaction
+            }
+          }
+        }
+      )
+      // 4. Calendar events live sync
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'calendar_events', filter: `space_id=eq.${spaceId}` },
@@ -411,7 +473,7 @@ export function useCouple() {
           }
         }
       )
-      // 3. Love notes live sync
+      // 5. Love notes live sync
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'love_notes', filter: `space_id=eq.${spaceId}` },
@@ -436,7 +498,7 @@ export function useCouple() {
           }
         }
       )
-      // 4. Photos live sync
+      // 6. Photos live sync
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'photos', filter: `space_id=eq.${spaceId}` },
@@ -454,7 +516,33 @@ export function useCouple() {
           }
         }
       )
-      // 5. Albums live sync
+      // 7. Photo reactions live sync
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'photo_reactions' },
+        async (payload) => {
+          const photoId = (payload.new as any)?.photo_id || (payload.old as any)?.photo_id
+          if (!photoId) return
+          const p = photos.value.find(item => item.id === photoId)
+          if (p) {
+            const { data: prList } = await supabase
+              .from('photo_reactions')
+              .select('*')
+              .eq('photo_id', photoId)
+            if (prList) {
+              const counts: Record<string, number> = {}
+              let userReaction: string | undefined = undefined
+              prList.forEach((r: any) => {
+                counts[r.reaction] = (counts[r.reaction] || 0) + 1
+                if (r.user_id === user.value?.id) userReaction = r.reaction
+              })
+              p.reactions = counts
+              p.userReaction = userReaction
+            }
+          }
+        }
+      )
+      // 8. Albums live sync
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'albums', filter: `space_id=eq.${spaceId}` },
@@ -508,15 +596,85 @@ export function useCouple() {
         ])
 
         if (!aRes.error && aRes.data) albums.value = aRes.data
-        if (!phRes.error && phRes.data) photos.value = phRes.data
-        if (!jRes.error && jRes.data) {
-          journalEntries.value = jRes.data.map((j: any) => ({
-            ...j,
-            author_name: j.profiles?.full_name || j.profiles?.email || (j.author_id === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasangan'),
-            comments: j.comments || [],
-            reactions: j.reactions || {},
-          }))
+
+        // Photos + Reactions
+        if (!phRes.error && phRes.data) {
+          const photoIds = phRes.data.map((p: any) => p.id)
+          let allPhotoReactions: any[] = []
+          if (photoIds.length > 0) {
+            const { data: prData } = await supabase.from('photo_reactions').select('*').in('photo_id', photoIds)
+            if (prData) allPhotoReactions = prData
+          }
+
+          photos.value = phRes.data.map((p: any) => {
+            const reactionsCount: Record<string, number> = {}
+            let userReaction: string | undefined = undefined
+            allPhotoReactions.filter((r: any) => r.photo_id === p.id).forEach((r: any) => {
+              reactionsCount[r.reaction] = (reactionsCount[r.reaction] || 0) + 1
+              if (r.user_id === user.value?.id) userReaction = r.reaction
+            })
+            return {
+              ...p,
+              reactions: reactionsCount,
+              userReaction,
+            }
+          })
         }
+
+        // Journal Entries + Comments + Reactions
+        if (!jRes.error && jRes.data) {
+          const entryIds = jRes.data.map((j: any) => j.id)
+          let allComments: any[] = []
+          let allReactions: any[] = []
+
+          if (entryIds.length > 0) {
+            const [commentsRes, reactionsRes] = await Promise.all([
+              supabase
+                .from('journal_comments')
+                .select('*, profiles:author_id(full_name, email)')
+                .in('entry_id', entryIds)
+                .order('created_at', { ascending: true }),
+              supabase
+                .from('journal_reactions')
+                .select('*')
+                .in('entry_id', entryIds)
+            ])
+            if (!commentsRes.error && commentsRes.data) allComments = commentsRes.data
+            if (!reactionsRes.error && reactionsRes.data) allReactions = reactionsRes.data
+          }
+
+          journalEntries.value = jRes.data.map((j: any) => {
+            const entryComments = allComments
+              .filter((c: any) => c.entry_id === j.id)
+              .map((c: any) => ({
+                id: c.id,
+                entry_id: c.entry_id,
+                author_name: c.profiles?.full_name || c.profiles?.email || (c.author_id === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasangan'),
+                content: c.content,
+                parent_id: c.parent_id,
+                created_at: c.created_at,
+              }))
+
+            const reactionsCount: Record<string, number> = {}
+            let userReaction: string | undefined = undefined
+
+            allReactions
+              .filter((r: any) => r.entry_id === j.id)
+              .forEach((r: any) => {
+                reactionsCount[r.emoji] = (reactionsCount[r.emoji] || 0) + 1
+                if (r.user_id === user.value?.id) userReaction = r.emoji
+              })
+
+            return {
+              ...j,
+              author_name: j.profiles?.full_name || j.profiles?.email || (j.author_id === user.value?.id ? (user.value?.full_name || 'Kamu') : 'Pasangan'),
+              comments: entryComments,
+              reactions: reactionsCount,
+              userReaction,
+            }
+          })
+        }
+
         if (!calRes.error && calRes.data) calendarEvents.value = calRes.data
         if (!lnRes.error && lnRes.data) {
           loveNotes.value = lnRes.data.map((n: any) => ({
@@ -834,13 +992,56 @@ export function useCouple() {
   }
 
   async function reactToPhoto(photoId: string, emoji = '❤️') {
-    triggerHeartBurst()
     const p = photos.value.find(item => item.id === photoId)
-    if (p) {
-      if (!p.reactions) p.reactions = {}
+    if (!p) return
+
+    if (!p.reactions) p.reactions = {}
+    const currentReaction = p.userReaction
+    const userId = user.value?.id
+    const isRealUser = Boolean(userId && !userId.startsWith('demo-user') && !usingFallback.value)
+
+    if (currentReaction === emoji) {
+      // Toggle off
+      if (p.reactions[emoji] && p.reactions[emoji] > 0) {
+        p.reactions[emoji] -= 1
+      }
+      p.userReaction = undefined
+
+      if (isRealUser && userId) {
+        try {
+          await supabase
+            .from('photo_reactions')
+            .delete()
+            .match({ photo_id: photoId, user_id: userId })
+        } catch (e) {
+          console.warn('Error removing photo reaction:', e)
+        }
+      }
+    } else {
+      triggerHeartBurst()
+      if (currentReaction && p.reactions[currentReaction] && p.reactions[currentReaction] > 0) {
+        p.reactions[currentReaction] -= 1
+      }
       p.reactions[emoji] = (p.reactions[emoji] || 0) + 1
       p.userReaction = emoji
-      if (usingFallback.value) saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
+
+      if (isRealUser && userId) {
+        try {
+          await supabase
+            .from('photo_reactions')
+            .upsert({
+              photo_id: photoId,
+              user_id: userId,
+              reaction: emoji,
+            }, { onConflict: 'photo_id,user_id' })
+        } catch (e) {
+          console.warn('Error saving photo reaction:', e)
+        }
+      }
+    }
+
+    if (usingFallback.value) {
+      saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
     }
   }
 
@@ -993,60 +1194,120 @@ export function useCouple() {
   }
 
   async function reactToJournal(entryId: string, emoji: string) {
-    triggerHeartBurst()
     const j = journalEntries.value.find(item => item.id === entryId)
-    if (j) {
-      if (!j.reactions) j.reactions = {}
+    if (!j) return
+
+    if (!j.reactions) j.reactions = {}
+    const currentReaction = j.userReaction
+    const userId = user.value?.id
+    const isRealUser = Boolean(userId && !userId.startsWith('demo-user') && !usingFallback.value)
+
+    if (currentReaction === emoji) {
+      // Toggle off (un-react)
+      if (j.reactions[emoji] && j.reactions[emoji] > 0) {
+        j.reactions[emoji] -= 1
+      }
+      j.userReaction = undefined
+
+      if (isRealUser && userId) {
+        try {
+          await supabase
+            .from('journal_reactions')
+            .delete()
+            .match({ entry_id: entryId, user_id: userId })
+        } catch (e) {
+          console.warn('Error removing reaction:', e)
+        }
+      }
+    } else {
+      triggerHeartBurst()
+      // Switch reaction or add for first time
+      if (currentReaction && j.reactions[currentReaction] && j.reactions[currentReaction] > 0) {
+        j.reactions[currentReaction] -= 1
+      }
       j.reactions[emoji] = (j.reactions[emoji] || 0) + 1
       j.userReaction = emoji
-      if (usingFallback.value) saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
+
+      if (isRealUser && userId) {
+        try {
+          await supabase
+            .from('journal_reactions')
+            .upsert({
+              entry_id: entryId,
+              user_id: userId,
+              emoji,
+            }, { onConflict: 'entry_id,user_id' })
+        } catch (e) {
+          console.warn('Error saving reaction:', e)
+        }
+      }
     }
 
-    if (!usingFallback.value && user.value && !user.value.id.startsWith('demo-user')) {
-      try {
-        await supabase
-          .from('journal_reactions')
-          .upsert({
-            entry_id: entryId,
-            user_id: user.value.id,
-            emoji,
-          }, { onConflict: 'entry_id,user_id' })
-      } catch {}
+    if (usingFallback.value) {
+      saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
     }
   }
 
   async function addJournalComment(entryId: string, content: string, parentId?: string) {
-    if (!content.trim()) return
+    const trimmed = content.trim()
+    if (!trimmed) return
     const j = journalEntries.value.find(item => item.id === entryId)
     if (!j) return
 
-    const newComment: JournalComment = {
-      id: 'jc-' + Date.now(),
-      entry_id: entryId,
-      author_name: user.value?.full_name || 'Kamu',
-      content: content.trim(),
-      parent_id: parentId || null,
-      created_at: new Date().toISOString(),
-    }
+    const userId = user.value?.id
+    const isRealUser = Boolean(userId && !userId.startsWith('demo-user') && !usingFallback.value)
 
-    if (!j.comments) j.comments = []
-    j.comments.push(newComment)
-    if (usingFallback.value) saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
-
-    if (!usingFallback.value && user.value && !user.value.id.startsWith('demo-user')) {
+    if (isRealUser && userId) {
       try {
-        await supabase
+        const { data, error: err } = await supabase
           .from('journal_comments')
           .insert({
             entry_id: entryId,
-            author_id: user.value.id,
-            content: content.trim(),
+            author_id: userId,
+            content: trimmed,
             parent_id: parentId || null,
           })
-      } catch {}
+          .select('*, profiles:author_id(full_name, email, avatar_url)')
+          .single()
+
+        if (err) throw err
+
+        if (data) {
+          const newComment: JournalComment = {
+            id: data.id,
+            entry_id: entryId,
+            author_name: data.profiles?.full_name || data.profiles?.email || user.value?.full_name || 'Kamu',
+            content: data.content,
+            parent_id: data.parent_id,
+            created_at: data.created_at,
+          }
+
+          if (!j.comments) j.comments = []
+          if (!j.comments.some(c => c.id === newComment.id)) {
+            j.comments.push(newComment)
+          }
+        }
+      } catch (err: any) {
+        console.error('Error adding comment:', err)
+        toast.error('Gagal Mengirim Komentar', err.message)
+        return
+      }
+    } else {
+      const newComment: JournalComment = {
+        id: 'jc-' + Date.now(),
+        entry_id: entryId,
+        author_name: user.value?.full_name || 'Kamu',
+        content: trimmed,
+        parent_id: parentId || null,
+        created_at: new Date().toISOString(),
+      }
+      if (!j.comments) j.comments = []
+      j.comments.push(newComment)
+      if (usingFallback.value) saveToLocalStorage(currentSpace.value?.id || 'couple-demo')
     }
 
-    toast.success('Komentar Terkirim', 'Pesan kamu berhasil ditambahkan.')
+    triggerHeartBurst()
+    toast.success('Komentar Terkirim 💕', 'Pesan kamu berhasil ditambahkan.')
   }
 
 

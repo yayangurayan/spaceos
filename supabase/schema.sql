@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS spaces (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('personal', 'couple')),
-  category TEXT NOT NULL DEFAULT 'private' CHECK (category IN ('private', 'trader', 'teacher', 'general')),
+  category TEXT NOT NULL DEFAULT 'trader' CHECK (category IN ('trader', 'teacher', 'general')),
   icon TEXT,
   owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   invite_code TEXT UNIQUE,
@@ -38,23 +38,19 @@ UPDATE spaces
 SET category = CASE
   WHEN type = 'couple' THEN 'general'
   WHEN lower(name) LIKE '%guru%' OR lower(name) LIKE '%les%' OR lower(name) LIKE '%teacher%' THEN 'teacher'
-  WHEN lower(name) LIKE '%trad%' OR lower(name) LIKE '%trader%' THEN 'trader'
-  ELSE 'private'
+  ELSE 'trader'
 END
-WHERE category IS NULL;
-ALTER TABLE spaces ALTER COLUMN category SET DEFAULT 'private';
+WHERE category IS NULL OR category = 'private';
+ALTER TABLE spaces ALTER COLUMN category SET DEFAULT 'trader';
 DO $$
 BEGIN
   BEGIN
     ALTER TABLE spaces ALTER COLUMN category SET NOT NULL;
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'spaces_category_check'
-  ) THEN
-    ALTER TABLE spaces ADD CONSTRAINT spaces_category_check
-      CHECK (category IN ('private', 'trader', 'teacher', 'general'));
-  END IF;
+  ALTER TABLE spaces DROP CONSTRAINT IF EXISTS spaces_category_check;
+  ALTER TABLE spaces ADD CONSTRAINT spaces_category_check
+    CHECK (category IN ('trader', 'teacher', 'general'));
 END $$;
 
 -- Auto-generate unique invite codes for couple spaces that don't have one
@@ -1250,9 +1246,13 @@ CREATE INDEX IF NOT EXISTS idx_photos_album_id ON photos(album_id);
 CREATE INDEX IF NOT EXISTS idx_photos_space_id ON photos(space_id);
 CREATE INDEX IF NOT EXISTS idx_photos_taken_at ON photos(space_id, taken_at DESC);
 CREATE INDEX IF NOT EXISTS idx_photo_reactions_photo_id ON photo_reactions(photo_id);
+CREATE INDEX IF NOT EXISTS idx_photo_reactions_user_id ON photo_reactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_entries_space_id ON journal_entries(space_id);
 CREATE INDEX IF NOT EXISTS idx_journal_entries_published_at ON journal_entries(space_id, published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_journal_comments_entry_id ON journal_comments(entry_id);
+CREATE INDEX IF NOT EXISTS idx_journal_comments_author_id ON journal_comments(author_id);
+CREATE INDEX IF NOT EXISTS idx_journal_reactions_entry_id ON journal_reactions(entry_id);
+CREATE INDEX IF NOT EXISTS idx_journal_reactions_user_id ON journal_reactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_calendar_events_space_id ON calendar_events(space_id);
 CREATE INDEX IF NOT EXISTS idx_calendar_events_start_time ON calendar_events(space_id, start_time ASC);
 CREATE INDEX IF NOT EXISTS idx_love_notes_space_id ON love_notes(space_id);
@@ -1491,6 +1491,63 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.space_members;
   EXCEPTION WHEN duplicate_object THEN NULL;
   END;
+END $$;
+
+-- ============================================================
+-- 14. Auto-update updated_at Timestamp Trigger
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply updated_at triggers
+DO $$
+BEGIN
+  -- journal_entries
+  DROP TRIGGER IF EXISTS trigger_journal_entries_updated_at ON public.journal_entries;
+  CREATE TRIGGER trigger_journal_entries_updated_at
+    BEFORE UPDATE ON public.journal_entries
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  -- calendar_events
+  DROP TRIGGER IF EXISTS trigger_calendar_events_updated_at ON public.calendar_events;
+  CREATE TRIGGER trigger_calendar_events_updated_at
+    BEFORE UPDATE ON public.calendar_events
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  -- albums
+  DROP TRIGGER IF EXISTS trigger_albums_updated_at ON public.albums;
+  CREATE TRIGGER trigger_albums_updated_at
+    BEFORE UPDATE ON public.albums
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  -- habits
+  DROP TRIGGER IF EXISTS trigger_habits_updated_at ON public.habits;
+  CREATE TRIGGER trigger_habits_updated_at
+    BEFORE UPDATE ON public.habits
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  -- books
+  DROP TRIGGER IF EXISTS trigger_books_updated_at ON public.books;
+  CREATE TRIGGER trigger_books_updated_at
+    BEFORE UPDATE ON public.books
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  -- trades
+  DROP TRIGGER IF EXISTS trigger_trades_updated_at ON public.trades;
+  CREATE TRIGGER trigger_trades_updated_at
+    BEFORE UPDATE ON public.trades
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  -- students
+  DROP TRIGGER IF EXISTS trigger_students_updated_at ON public.students;
+  CREATE TRIGGER trigger_students_updated_at
+    BEFORE UPDATE ON public.students
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 END $$;
 
 

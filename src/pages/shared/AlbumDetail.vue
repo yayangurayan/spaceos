@@ -7,37 +7,37 @@
         class="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
       >
         <Icon name="arrow-left" :size="16" />
-        <span>Kembali ke Galeri Album</span>
+        <span>{{ t('back_to_gallery') }}</span>
       </router-link>
     </div>
 
     <!-- Loading / Not Found State -->
-    <div v-if="!album && !isLoading" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-3">
+    <div v-if="!album && !isLoading" class="glass rounded-2xl p-8 sm:p-12 text-center text-slate-400 space-y-3">
       <span class="text-4xl block">🔍</span>
-      <h3 class="text-base font-bold text-white">Album tidak ditemukan</h3>
+      <h3 class="text-base font-bold text-white">{{ t('album_not_found') }}</h3>
       <router-link to="/gallery" class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold inline-block">
-        Lihat Semua Album
+        {{ t('view_all_albums') }}
       </router-link>
     </div>
 
     <template v-else-if="album">
       <!-- 1. Album Header Banner -->
-      <div class="relative glass rounded-2xl p-6 border border-slate-700/60 overflow-hidden bg-gradient-to-r from-rose-950/40 via-slate-900/80 to-slate-900/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div class="space-y-2">
+      <div class="relative glass rounded-2xl p-5 sm:p-6 border border-slate-700/60 overflow-hidden bg-gradient-to-r from-rose-950/40 via-slate-900/80 to-slate-900/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-2 min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2">
-            <h1 class="text-xl sm:text-2xl font-extrabold text-white">
+            <h1 class="text-xl sm:text-2xl font-extrabold text-white break-words">
               {{ album.name }}
             </h1>
-            <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">
-              📸 {{ albumPhotos.length }} Foto
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 shrink-0">
+              📸 {{ t('photos_count', { count: albumPhotos.length }) }}
             </span>
           </div>
 
-          <p v-if="album.description" class="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+          <p v-if="album.description" class="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed break-words">
             {{ album.description }}
           </p>
 
-          <div class="flex flex-wrap items-center gap-2 pt-1">
+          <div v-if="album.tags && album.tags.length > 0" class="flex flex-wrap items-center gap-1.5 pt-1">
             <span
               v-for="tag in album.tags"
               :key="tag"
@@ -49,42 +49,42 @@
         </div>
 
         <!-- Action Controls -->
-        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto shrink-0">
           <!-- Slideshow Button -->
           <button
             v-if="albumPhotos.length > 0"
             type="button"
             @click="startSlideshow"
-            class="px-4 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
           >
-            <span>▶️ Slideshow</span>
+            <span>{{ t('slideshow') }}</span>
           </button>
 
           <!-- Upload Photos Button -->
           <button
             type="button"
             @click="showUploadModal = true"
-            class="btn-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-rose-500/20"
+            class="btn-primary flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-rose-500/20"
           >
             <Icon name="upload" :size="14" />
-            <span>+ Tambah Foto</span>
+            <span>{{ t('add_photo') }}</span>
           </button>
         </div>
       </div>
 
       <!-- 2. Grid Style Switcher -->
-      <div class="flex items-center justify-between">
-        <span class="text-xs text-slate-400 font-mono">
-          Menampilkan {{ albumPhotos.length }} foto kenangan
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs text-slate-400 font-mono truncate">
+          {{ t('photos_count', { count: albumPhotos.length }) }}
         </span>
 
-        <div class="flex items-center gap-1 bg-dark/80 p-1 rounded-xl border border-slate-700/60 text-xs">
+        <div class="flex items-center gap-1 bg-dark/80 p-1 rounded-xl border border-slate-700/60 text-xs shrink-0">
           <button
             type="button"
             @click="layoutMode = 'uniform'"
             class="px-2.5 py-1 rounded-lg transition-all"
             :class="layoutMode === 'uniform' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'"
-            title="Grid Kotak Seragam"
+            title="Grid"
           >
             ⏹️ Grid
           </button>
@@ -93,7 +93,7 @@
             @click="layoutMode = 'masonry'"
             class="px-2.5 py-1 rounded-lg transition-all"
             :class="layoutMode === 'masonry' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'"
-            title="Tampilan Masonry / Variasi Tinggi"
+            title="Masonry"
           >
             🧱 Masonry
           </button>
@@ -101,23 +101,23 @@
       </div>
 
       <!-- 3. Photos Grid -->
-      <div v-if="albumPhotos.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-3">
+      <div v-if="albumPhotos.length === 0" class="glass rounded-2xl p-8 sm:p-12 text-center text-slate-400 space-y-3">
         <span class="text-4xl block">📷</span>
-        <h3 class="text-base font-bold text-white">Album ini masih kosong</h3>
-        <p class="text-xs text-slate-500">Mulai unggah foto kencan atau liburan ke dalam album ini.</p>
+        <h3 class="text-base font-bold text-white">{{ t('no_photos_album') }}</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">{{ t('no_photos_album_desc') }}</p>
         <button
           type="button"
           @click="showUploadModal = true"
           class="btn-primary px-5 py-2 text-xs font-bold rounded-xl mt-2"
         >
-          + Unggah Foto Sekarang
+          {{ t('add_photo') }}
         </button>
       </div>
 
       <!-- Uniform Grid Mode -->
       <div
         v-else-if="layoutMode === 'uniform'"
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4"
       >
         <div
           v-for="(photo, idx) in albumPhotos"
@@ -133,7 +133,7 @@
           />
 
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
-            <p class="text-xs font-semibold text-white truncate">{{ photo.caption || 'Foto Kenangan' }}</p>
+            <p class="text-xs font-semibold text-white truncate">{{ photo.caption || '' }}</p>
             <p v-if="photo.location" class="text-[10px] text-slate-300 truncate mt-0.5">📍 {{ photo.location }}</p>
           </div>
         </div>
@@ -142,13 +142,13 @@
       <!-- Masonry Grid Mode -->
       <div
         v-else
-        class="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4"
+        class="columns-2 sm:columns-3 md:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4"
       >
         <div
           v-for="(photo, idx) in albumPhotos"
           :key="photo.id"
           @click="openLightbox(albumPhotos, idx)"
-          class="group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/60 hover:border-rose-500/60 cursor-pointer break-inside-avoid transition-all duration-300 hover:-translate-y-1 hover:shadow-xl mb-4"
+          class="group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/60 hover:border-rose-500/60 cursor-pointer break-inside-avoid transition-all duration-300 hover:-translate-y-1 hover:shadow-xl mb-3 sm:mb-4"
         >
           <img
             :src="photo.image_url"
@@ -158,7 +158,7 @@
           />
 
           <div class="p-2.5 bg-slate-900/90 text-xs">
-            <p class="font-semibold text-white truncate">{{ photo.caption || 'Momen Spesial' }}</p>
+            <p class="font-semibold text-white truncate">{{ photo.caption || '' }}</p>
             <p class="text-[10px] text-slate-400 mt-0.5">🗓️ {{ formatDate(photo.taken_at || photo.created_at) }}</p>
           </div>
         </div>
@@ -192,10 +192,12 @@ import Icon from '@/components/ui/Icon.vue'
 import PhotoUploadModal from '@/components/gallery/PhotoUploadModal.vue'
 import PhotoLightbox from '@/components/gallery/PhotoLightbox.vue'
 import { useCouple } from '@/composables/useCouple'
+import { useI18n } from '@/composables/useI18n'
 import type { PhotoFormData } from '@/types'
 
 const route = useRoute()
 const albumId = computed(() => route.params.id as string)
+const { t, currentLang } = useI18n()
 
 const {
   albums,
@@ -234,7 +236,8 @@ function startSlideshow() {
 
 function formatDate(dateStr?: string | null) {
   if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('id-ID', {
+  const locale = currentLang.value === 'de' ? 'de-DE' : 'id-ID'
+  return new Date(dateStr).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

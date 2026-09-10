@@ -4,12 +4,12 @@
          Desktop Sidebar (lg+)
          ============================ -->
     <aside
-      class="fixed top-0 left-0 z-40 h-screen hidden lg:block border-r border-slate-700/50 transition-all duration-300"
-      :style="{ width: isSidebarCollapsed ? '0px' : '280px' }"
+      class="fixed top-0 left-0 z-40 h-screen hidden lg:block border-r border-slate-700/50"
+      :style="{ width: isSidebarCollapsed ? '0px' : '280px', transition: 'width 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }"
     >
       <div
-        class="h-full overflow-hidden transition-all duration-300"
-        :style="{ width: isSidebarCollapsed ? '0px' : '280px', opacity: isSidebarCollapsed ? 0 : 1 }"
+        class="h-full overflow-hidden"
+        :style="{ width: isSidebarCollapsed ? '0px' : '280px', opacity: isSidebarCollapsed ? 0 : 1, transition: 'width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease' }"
       >
         <Sidebar @navigate="onNavigate" />
       </div>
@@ -50,8 +50,8 @@
          Main Content Area
          ============================ -->
     <div
-      class="flex flex-col min-h-screen transition-all duration-300"
-      :style="{ marginLeft: desktopMargin }"
+      class="flex flex-col min-h-screen"
+      :style="{ marginLeft: desktopMargin, transition: 'margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }"
     >
       <!-- Top Bar -->
       <Topbar
@@ -60,7 +60,7 @@
       />
 
       <!-- Page Content -->
-      <main class="flex-1 p-4 lg:p-6">
+      <main class="flex-1 p-4 lg:p-6 overflow-x-hidden">
         <router-view v-slot="{ Component, route }">
           <transition name="page" mode="out-in">
             <component :is="Component" :key="route.path" />
@@ -145,21 +145,21 @@ onUnmounted(() => {
 
 <style scoped>
 /* ============================
-   Page Transition (fade + slide right)
+   Page Transition (smooth fade + subtle slide)
    ============================ */
 .page-enter-active {
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .page-leave-active {
-  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateX(16px);
+  transform: translateY(12px);
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateX(-8px);
+  transform: translateY(-6px);
 }
 
 /* ============================
@@ -167,7 +167,7 @@ onUnmounted(() => {
    ============================ */
 .overlay-enter-active,
 .overlay-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .overlay-enter-from,
 .overlay-leave-to {
@@ -178,10 +178,10 @@ onUnmounted(() => {
    Mobile Sidebar Slide
    ============================ */
 .sidebar-slide-enter-active {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .sidebar-slide-leave-active {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 1, 1);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 1, 1);
 }
 .sidebar-slide-enter-from,
 .sidebar-slide-leave-to {

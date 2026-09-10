@@ -2,54 +2,44 @@
   <div class="space-y-6 animate-fade-in">
     <!-- 1. Page Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
+      <div class="min-w-0">
         <div class="flex items-center gap-2.5">
           <span class="text-2xl sm:text-3xl">📖</span>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Buku Harian Bersama (Shared Journal)
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight truncate">
+            {{ t('journal_page_title') }}
           </h1>
         </div>
         <p class="text-xs sm:text-sm text-slate-400 mt-1">
-          Catat perasaan, cerita harian, dan apresiasi kecil untuk pasanganmu.
+          {{ t('journal_page_desc') }}
         </p>
       </div>
 
       <!-- Actions -->
-      <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-        <!-- AI Relationship Report Button -->
-        <button
-          type="button"
-          @click="runRelationshipReport"
-          class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-pink-500/20 flex items-center justify-center gap-2 transition-all hover:scale-102"
-        >
-          <span>✨</span>
-          <span>AI Relationship Report</span>
-        </button>
-
+      <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
         <button
           type="button"
           @click="openWriteModal()"
-          class="btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20"
+          class="btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20 w-full sm:w-auto"
         >
           <Icon name="plus" :size="16" />
-          <span>+ Tulis Journal Baru</span>
+          <span>{{ t('write_new_journal') }}</span>
         </button>
       </div>
     </div>
 
-    <!-- AI Conversation Starters -->
+    <!-- Topic Starters -->
     <div class="glass rounded-2xl p-4 border border-rose-500/20 bg-rose-500/5 space-y-2">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold uppercase tracking-wider text-rose-300 flex items-center gap-1.5">
           <span>💡</span>
-          <span>Ide Topik & Pemantik Cerita Hari Ini</span>
+          <span>{{ t('topic_ideas_title') }}</span>
         </span>
         <button
           type="button"
           @click="refreshStarters"
           class="text-[11px] text-slate-400 hover:text-white transition-colors"
         >
-          🔄 Acak Ulang
+          {{ t('shuffle_topics') }}
         </button>
       </div>
 
@@ -59,7 +49,7 @@
           :key="idx"
           type="button"
           @click="startWithPrompt(prompt)"
-          class="text-left p-2.5 rounded-xl bg-slate-900/80 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/30 text-xs text-slate-200 transition-all hover:translate-x-1"
+          class="text-left p-2.5 rounded-xl bg-slate-900/80 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/30 text-xs text-slate-200 transition-all duration-200 hover:translate-x-1"
         >
           {{ prompt }}
         </button>
@@ -74,15 +64,15 @@
       <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-2xl shrink-0">
         ⏳
       </div>
-      <div class="space-y-1 flex-1">
+      <div class="space-y-1 flex-1 min-w-0">
         <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-          Nostalgia Hari Ini (On This Day)
+          {{ t('nostalgia_title') }}
         </span>
-        <h3 class="text-sm font-bold text-white">
-          {{ onThisDayItems.journals[0]?.title || 'Kenangan Manis di Tanggal Ini' }}
+        <h3 class="text-sm font-bold text-white truncate">
+          {{ onThisDayItems.journals[0]?.title || t('nostalgia_default_title') }}
         </h3>
         <p class="text-xs text-slate-300 line-clamp-2">
-          {{ onThisDayItems.journals[0]?.content || 'Ada foto kenangan yang kalian ambil di tanggal ini beberapa tahun lalu.' }}
+          {{ onThisDayItems.journals[0]?.content || t('nostalgia_default_desc') }}
         </p>
       </div>
     </div>
@@ -94,12 +84,12 @@
         <button
           type="button"
           @click="selectedMood = 'all'"
-          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200"
           :class="selectedMood === 'all'
             ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold shadow-md'
             : 'bg-slate-800/80 text-slate-400 hover:text-white'"
         >
-          Semua Mood
+          {{ t('all_moods') }}
         </button>
 
         <button
@@ -107,7 +97,7 @@
           :key="m.name"
           type="button"
           @click="selectedMood = m.name"
-          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1"
           :class="selectedMood === m.name
             ? 'bg-rose-500 text-white font-bold shadow-md'
             : 'bg-slate-800/80 text-slate-400 hover:text-white'"
@@ -123,8 +113,8 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Cari cerita, tagar, kata kunci..."
-          class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+          :placeholder="t('search_journal_placeholder')"
+          class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors duration-200"
         />
       </div>
     </div>
@@ -132,14 +122,14 @@
     <!-- 4. Journal Entries Feed -->
     <div v-if="filteredEntries.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-3">
       <span class="text-4xl block">📖</span>
-      <h3 class="text-base font-bold text-white">Belum ada journal entry</h3>
-      <p class="text-xs text-slate-500">Mulai tulis catatan cinta atau cerita seru hari ini.</p>
+      <h3 class="text-base font-bold text-white">{{ t('no_journal_entries') }}</h3>
+      <p class="text-xs text-slate-500">{{ t('no_journal_entries_desc') }}</p>
       <button
         type="button"
         @click="openWriteModal()"
         class="btn-primary px-5 py-2 text-xs font-bold rounded-xl mt-2"
       >
-        + Tulis Journal Pertama
+        {{ t('write_first_journal') }}
       </button>
     </div>
 
@@ -153,28 +143,28 @@
         <div class="space-y-3">
           <!-- Top Row: Mood, Author & Date -->
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="text-xl p-1.5 rounded-xl bg-slate-800 border border-slate-700">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-xl p-1.5 rounded-xl bg-slate-800 border border-slate-700 shrink-0">
                 {{ getMoodEmoji(entry.mood) }}
               </span>
-              <div>
-                <span class="text-xs font-bold text-white block">{{ entry.author_name || 'Kamu' }}</span>
+              <div class="min-w-0">
+                <span class="text-xs font-bold text-white block truncate">{{ entry.author_name || t('you') }}</span>
                 <span class="text-[10px] text-slate-400 font-mono">{{ formatDate(entry.published_at || entry.created_at) }}</span>
               </div>
             </div>
 
             <span
               v-if="!entry.is_published"
-              class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30"
+              class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0"
             >
-              Draft
+              {{ t('draft') }}
             </span>
           </div>
 
           <!-- Title & Preview Content -->
           <div>
             <h3 class="text-base font-bold text-white hover:text-rose-400 transition-colors line-clamp-1">
-              {{ entry.title || 'Catatan Bersama' }}
+              {{ entry.title || t('shared_note') }}
             </h3>
             <p class="text-xs text-slate-300 line-clamp-3 mt-1.5 leading-relaxed">
               {{ entry.content }}
@@ -198,7 +188,7 @@
           <div class="flex items-center gap-3">
             <span class="flex items-center gap-1">
               <span>💬</span>
-              <span>{{ entry.comments?.length || 0 }} Komentar</span>
+              <span>{{ t('comments_count', { count: entry.comments?.length || 0 }) }}</span>
             </span>
 
             <button
@@ -215,16 +205,16 @@
             <button
               type="button"
               @click.stop="openEditModal(entry)"
-              class="p-1.5 text-slate-400 hover:text-white"
-              title="Edit Entry"
+              class="p-1.5 text-slate-400 hover:text-white transition-colors"
+              :title="t('edit_entry')"
             >
               <Icon name="edit" :size="14" />
             </button>
             <button
               type="button"
               @click.stop="confirmDelete(entry.id)"
-              class="p-1.5 text-slate-400 hover:text-rose-400"
-              title="Hapus Entry"
+              class="p-1.5 text-slate-400 hover:text-rose-400 transition-colors"
+              :title="t('delete_entry')"
             >
               <Icon name="trash" :size="14" />
             </button>
@@ -241,17 +231,6 @@
       @close="showEditorModal = false; selectedEntry = null; initialPrompt = ''"
       @save="handleSaveJournal"
     />
-
-    <!-- Modal: AI Relationship Report -->
-    <AIInsightModal
-      v-if="showReportModal"
-      title="AI Relationship Insights & Harmony Report"
-      icon="✨"
-      :content="reportContent"
-      :is-loading="isGenerating"
-      loading-title="AI Sedang Menganalisis Harmoni Hubungan & Iklim Emosi..."
-      @close="showReportModal = false"
-    />
   </div>
 </template>
 
@@ -260,12 +239,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Icon from '@/components/ui/Icon.vue'
 import JournalEditor from '@/components/journal/JournalEditor.vue'
-import AIInsightModal from '@/components/ai/AIInsightModal.vue'
 import { useCouple } from '@/composables/useCouple'
 import { useJournalAI } from '@/composables/useJournalAI'
+import { useI18n } from '@/composables/useI18n'
 import type { JournalEntry, JournalEntryFormData } from '@/types'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const {
   journalEntries,
@@ -277,7 +257,7 @@ const {
   reactToJournal,
 } = useCouple()
 
-const { isGenerating, generateRelationshipReport, getConversationStarters } = useJournalAI()
+const { getConversationStarters } = useJournalAI()
 
 const selectedMood = ref('all')
 const searchQuery = ref('')
@@ -287,15 +267,13 @@ const initialPrompt = ref('')
 // Modals
 const showEditorModal = ref(false)
 const selectedEntry = ref<JournalEntry | null>(null)
-const showReportModal = ref(false)
-const reportContent = ref('')
 
-const moodOptions = [
-  { name: 'Happy', emoji: '😊', label: 'Senang' },
-  { name: 'Loving', emoji: '💕', label: 'Sayang' },
-  { name: 'Excited', emoji: '🎉', label: 'Semangat' },
-  { name: 'Thoughtful', emoji: '😔', label: 'Reflektif' },
-]
+const moodOptions = computed(() => [
+  { name: 'Happy', emoji: '😊', label: t('mood_happy') },
+  { name: 'Loving', emoji: '💕', label: t('mood_loving') },
+  { name: 'Excited', emoji: '🎉', label: t('mood_excited') },
+  { name: 'Thoughtful', emoji: '😔', label: t('mood_thoughtful') },
+])
 
 const filteredEntries = computed(() => {
   return journalEntries.value.filter(entry => {
@@ -339,13 +317,6 @@ function openWriteModal(prompt?: string) {
   showEditorModal.value = true
 }
 
-async function runRelationshipReport() {
-  showReportModal.value = true
-  reportContent.value = ''
-  const res = await generateRelationshipReport(journalEntries.value)
-  reportContent.value = res
-}
-
 function openEditModal(entry: JournalEntry) {
   selectedEntry.value = entry
   initialPrompt.value = ''
@@ -368,7 +339,7 @@ function navigateToEntry(id: string) {
 }
 
 async function confirmDelete(id: string) {
-  if (confirm('Hapus catatan journal ini?')) {
+  if (confirm(t('confirm_delete_journal'))) {
     await deleteJournalEntry(id)
   }
 }

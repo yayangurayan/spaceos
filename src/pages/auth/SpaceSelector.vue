@@ -1,5 +1,23 @@
 <template>
-  <div class="min-h-screen bg-dark">
+  <div class="min-h-screen bg-dark relative overflow-hidden">
+    <!-- Animated background particles -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+      <div class="floating-orb w-[400px] h-[400px] bg-accent/10 -top-32 -right-32" style="animation-duration: 14s;"></div>
+      <div class="floating-orb w-[300px] h-[300px] bg-primary/10 -bottom-24 -left-24" style="animation-duration: 18s; animation-delay: 3s;"></div>
+      <div
+        v-for="i in 8"
+        :key="'particle-' + i"
+        class="floating-particle bg-accent/30"
+        :style="{
+          left: `${10 + (i * 11) % 85}%`,
+          bottom: `-${3 + (i % 3) * 2}%`,
+          width: `${2 + (i % 3)}px`,
+          height: `${2 + (i % 3)}px`,
+          animationDuration: `${10 + (i % 4) * 4}s`,
+          animationDelay: `${i * 1.2}s`,
+        }"
+      ></div>
+    </div>
     <!-- Header -->
     <header class="border-b border-slate-800 bg-slate-950/70 backdrop-blur-xl">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -112,12 +130,12 @@
       </div>
 
       <!-- Spaces Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <div
           v-for="(space, index) in spaces"
           :key="space.id"
-          class="space-card glass rounded-xl p-6 text-left group relative overflow-hidden animate-slide-in cursor-pointer"
-          :style="{ animationDelay: `${index * 80}ms`, opacity: 0 }"
+          class="space-card glass rounded-xl p-6 sm:p-7 text-left group relative overflow-hidden animate-slide-in cursor-pointer"
+          :style="{ animationDelay: `${index * 100}ms`, opacity: 0 }"
           @click="handleSelectSpace(space.id, $event)"
         >
           <!-- Ripple container -->
@@ -128,7 +146,7 @@
             <div class="flex items-center gap-4 mb-4">
               <!-- Space Icon -->
               <div
-                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-transform duration-150 group-hover:scale-110 shadow-md"
+                class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 shadow-md"
                 :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : space.category === 'private' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
               >
                 {{ space.type === 'couple' ? '💑' : space.category === 'private' ? '🔒' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
@@ -196,13 +214,13 @@
                 </button>
               </div>
               <div v-else class="flex items-center justify-between gap-2">
-                <p class="text-[10px] text-pink-400/70 font-semibold">Belum ada kode undangan</p>
+                <p class="text-[10px] text-pink-400/70 font-semibold">{{ t('no_invite_code_yet') }}</p>
                 <button
                   type="button"
                   @click.stop="generateMissingInviteCode(space)"
                   class="px-2 py-1 rounded bg-pink-500 hover:bg-pink-400 text-white text-[10px] font-bold transition-all"
                 >
-                  Buat Kode
+                  {{ t('generate_code') }}
                 </button>
               </div>
             </div>
@@ -236,36 +254,20 @@
               <!-- Space Category / Template -->
               <div>
                 <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ t('choose_category_type') }}</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                  <!-- Private Personal Space -->
-                  <button
-                    type="button"
-                    @click="setSpaceTemplate('personal', 'private', '🔒', 'My Private Space')"
-                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
-                    :class="newSpace.category === 'private'
-                      ? 'border-emerald-500 bg-emerald-500/15 text-white shadow-lg shadow-emerald-500/10 scale-102 ring-1 ring-emerald-500'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
-                  >
-                    <span class="text-2xl mb-1 block">🔒</span>
-                    <div>
-                      <span class="text-xs font-bold text-white block">{{ t('private_space_title') }}</span>
-                      <span class="text-[10px] text-slate-400 leading-tight">{{ t('private_space_desc') }}</span>
-                    </div>
-                  </button>
-
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <!-- Option 1: Trading & Habits -->
                   <button
                     type="button"
                     @click="setSpaceTemplate('personal', 'trader', '📈', 'My Trading Space')"
-                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
+                    class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
                     :class="newSpace.category === 'trader' && newSpace.type === 'personal'
-                      ? 'border-cyan-500 bg-cyan-500/15 text-white shadow-lg shadow-cyan-500/10 scale-102 ring-1 ring-cyan-500'
+                      ? 'border-cyan-500 bg-cyan-500/15 text-white shadow-lg shadow-cyan-500/10 ring-1 ring-cyan-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-2xl mb-1 block">📈</span>
+                    <span class="text-3xl mb-2 block">📈</span>
                     <div>
-                      <span class="text-xs font-bold text-white block">{{ t('trading_hub_title') }}</span>
-                      <span class="text-[10px] text-slate-400 leading-tight">{{ t('trading_hub_desc') }}</span>
+                      <span class="text-sm font-bold text-white block">{{ t('trading_hub_title') }}</span>
+                      <span class="text-xs text-slate-400 leading-tight">{{ t('trading_hub_desc') }}</span>
                     </div>
                   </button>
 
@@ -273,15 +275,15 @@
                   <button
                     type="button"
                     @click="setSpaceTemplate('personal', 'teacher', '🎓', 'Bimbingan Belajar')"
-                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
+                    class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
                     :class="newSpace.category === 'teacher' && newSpace.type === 'personal'
-                      ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg shadow-indigo-500/10 scale-102 ring-1 ring-indigo-500'
+                      ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-2xl mb-1 block">🎓</span>
+                    <span class="text-3xl mb-2 block">🎓</span>
                     <div>
-                      <span class="text-xs font-bold text-white block">{{ t('teacher_hub_title') }}</span>
-                      <span class="text-[10px] text-slate-400 leading-tight">{{ t('teacher_hub_desc') }}</span>
+                      <span class="text-sm font-bold text-white block">{{ t('teacher_hub_title') }}</span>
+                      <span class="text-xs text-slate-400 leading-tight">{{ t('teacher_hub_desc') }}</span>
                     </div>
                   </button>
 
@@ -289,15 +291,15 @@
                   <button
                     type="button"
                     @click="setSpaceTemplate('couple', 'general', '💑', 'Our Romantic Space 💕')"
-                    class="p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between"
+                    class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
                     :class="newSpace.type === 'couple'
-                      ? 'border-pink-500 bg-pink-500/15 text-white shadow-lg shadow-pink-500/10 scale-102 ring-1 ring-pink-500'
+                      ? 'border-pink-500 bg-pink-500/15 text-white shadow-lg shadow-pink-500/10 ring-1 ring-pink-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-2xl mb-1 block">💑</span>
+                    <span class="text-3xl mb-2 block">💑</span>
                     <div>
-                      <span class="text-xs font-bold text-white block">{{ t('couple_space_title') }}</span>
-                      <span class="text-[10px] text-slate-400 leading-tight">{{ t('couple_space_desc') }}</span>
+                      <span class="text-sm font-bold text-white block">{{ t('couple_space_title') }}</span>
+                      <span class="text-xs text-slate-400 leading-tight">{{ t('couple_space_desc') }}</span>
                     </div>
                   </button>
                 </div>
@@ -508,21 +510,21 @@ async function generateMissingInviteCode(space: SpaceWithMeta) {
   if (authStore.user && !authStore.user.id.startsWith('demo-user')) {
     await supabase.from('spaces').update({ invite_code: newCode }).eq('id', space.id)
   }
-  toast.success('Kode Berhasil Dibuat', 'Kode undangan pasangan siap dibagikan.')
+  toast.success(t('code_generated_title'), t('code_generated_desc'))
 }
 
 const newSpace = reactive({
   name: 'My Trading Space',
   type: 'personal' as SpaceType,
-  category: 'private' as SpaceCategory,
-  icon: '🔒',
+  category: 'trader' as SpaceCategory,
+  icon: '📈',
 })
 
 function setSpaceTemplate(type: SpaceType, category: SpaceCategory, icon: string, defaultName: string) {
   newSpace.type = type
   newSpace.category = category
   newSpace.icon = icon
-  if (!newSpace.name || newSpace.name === 'My Private Space' || newSpace.name === 'My Trading Space' || newSpace.name === 'Bimbingan Belajar' || newSpace.name === 'Our Romantic Space 💕') {
+  if (!newSpace.name || newSpace.name === 'My Trading Space' || newSpace.name === 'Bimbingan Belajar' || newSpace.name === 'Our Romantic Space 💕') {
     newSpace.name = defaultName
   }
 }
@@ -726,10 +728,10 @@ async function handleCreateSpace() {
 
     toast.success(t('space_created_success'), t('space_created_ready', { name: createdSpace.name }))
     showCreateModal.value = false
-    newSpace.name = 'My Private Space'
+    newSpace.name = 'My Trading Space'
     newSpace.type = 'personal'
-    newSpace.category = 'private'
-    newSpace.icon = '🔒'
+    newSpace.category = 'trader'
+    newSpace.icon = '📈'
 
     // Automatically enter the new empty space
     await authStore.selectSpace(createdSpace.id)
@@ -749,7 +751,7 @@ async function handleLogout() {
 
 <style scoped>
 .space-card {
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
   border: 1px solid transparent;
 }
 

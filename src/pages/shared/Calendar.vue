@@ -2,36 +2,36 @@
   <div class="space-y-6 animate-fade-in">
     <!-- 1. Page Header & Anniversary Counter Banner -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
+      <div class="min-w-0">
         <div class="flex items-center gap-2.5">
-          <span class="text-2xl sm:text-3xl">🗓️</span>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Kalender Bersama (Our Calendar)
+          <span class="text-2xl sm:text-3xl shrink-0">🗓️</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight truncate">
+            {{ t('calendar_title') }}
           </h1>
         </div>
         <p class="text-xs sm:text-sm text-slate-400 mt-1">
-          Jadwal kencan, liburan bareng, pengingat ulang tahun, dan agenda spesial berdua.
+          {{ t('calendar_desc') }}
         </p>
       </div>
 
       <!-- Actions -->
-      <div class="flex items-center gap-2.5 w-full sm:w-auto">
+      <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
         <button
           type="button"
           @click="exportToICS(calendarEvents)"
-          class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors"
-          title="Ekspor ke Google Calendar / Apple Calendar"
+          class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors"
+          :title="t('export_ics_title')"
         >
-          <span>📥 Ekspor (.ICS)</span>
+          <span>{{ t('export_ics') }}</span>
         </button>
 
         <button
           type="button"
           @click="openAddEvent()"
-          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2 transition-all"
+          class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2 transition-all"
         >
           <Icon name="plus" :size="16" />
-          <span>+ Buat Agenda</span>
+          <span>{{ t('create_agenda') }}</span>
         </button>
       </div>
     </div>
@@ -43,9 +43,9 @@
         <div class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center text-2xl shrink-0">
           💕
         </div>
-        <div>
-          <p class="text-2xl font-bold font-mono text-white">{{ daysTogether }} Hari</p>
-          <p class="text-xs text-rose-300/80">Hari Bahagia Bersama</p>
+        <div class="min-w-0">
+          <p class="text-2xl font-bold font-mono text-white">{{ daysTogether }} {{ t('days_unit') }}</p>
+          <p class="text-xs text-rose-300/80 truncate">{{ t('happy_days_together') }}</p>
         </div>
       </div>
 
@@ -54,23 +54,22 @@
         <div class="w-12 h-12 rounded-xl bg-pink-500/20 text-pink-300 flex items-center justify-center text-2xl shrink-0">
           🎂
         </div>
-        <div>
-          <p class="text-2xl font-bold font-mono text-pink-400">{{ anniversaryCountdown.days }} Hari</p>
-          <p class="text-xs text-slate-400">Menuju Anniversary ke-{{ anniversaryCountdown.years }}</p>
+        <div class="min-w-0">
+          <p class="text-2xl font-bold font-mono text-pink-400">{{ anniversaryCountdown.days }} {{ t('days_unit') }}</p>
+          <p class="text-xs text-slate-400 truncate">{{ t('anniversary_countdown', { year: anniversaryCountdown.years }) }}</p>
         </div>
       </div>
-
 
       <!-- Events this month -->
       <div class="glass rounded-2xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-950/30 to-slate-900 flex items-center gap-3.5">
         <div class="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center text-2xl shrink-0">
           ✨
         </div>
-        <div>
+        <div class="min-w-0">
           <p class="text-2xl font-bold font-mono text-cyan-300">
-            {{ calendarEvents.length }} Agenda
+            {{ calendarEvents.length }} {{ t('events_this_month') }}
           </p>
-          <p class="text-xs text-slate-400">Total Rencana Terjadwal</p>
+          <p class="text-xs text-slate-400 truncate">{{ t('events_count', { count: calendarEvents.length }) }}</p>
         </div>
       </div>
     </div>
@@ -78,7 +77,7 @@
     <!-- 3. Calendar View Switcher & Month Navigation -->
     <div class="glass rounded-2xl p-4 border border-slate-700/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
       <!-- Navigation Controls -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <button
           type="button"
           @click="prevMonth"
@@ -98,9 +97,9 @@
           @click="resetToCurrentMonth"
           class="px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white ml-1"
         >
-          Bulan Ini
+          {{ t('view_today') }}
         </button>
-        <span class="text-sm font-bold text-white ml-2">
+        <span class="text-sm font-bold text-white ml-2 capitalize">
           {{ formattedCurrentMonthYear }}
         </span>
       </div>
@@ -110,18 +109,18 @@
         <button
           type="button"
           @click="currentView = 'month'"
-          class="px-3 py-1.5 rounded-lg transition-all"
+          class="px-3.5 py-1.5 rounded-lg transition-all"
           :class="currentView === 'month' ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold' : 'text-slate-400 hover:text-white'"
         >
-          📅 Bulanan
+          📅 {{ t('view_month') }}
         </button>
         <button
           type="button"
           @click="currentView = 'list'"
-          class="px-3 py-1.5 rounded-lg transition-all"
+          class="px-3.5 py-1.5 rounded-lg transition-all"
           :class="currentView === 'list' ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold' : 'text-slate-400 hover:text-white'"
         >
-          📋 Agenda List
+          📋 {{ t('view_list') }}
         </button>
       </div>
     </div>
@@ -130,7 +129,7 @@
     <div v-if="currentView === 'month'" class="glass rounded-2xl p-4 border border-slate-700/60 overflow-hidden">
       <!-- Days of Week Header -->
       <div class="grid grid-cols-7 gap-1 sm:gap-2 pb-2 text-center text-xs font-bold text-slate-400 border-b border-slate-800">
-        <div v-for="d in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']" :key="d" class="py-1">
+        <div v-for="d in weekDays" :key="d" class="py-1">
           {{ d }}
         </div>
       </div>
@@ -171,8 +170,8 @@
           </div>
 
           <!-- Plus on hover -->
-          <div class="hidden group-hover:block text-[10px] text-slate-500 text-center">
-            + Tambah
+          <div class="hidden group-hover:block text-[10px] text-slate-500 text-center truncate">
+            + {{ t('create_agenda') }}
           </div>
         </div>
       </div>
@@ -180,31 +179,31 @@
 
     <!-- 5. VIEW MODE B: AGENDA LIST -->
     <div v-else class="space-y-4">
-      <div v-if="calendarEvents.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-2">
+      <div v-if="calendarEvents.length === 0" class="glass rounded-2xl p-8 sm:p-12 text-center text-slate-400 space-y-2">
         <span class="text-3xl block">🗓️</span>
-        <p class="text-base font-bold text-white">Belum ada agenda acara</p>
-        <p class="text-xs text-slate-500">Mulai jadwalkan kencan atau liburan bersama pasanganmu.</p>
+        <p class="text-base font-bold text-white">{{ t('no_events_couple') }}</p>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">{{ t('no_events_couple_desc') }}</p>
       </div>
 
       <div v-else class="space-y-3">
         <div
           v-for="evt in calendarEvents"
           :key="evt.id"
-          class="glass rounded-2xl p-5 border border-slate-700/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all hover:border-rose-500/40"
+          class="glass rounded-2xl p-4 sm:p-5 border border-slate-700/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all hover:border-rose-500/40"
         >
-          <div class="flex items-start gap-4">
+          <div class="flex items-start gap-3.5 min-w-0 flex-1">
             <!-- Category Icon & Color Indicator -->
             <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-md"
+              class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-md"
               :style="{ backgroundColor: evt.color ? evt.color + '22' : '#f43f5e22', color: evt.color || '#f43f5e' }"
             >
               {{ getCategoryIcon(evt.category) }}
             </div>
 
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
+            <div class="space-y-1 min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
                 <span
-                  class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border"
+                  class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0"
                   :style="{ backgroundColor: evt.color ? evt.color + '20' : '#f43f5e20', color: evt.color || '#f43f5e', borderColor: evt.color || '#f43f5e' }"
                 >
                   {{ evt.category }}
@@ -214,26 +213,26 @@
                 </span>
               </div>
 
-              <h3 class="text-base font-bold text-white">{{ evt.title }}</h3>
-              <p v-if="evt.description" class="text-xs text-slate-300 leading-relaxed">{{ evt.description }}</p>
-              <p v-if="evt.location" class="text-[11px] text-slate-400">📍 {{ evt.location }}</p>
+              <h3 class="text-base font-bold text-white break-words">{{ evt.title }}</h3>
+              <p v-if="evt.description" class="text-xs text-slate-300 leading-relaxed break-words">{{ evt.description }}</p>
+              <p v-if="evt.location" class="text-[11px] text-slate-400 truncate">📍 {{ evt.location }}</p>
             </div>
           </div>
 
           <!-- Actions -->
-          <div class="flex items-center gap-2 self-end md:self-center">
+          <div class="flex items-center gap-2 self-end md:self-center shrink-0">
             <button
               type="button"
               @click="openEditEvent(evt)"
               class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors"
             >
-              Edit
+              {{ t('edit') }}
             </button>
             <button
               type="button"
               @click="confirmDelete(evt.id)"
               class="p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-              title="Hapus Agenda"
+              :title="t('delete')"
             >
               <Icon name="trash" :size="14" />
             </button>
@@ -260,8 +259,10 @@ import Icon from '@/components/ui/Icon.vue'
 import CoupleEventModal from '@/components/calendar/CoupleEventModal.vue'
 import { useCouple } from '@/composables/useCouple'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from '@/composables/useI18n'
 import type { CoupleCalendarEvent, CoupleEventFormData } from '@/types'
 
+const { t, currentLang } = useI18n()
 const authStore = useAuthStore()
 const { currentSpace } = storeToRefs(authStore)
 
@@ -311,6 +312,11 @@ const anniversaryCountdown = computed(() => {
   }
 })
 
+const weekDays = computed(() => {
+  return currentLang.value === 'de'
+    ? ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+    : ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+})
 
 const currentView = ref<'month' | 'list'>('month')
 const currentDate = ref(new Date())
@@ -321,7 +327,8 @@ const selectedEvent = ref<CoupleCalendarEvent | null>(null)
 const selectedDate = ref('')
 
 const formattedCurrentMonthYear = computed(() => {
-  return currentDate.value.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+  const locale = currentLang.value === 'de' ? 'de-DE' : 'id-ID'
+  return currentDate.value.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
 })
 
 function prevMonth() {
@@ -430,14 +437,15 @@ async function handleSaveEvent(formData: CoupleEventFormData) {
 }
 
 async function confirmDelete(id: string) {
-  if (confirm('Hapus jadwal acara ini?')) {
+  if (confirm(t('confirm_delete_event'))) {
     await deleteCalendarEvent(id)
   }
 }
 
 function formatDateTime(datetimeStr: string) {
   const d = new Date(datetimeStr)
-  return d.toLocaleDateString('id-ID', {
+  const locale = currentLang.value === 'de' ? 'de-DE' : 'id-ID'
+  return d.toLocaleDateString(locale, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
