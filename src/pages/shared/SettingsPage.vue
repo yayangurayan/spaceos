@@ -88,7 +88,7 @@
         <div class="space-y-1">
           <label class="block text-xs font-semibold text-slate-300">{{ t('email_address') }}</label>
           <input
-            :value="user?.email || 'alex.morgan@spaceos.app'"
+            :value="user?.email || '-'"
             disabled
             type="email"
             class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-500 cursor-not-allowed font-mono"
@@ -114,6 +114,29 @@
         >
           {{ t('save_profile') }}
         </button>
+      </div>
+
+      <!-- Couple Space Invitation (if applicable) -->
+      <div v-if="coupleSpaceInfo" class="mt-6 pt-6 border-t border-slate-800 animate-fade-in">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+          <span>💞</span>
+          <span>{{ t('couple_space_title') }}</span>
+        </h3>
+        <div class="p-4 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-between gap-4">
+          <div>
+            <p class="text-xs text-pink-200 font-semibold mb-0.5">{{ coupleSpaceInfo.name }}</p>
+            <p class="text-[10px] text-pink-400/80">{{ t('invite_code_label') }}:</p>
+            <p class="text-sm font-mono font-bold text-pink-300 tracking-widest mt-1">{{ coupleSpaceInfo.invite_code }}</p>
+          </div>
+          <button
+            type="button"
+            @click="copyInviteCode"
+            class="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white text-xs font-bold shadow-lg shadow-pink-500/30 transition-all flex items-center gap-2"
+          >
+            <span>📋</span>
+            <span>{{ t('copy_invite_code') }}</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -409,7 +432,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -426,6 +449,25 @@ const { spaces, user } = storeToRefs(authStore)
 const activeTab = ref<'profile' | 'ai' | 'notifications' | 'backup' | 'danger'>('profile')
 const showApiKey = ref(false)
 const showResetModal = ref(false)
+
+const coupleSpaceInfo = computed(() => {
+  const coupleSpace = spaces.value.find(s => s.type === 'couple')
+  if (coupleSpace && (coupleSpace as any).invite_code) {
+    return coupleSpace as any
+  }
+  return null
+})
+
+async function copyInviteCode() {
+  if (!coupleSpaceInfo.value) return
+  const code = coupleSpaceInfo.value.invite_code
+  try {
+    await navigator.clipboard.writeText(code)
+    toast.success(t('copy_invite_code_success'), t('copy_invite_code_desc', { code }))
+  } catch {
+    toast.info(t('invite_code'), code)
+  }
+}
 
 const profileForm = reactive({
   fullName: user.value?.full_name || 'Alex Morgan',

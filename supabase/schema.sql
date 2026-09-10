@@ -25,9 +25,14 @@ CREATE TABLE IF NOT EXISTS spaces (
   category TEXT NOT NULL DEFAULT 'private' CHECK (category IN ('private', 'trader', 'teacher', 'general')),
   icon TEXT,
   owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  invite_code TEXT UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Add invite_code column to existing tables (safe to run multiple times)
+ALTER TABLE spaces ADD COLUMN IF NOT EXISTS invite_code TEXT UNIQUE;
+
+-- Add category if missing (backward compat)
 ALTER TABLE spaces ADD COLUMN IF NOT EXISTS category TEXT;
 UPDATE spaces
 SET category = CASE
@@ -38,9 +43,12 @@ SET category = CASE
 END
 WHERE category IS NULL;
 ALTER TABLE spaces ALTER COLUMN category SET DEFAULT 'private';
-ALTER TABLE spaces ALTER COLUMN category SET NOT NULL;
 DO $$
 BEGIN
+  BEGIN
+    ALTER TABLE spaces ALTER COLUMN category SET NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint WHERE conname = 'spaces_category_check'
   ) THEN
@@ -48,6 +56,12 @@ BEGIN
       CHECK (category IN ('private', 'trader', 'teacher', 'general'));
   END IF;
 END $$;
+
+-- Auto-generate unique invite codes for couple spaces that don't have one
+UPDATE spaces
+SET invite_code = upper(substring(md5(id::text || name || created_at::text), 1, 8))
+WHERE type = 'couple' AND invite_code IS NULL;
+
 
 -- ============================
 -- 3. Space Members Table
@@ -104,6 +118,40 @@ CREATE TRIGGER on_auth_user_created
 -- Helper Functions (Avoid RLS Infinite Recursion)
 -- SECURITY DEFINER functions bypass RLS inside their query
 -- ============================================================
+
+-- Generate a unique 8-character invite code for couple spaces
+CREATE OR REPLACE FUNCTION public.generate_invite_code()
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  code TEXT;
+  collision BOOLEAN;
+BEGIN
+  LOOP
+    code := upper(substring(md5(random()::text || clock_timestamp()::text), 1, 8));
+    SELECT EXISTS(SELECT 1 FROM public.spaces WHERE invite_code = code) INTO collision;
+    EXIT WHEN NOT collision;
+  END LOOP;
+  RETURN code;
+END;
+$$;
+
+-- Auto-assign invite_code when a couple space is created
+CREATE OR REPLACE FUNCTION public.handle_new_couple_space()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.type = 'couple' AND (NEW.invite_code IS NULL OR NEW.invite_code = '') THEN
+    UPDATE public.spaces SET invite_code = public.generate_invite_code() WHERE id = NEW.id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_couple_space_created ON public.spaces;
+CREATE TRIGGER on_couple_space_created
+  AFTER INSERT ON public.spaces
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_couple_space();
 
 -- Check if user is a member of a space
 CREATE OR REPLACE FUNCTION public.is_space_member(_space_id UUID, _user_id UUID DEFAULT auth.uid())
@@ -213,6 +261,21 @@ CREATE POLICY "Owners can update their spaces"
 CREATE POLICY "Owners can delete their spaces"
   ON spaces FOR DELETE
   USING (owner_id = (SELECT auth.uid()));
+
+-- Allow any authenticated user to look up a space by invite_code
+-- (needed so Partner user can find and join a Couple Space)
+DROP POLICY IF EXISTS "Authenticated can lookup spaces by invite_code" ON spaces;
+CREATE POLICY "Authenticated can lookup spaces by invite_code"
+  ON spaces FOR SELECT
+  USING (
+    auth.role() = 'authenticated'
+    AND type = 'couple'
+    AND invite_code IS NOT NULL
+  );
+
+-- Index for invite_code lookups (fast join flow)
+CREATE INDEX IF NOT EXISTS idx_spaces_invite_code ON spaces(invite_code) WHERE invite_code IS NOT NULL;
+
 
 -- ============================
 -- Space Members Policies

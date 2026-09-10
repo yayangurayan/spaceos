@@ -173,6 +173,29 @@
                 {{ t('never_accessed') }}
               </template>
             </p>
+
+            <!-- Couple Space Invite Code Display -->
+            <div
+              v-if="space.type === 'couple' && (space as any).invite_code"
+              class="mt-3 pt-3 border-t border-pink-500/20"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-[10px] text-pink-400/70 font-semibold mb-0.5">{{ t('invite_code') }}</p>
+                  <p class="text-xs font-mono font-bold text-pink-300 tracking-widest">{{ (space as any).invite_code }}</p>
+                </div>
+                <button
+                  type="button"
+                  @click.stop="copyInviteCode((space as any).invite_code)"
+                  class="p-1.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/30 text-pink-400 transition-colors flex-shrink-0"
+                  :title="t('copy_invite_code')"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -437,6 +460,28 @@ async function handleJoinSpace() {
   }
 }
 
+/**
+ * Generate a local invite code for couple spaces (fallback when offline / pre-Supabase).
+ * Format: 4 letters + 4 digits, e.g. "ABCD1234"
+ */
+function generateLocalInviteCode(): string {
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+  const digits = '0123456789'
+  let code = ''
+  for (let i = 0; i < 4; i++) code += letters[Math.floor(Math.random() * letters.length)]
+  for (let i = 0; i < 4; i++) code += digits[Math.floor(Math.random() * digits.length)]
+  return code
+}
+
+async function copyInviteCode(code: string) {
+  try {
+    await navigator.clipboard.writeText(code)
+    toast.success(t('copy_invite_code_success'), t('copy_invite_code_desc', { code }))
+  } catch {
+    toast.info(t('invite_code'), code)
+  }
+}
+
 const newSpace = reactive({
   name: 'My Trading Space',
   type: 'personal' as SpaceType,
@@ -521,7 +566,10 @@ async function confirmDeleteSpace() {
   if (res.success) {
     toast.success(t('delete_space_success'), t('delete_space_success_desc', { name: target.name }))
   } else {
-    toast.error('Gagal menghapus space', res.error || 'Terjadi kesalahan.')
+    const errMsg = res.error === 'cannot_delete_last_space'
+      ? t('cannot_delete_last_space')
+      : (res.error || t('try_again'))
+    toast.error(t('delete_space_failed') || 'Gagal menghapus space', errMsg)
   }
 }
 
@@ -535,7 +583,16 @@ async function handleCreateSpace() {
 
   try {
     const userId = authStore.user?.id || 'demo-user'
-    const newSpaceId = 'space-' + Date.now()
+    // Generate a proper invite_code for couple spaces
+    const inviteCode = newSpace.type === 'couple'
+      ? generateLocalInviteCode()
+      : undefined
+
+    // Use proper UUID for Supabase-compatible ID when authenticated
+    const isRealUser = authStore.user && !authStore.user.id.startsWith('demo-user')
+    const newSpaceId = isRealUser
+      ? crypto.randomUUID()
+      : 'space-' + Date.now()
 
     const createdSpace: SpaceWithMeta = {
       id: newSpaceId,
@@ -547,7 +604,8 @@ async function handleCreateSpace() {
       role: 'owner',
       last_accessed: new Date().toISOString(),
       created_at: new Date().toISOString(),
-    }
+      ...(inviteCode ? { invite_code: inviteCode } : {}),
+    } as SpaceWithMeta
 
     // 1. Initialize 100% EMPTY arrays for all modules in this new space
     localStorage.setItem(`spaceos_trades_${newSpaceId}`, JSON.stringify([]))
@@ -575,21 +633,32 @@ async function handleCreateSpace() {
     localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
 
     // 3. Optional online sync
-    if (authStore.user && authStore.user.id !== 'demo-user-123') {
-      const { error: insertError } = await supabase
+    if (authStore.user && !authStore.user.id.startsWith('demo-user')) {
+      const payload: Record<string, any> = {
+        id: createdSpace.id,
+        name: createdSpace.name,
+        type: createdSpace.type,
+        category: createdSpace.category,
+        icon: createdSpace.icon,
+        owner_id: userId,
+      }
+      if (inviteCode) payload.invite_code = inviteCode
+
+      const { data: insertedSpace, error: insertError } = await supabase
           .from('spaces')
-          .insert({
-            id: createdSpace.id,
-            name: createdSpace.name,
-            type: createdSpace.type,
-            category: createdSpace.category,
-            icon: createdSpace.icon,
-            owner_id: userId,
-          })
+          .insert(payload)
+          .select('invite_code')
+          .single()
       if (insertError) {
         const pending = JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]
         localStorage.setItem('spaceos_pending_spaces', JSON.stringify([createdSpace, ...pending]))
       } else {
+        // If Supabase generated/returned an invite_code (via trigger), use that
+        if (insertedSpace?.invite_code && createdSpace.type === 'couple') {
+          ;(createdSpace as any).invite_code = insertedSpace.invite_code
+          spaces.value[0] = { ...spaces.value[0], invite_code: insertedSpace.invite_code } as SpaceWithMeta
+          localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+        }
         const pending = (JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]).filter(space => space.id !== createdSpace.id)
         localStorage.setItem('spaceos_pending_spaces', JSON.stringify(pending))
       }

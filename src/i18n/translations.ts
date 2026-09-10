@@ -95,8 +95,17 @@ export const translations = {
     'delete_space_confirm_desc': 'Space "{name}" dan semua data di dalamnya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.',
     'delete_space_success': 'Space Berhasil Dihapus',
     'delete_space_success_desc': 'Space "{name}" telah dihapus dari daftar ruang kerja Anda.',
+    'delete_space_failed': 'Gagal Menghapus Space',
     'cannot_delete_last_space': 'Tidak Dapat Menghapus',
     'cannot_delete_last_space_desc': 'Anda harus memiliki setidaknya satu space aktif.',
+    'yes_delete_space': 'Ya, Hapus Space',
+    'entering_space': 'Membuka Space...',
+    'opening_space_desc': 'Berhasil masuk ke ruang kerja Anda.',
+    'select_space_failed': 'Gagal membuka space. Silakan coba lagi.',
+    'private_space_title': 'Private Space',
+    'private_space_desc': 'Catatan pribadi, target, & refleksi',
+    'create_space_failed': 'Gagal Membuat Space',
+    'space_name_required': 'Nama space tidak boleh kosong.',
     'sign_out': 'Keluar',
 
     // Create Space Modal
@@ -502,8 +511,15 @@ export const translations = {
     'delete_space_confirm_desc': 'Der Bereich "{name}" und alle darin enthaltenen Daten werden unwiderruflich gelöscht.',
     'delete_space_success': 'Bereich erfolgreich gelöscht',
     'delete_space_success_desc': 'Der Bereich "{name}" wurde aus Ihrer Liste entfernt.',
+    'delete_space_failed': 'Löschen fehlgeschlagen',
     'cannot_delete_last_space': 'Löschen nicht möglich',
     'cannot_delete_last_space_desc': 'Sie müssen mindestens einen aktiven Bereich behalten.',
+    'yes_delete_space': 'Ja, Bereich löschen',
+    'select_space_failed': 'Bereich konnte nicht geöffnet werden. Bitte erneut versuchen.',
+    'private_space_title': 'Privater Bereich',
+    'private_space_desc': 'Persönliche Notizen, Ziele & Reflexionen',
+    'create_space_failed': 'Bereich konnte nicht erstellt werden',
+    'space_name_required': 'Bereichsname darf nicht leer sein.',
     'sign_out': 'Abmelden',
 
     // Create Space Modal

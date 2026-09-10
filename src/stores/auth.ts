@@ -340,17 +340,9 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: true, needsConfirmation: false }
     } catch (err: any) {
-      user.value = {
-        id: 'demo-user-' + Date.now(),
-        email,
-        full_name: fullName,
-        avatar_url: DEFAULT_DEMO_USER.avatar_url,
-        created_at: new Date().toISOString(),
-      }
-      localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
-      spaces.value = [...DEFAULT_SPACES]
-      currentSpace.value = DEFAULT_SPACES[0]
-      return { success: true, needsConfirmation: false, message: 'Akun siap digunakan dalam mode demo offline.' }
+      const message = err?.message || 'Registrasi gagal. Periksa koneksi internet Anda.'
+      error.value = message
+      return { success: false, error: message }
     } finally {
       isLoading.value = false
     }
@@ -369,10 +361,9 @@ export const useAuthStore = defineStore('auth', () => {
       if (authError) throw authError
       return { success: true }
     } catch (err: any) {
-      user.value = { ...DEFAULT_DEMO_USER }
-      spaces.value = [...DEFAULT_SPACES]
-      currentSpace.value = DEFAULT_SPACES[0]
-      return { success: true }
+      const message = err?.message || 'OAuth login gagal.'
+      error.value = message
+      return { success: false, error: message }
     } finally {
       isLoading.value = false
     }
@@ -405,43 +396,48 @@ export const useAuthStore = defineStore('auth', () => {
     const normalized = code.trim().toUpperCase()
 
     try {
-      // 1. Check local/demo spaces
-      let targetSpace = spaces.value.find(s => (s as any).invite_code === normalized || s.id.toUpperCase() === normalized)
-
-      if (!targetSpace) {
-        // Check default couple space
-        const defaultCouple = DEFAULT_SPACES.find(s => s.type === 'couple')
-        if (normalized === 'COUPLE-8888' || normalized === 'COUPLE' || normalized.includes('COUPLE')) {
-          targetSpace = defaultCouple
-        }
+      if (!user.value?.id || user.value.id.startsWith('demo-user')) {
+        return { success: false, error: 'Anda harus login dengan akun nyata untuk bergabung ke Couple Space.' }
       }
 
-      // 2. Also try Supabase query if available
-      if (!targetSpace && user.value?.id) {
-        const { data } = await supabase
-          .from('spaces')
-          .select('*')
-          .or(`invite_code.eq.${normalized},id.eq.${normalized}`)
-          .single()
-        if (data) targetSpace = { ...data, role: 'partner', last_accessed: new Date().toISOString() }
-      }
+      // 1. Query Supabase for a couple space with this invite_code
+      const { data: spaceData, error: lookupErr } = await supabase
+        .from('spaces')
+        .select('*')
+        .eq('invite_code', normalized)
+        .eq('type', 'couple')
+        .single()
 
-      if (!targetSpace) {
+      if (lookupErr || !spaceData) {
         return { success: false, error: 'Kode undangan tidak ditemukan. Periksa kembali kode dari pasangan Anda.' }
       }
 
-      // Add to user spaces list if not already present
-      if (!spaces.value.some(s => s.id === targetSpace!.id)) {
-        spaces.value.unshift({
-          ...targetSpace,
-          role: 'partner',
-          last_accessed: new Date().toISOString(),
-        })
-        localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+      const targetSpace = spaceData as any
+
+      // 2. Add user to space_members in Supabase
+      const { error: memberErr } = await supabase
+        .from('space_members')
+        .upsert(
+          { space_id: targetSpace.id, user_id: user.value.id, role: 'member' },
+          { onConflict: 'space_id,user_id' }
+        )
+
+      if (memberErr) {
+        return { success: false, error: 'Gagal bergabung: ' + memberErr.message }
       }
 
-      await selectSpace(targetSpace.id)
-      return { success: true, space: targetSpace }
+      // 3. Refresh spaces list from Supabase
+      await fetchSpaces()
+
+      // 4. Select the joined space
+      const joined: SpaceWithMeta = {
+        ...targetSpace,
+        role: 'member',
+        last_accessed: new Date().toISOString(),
+      }
+
+      await selectSpace(joined.id)
+      return { success: true, space: joined }
     } catch (err: any) {
       return { success: false, error: err?.message || 'Gagal bergabung ke space.' }
     } finally {
@@ -483,27 +479,47 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: 'Space not found' }
       }
 
-      // Purge remote data first so a failed request cannot leave local state misleadingly deleted.
-      if (user.value && user.value.id !== 'demo-user-123') {
-        const { error: deleteError } = await supabase.from('spaces').delete().eq('id', spaceId)
-        if (deleteError) return { success: false, error: deleteError.message }
+      const targetSpace = spaces.value[targetIndex]
+
+      // Attempt to delete from Supabase — skip gracefully if not there (local-only space or non-UUID id)
+      if (user.value && !user.value.id.startsWith('demo-user')) {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(spaceId)
+        if (isUUID) {
+          // Only delete if owner; partners should just remove themselves from space_members
+          if (targetSpace.role === 'owner') {
+            const { error: deleteError } = await supabase.from('spaces').delete().eq('id', spaceId)
+            if (deleteError && deleteError.code !== 'PGRST116') {
+              return { success: false, error: deleteError.message }
+            }
+          } else {
+            // Partner: just remove self from space_members
+            await supabase
+              .from('space_members')
+              .delete()
+              .eq('space_id', spaceId)
+              .eq('user_id', user.value.id)
+          }
+        }
       }
 
+      // Remove from local spaces list
       spaces.value.splice(targetIndex, 1)
       localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
 
+      // Purge all localStorage keys for this space (collect first, then delete to avoid index shift)
       const keysToRemove: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
-        const isSpaceKey = key?.endsWith(`_${spaceId}`)
-        const isLegacyCoupleKey = spaceId === 'space-couple' && !!key?.match(/^spaceos_couple_(albums|photos|journals|events|notes)$/)
-        if (key && (isSpaceKey || isLegacyCoupleKey || (key === 'spaceos_current_space_id' && localStorage.getItem(key) === spaceId))) {
+        if (key && (
+          key.endsWith(`_${spaceId}`) ||
+          key === 'spaceos_current_space_id' && localStorage.getItem(key) === spaceId
+        )) {
           keysToRemove.push(key)
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k))
 
-      // 4. If current space was deleted, select another remaining space
+      // If current space was deleted, select another remaining space
       if (currentSpace.value?.id === spaceId) {
         if (spaces.value.length > 0) {
           await selectSpace(spaces.value[0].id)
