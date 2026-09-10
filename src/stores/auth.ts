@@ -233,6 +233,7 @@ export const useAuthStore = defineStore('auth', () => {
             category,
             icon,
             owner_id,
+            invite_code,
             created_at
           )
         `)

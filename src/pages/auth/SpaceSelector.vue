@@ -176,10 +176,10 @@
 
             <!-- Couple Space Invite Code Display -->
             <div
-              v-if="space.type === 'couple' && (space as any).invite_code"
+              v-if="space.type === 'couple'"
               class="mt-3 pt-3 border-t border-pink-500/20"
             >
-              <div class="flex items-center justify-between gap-2">
+              <div v-if="(space as any).invite_code" class="flex items-center justify-between gap-2">
                 <div>
                   <p class="text-[10px] text-pink-400/70 font-semibold mb-0.5">{{ t('invite_code') }}</p>
                   <p class="text-xs font-mono font-bold text-pink-300 tracking-widest">{{ (space as any).invite_code }}</p>
@@ -193,6 +193,16 @@
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
+                </button>
+              </div>
+              <div v-else class="flex items-center justify-between gap-2">
+                <p class="text-[10px] text-pink-400/70 font-semibold">Belum ada kode undangan</p>
+                <button
+                  type="button"
+                  @click.stop="generateMissingInviteCode(space)"
+                  class="px-2 py-1 rounded bg-pink-500 hover:bg-pink-400 text-white text-[10px] font-bold transition-all"
+                >
+                  Buat Kode
                 </button>
               </div>
             </div>
@@ -480,6 +490,24 @@ async function copyInviteCode(code: string) {
   } catch {
     toast.info(t('invite_code'), code)
   }
+}
+
+async function generateMissingInviteCode(space: SpaceWithMeta) {
+  const newCode = generateLocalInviteCode()
+  ;(space as any).invite_code = newCode
+  
+  // Update local
+  const idx = spaces.value.findIndex(s => s.id === space.id)
+  if (idx !== -1) {
+    spaces.value[idx] = space
+    localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
+  }
+  
+  // Update remote
+  if (authStore.user && !authStore.user.id.startsWith('demo-user')) {
+    await supabase.from('spaces').update({ invite_code: newCode }).eq('id', space.id)
+  }
+  toast.success('Kode Berhasil Dibuat', 'Kode undangan pasangan siap dibagikan.')
 }
 
 const newSpace = reactive({
