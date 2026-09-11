@@ -5,7 +5,7 @@
         <div
           v-for="toast in toasts"
           :key="toast.id"
-          class="pointer-events-auto w-80 rounded-xl glass border-l-4 px-4 py-3 shadow-2xl cursor-pointer"
+          class="pointer-events-auto w-80 rounded-xl border-l-4 px-4 py-3 shadow-2xl shadow-black/40 cursor-pointer backdrop-blur-2xl bg-slate-900/85 border border-slate-700/20"
           :class="borderClass(toast.type)"
           @click="removeToast(toast.id)"
         >

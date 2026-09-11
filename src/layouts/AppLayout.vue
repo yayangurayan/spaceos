@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-dark text-slate-200 font-sans">
+  <div class="min-h-screen bg-dark text-slate-200 font-sans relative">
+    <!-- Subtle aurora background for the main app -->
+    <AuroraBackground variant="subtle" />
+
     <!-- ============================
          Desktop Sidebar (lg+)
          ============================ -->
@@ -50,7 +53,7 @@
          Main Content Area
          ============================ -->
     <div
-      class="flex flex-col min-h-screen"
+      class="flex flex-col min-h-screen relative z-[1]"
       :style="{ marginLeft: desktopMargin, transition: 'margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }"
     >
       <!-- Top Bar -->
@@ -75,6 +78,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
 import Topbar from '@/components/layout/Topbar.vue'
+import AuroraBackground from '@/components/ui/AuroraBackground.vue'
 import { useNavigation } from '@/composables/useNavigation'
 
 const {
@@ -148,18 +152,20 @@ onUnmounted(() => {
    Page Transition (smooth fade + subtle slide)
    ============================ */
 .page-enter-active {
-  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
 }
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(12px) scale(0.99);
+  filter: blur(2px);
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(-6px) scale(0.99);
+  filter: blur(2px);
 }
 
 /* ============================

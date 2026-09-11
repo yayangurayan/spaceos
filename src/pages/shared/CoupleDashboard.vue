@@ -395,8 +395,9 @@ function daysUntil(dateStr: string): string {
 .photo-gradient-3 { background: linear-gradient(135deg, #1e293b, #1e3a5f); }
 .photo-gradient-4 { background: linear-gradient(135deg, #1e293b, #581c87); }
 
+/* Photo cards */
 .photo-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
 }
 .photo-card:hover {
   transform: translateY(-4px) scale(1.02);
@@ -405,25 +406,26 @@ function daysUntil(dateStr: string): string {
 
 /* On this day gradient */
 .on-this-day-gradient {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1));
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.1);
 }
 
 /* Event cards */
 .event-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .event-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 /* Journal cards */
 .journal-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .journal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
   border-color: rgba(244, 63, 94, 0.2);
 }
 

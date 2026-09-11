@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-30 h-16 glass border-b border-slate-700/50 flex items-center justify-between px-4 lg:px-6 shrink-0 backdrop-blur-xl bg-slate-950/70">
+  <header class="sticky top-0 z-30 h-16 border-b border-slate-700/30 flex items-center justify-between px-4 lg:px-6 shrink-0 backdrop-blur-2xl bg-slate-950/60" style="box-shadow: 0 1px 0 rgba(6, 182, 212, 0.04), 0 4px 20px rgba(0, 0, 0, 0.15);">
     <!-- Left: Hamburger + Space name -->
     <div class="flex items-center gap-3">
       <!-- Mobile Hamburger -->

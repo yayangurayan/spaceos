@@ -1,25 +1,21 @@
 <template>
   <div class="min-h-screen bg-dark relative overflow-hidden">
-    <!-- Animated background particles -->
-    <div class="absolute inset-0 pointer-events-none overflow-hidden">
-      <div class="floating-orb w-[400px] h-[400px] bg-accent/10 -top-32 -right-32" style="animation-duration: 14s;"></div>
-      <div class="floating-orb w-[300px] h-[300px] bg-primary/10 -bottom-24 -left-24" style="animation-duration: 18s; animation-delay: 3s;"></div>
-      <div
-        v-for="i in 8"
-        :key="'particle-' + i"
-        class="floating-particle bg-accent/30"
-        :style="{
-          left: `${10 + (i * 11) % 85}%`,
-          bottom: `-${3 + (i % 3) * 2}%`,
-          width: `${2 + (i % 3)}px`,
-          height: `${2 + (i % 3)}px`,
-          animationDuration: `${10 + (i % 4) * 4}s`,
-          animationDelay: `${i * 1.2}s`,
-        }"
-      ></div>
-    </div>
+    <!-- Premium Aurora Background -->
+    <AuroraBackground variant="default" />
+
+    <!-- Interactive Canvas Particles -->
+    <ParticleCanvas
+      :count="40"
+      :hue="190"
+      :hue2="250"
+      :link-distance="120"
+      :speed="0.25"
+      :opacity="0.4"
+      :interactive="true"
+      :size-range="[1, 3]"
+    />
     <!-- Header -->
-    <header class="border-b border-slate-800 bg-slate-950/70 backdrop-blur-xl">
+    <header class="border-b border-slate-800/60 bg-slate-950/60 backdrop-blur-2xl relative z-[2]">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent to-primary flex items-center justify-center shadow-md">
@@ -54,7 +50,7 @@
     </header>
 
     <!-- Content -->
-    <main class="max-w-5xl mx-auto px-6 py-10">
+    <main class="max-w-5xl mx-auto px-6 py-10 relative z-[2]">
       <!-- Greeting -->
       <div class="mb-8 animate-fade-in">
         <h1 class="text-3xl font-bold text-white mb-2">
@@ -444,6 +440,8 @@ import { useToastStore } from '@/stores/toast'
 import { useI18n } from '@/composables/useI18n'
 import { supabase } from '@/utils/supabase'
 import type { SpaceType, SpaceCategory, SpaceWithMeta } from '@/types'
+import ParticleCanvas from '@/components/ui/ParticleCanvas.vue'
+import AuroraBackground from '@/components/ui/AuroraBackground.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -751,18 +749,45 @@ async function handleLogout() {
 
 <style scoped>
 .space-card {
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-  border: 1px solid transparent;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  position: relative;
+}
+
+.space-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 0.85rem;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent, rgba(6, 182, 212, 0.15), transparent, rgba(99, 102, 241, 0.15), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.space-card:hover::before {
+  opacity: 1;
 }
 
 .space-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  border-color: rgba(148, 163, 184, 0.15);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(6, 182, 212, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: rgba(148, 163, 184, 0.12);
 }
 
 .space-card:active {
-  transform: scale(0.98);
+  transform: translateY(-1px) scale(0.99);
+  transition-duration: 0.15s;
 }
 
 /* Ripple effect */
@@ -794,3 +819,4 @@ async function handleLogout() {
   opacity: 0;
 }
 </style>
+

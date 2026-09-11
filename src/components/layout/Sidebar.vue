@@ -1,12 +1,12 @@
 <template>
-  <aside class="flex flex-col h-full bg-slate-950/95 backdrop-blur-2xl border-r border-slate-800/70 select-none">
+  <aside class="flex flex-col h-full bg-slate-950/90 backdrop-blur-2xl border-r border-slate-800/40 select-none relative" style="box-shadow: 1px 0 20px rgba(0, 0, 0, 0.2);">
     <!-- ============================
          Header: Logo + Space Name & Mode Selector
          ============================ -->
     <div class="px-5 py-4 border-b border-slate-800/80 shrink-0 space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/20 animate-pulse-glow">
             <span class="text-white font-extrabold text-base tracking-wider">S</span>
           </div>
           <div>
