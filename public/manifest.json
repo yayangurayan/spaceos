@@ -1,17 +1,79 @@
 {
+  "id": "/",
   "name": "SpaceOS - Workspace Hub",
   "short_name": "SpaceOS",
   "description": "Multi-workspace operating system for traders, educators, couples, and creators.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0a0e17",
+  "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait-primary",
+  "categories": [
+    "productivity",
+    "utilities",
+    "finance",
+    "education"
+  ],
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/icons/spaceos-icon-192.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/spaceos-icon-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Finance Tracker",
+      "short_name": "Finance",
+      "description": "Kelola arus kas, tabungan, dan anggaran",
+      "url": "/finance",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Trading Journal",
+      "short_name": "Trading",
+      "description": "Catat dan analisis performa trading",
+      "url": "/trading",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Habit Tracker",
+      "short_name": "Habits",
+      "description": "Pantau kebiasaan dan produktivitas harian",
+      "url": "/habits",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

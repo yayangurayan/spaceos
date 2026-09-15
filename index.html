@@ -2,13 +2,12 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/webp" href="/icons/spaceos-icon-192.webp" />
+    <link rel="icon" type="image/png" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="SpaceOS" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="description" content="SpaceOS - Modern multi-workspace operating system for traders, educators, couples, and creators." />
     <title>SpaceOS</title>
   </head>
@@ -27,19 +26,17 @@
     <script type="module" src="/src/main.ts"></script>
 
     <script>
-      // Fix refresh 404: Unregister any service workers on localhost/dev server
+      // Daftarkan Service Worker untuk PWA
       if ('serviceWorker' in navigator) {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (const registration of registrations) {
-              registration.unregister()
-            }
-          })
-        } else if (window.location.protocol === 'https:') {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').catch(() => {})
-          })
-        }
+        window.addEventListener('load', () => {
+          if (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            navigator.serviceWorker.register('/sw.js').then((reg) => {
+              console.log('[SpaceOS PWA] Service Worker terdaftar pada scope:', reg.scope);
+            }).catch((err) => {
+              console.warn('[SpaceOS PWA] Registrasi Service Worker gagal:', err);
+            });
+          }
+        });
       }
     </script>
   </body>

@@ -100,6 +100,20 @@
         <span>{{ item.label }}</span>
       </router-link>
 
+      <!-- Install PWA Button (When available & not yet installed) -->
+      <button
+        v-if="isInstallable && !isInstalled"
+        @click="handleInstallClick"
+        class="nav-item group flex items-center gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition-all duration-200 w-full text-left shadow-sm"
+      >
+        <Icon
+          name="download"
+          :size="18"
+          class="shrink-0 text-cyan-400 group-hover:scale-110 transition-transform duration-200"
+        />
+        <span>Install SpaceOS</span>
+      </button>
+
       <!-- Language Toggle -->
       <button
         @click="toggleLang"
@@ -136,8 +150,9 @@ import { useToastStore } from '@/stores/toast'
 import { useNavigation } from '@/composables/useNavigation'
 import Icon from '@/components/ui/Icon.vue'
 import { useI18n } from '@/composables/useI18n'
+import { usePwaInstall } from '@/composables/usePwaInstall'
 
-defineEmits<{
+const emit = defineEmits<{
   navigate: []
 }>()
 
@@ -147,6 +162,12 @@ const toast = useToastStore()
 const { currentSpace } = storeToRefs(authStore)
 const { currentLang, toggleLang, t } = useI18n()
 const { navigationSections, footerItems, isActive } = useNavigation()
+const { isInstallable, isInstalled, promptInstall } = usePwaInstall()
+
+async function handleInstallClick() {
+  await promptInstall()
+  emit('navigate')
+}
 
 async function handleLogout() {
   await authStore.logout()
