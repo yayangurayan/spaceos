@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 animate-fade-in">
+  <div class="space-y-6 animate-fade-in w-[calc(100vw-2rem)] lg:w-full max-w-full">
     <!-- Page Header & Action Bar -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>

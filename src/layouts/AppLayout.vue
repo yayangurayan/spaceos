@@ -152,20 +152,18 @@ onUnmounted(() => {
    Page Transition (smooth fade + subtle slide)
    ============================ */
 .page-enter-active {
-  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .page-enter-from {
   opacity: 0;
   transform: translateY(12px) scale(0.99);
-  filter: blur(2px);
 }
 .page-leave-to {
   opacity: 0;
   transform: translateY(-6px) scale(0.99);
-  filter: blur(2px);
 }
 
 /* ============================

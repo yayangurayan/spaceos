@@ -6,9 +6,6 @@
     <div class="aurora-blob blob-3"></div>
     <div class="aurora-blob blob-4"></div>
 
-    <!-- Noise texture overlay for organic feel -->
-    <div class="aurora-noise"></div>
-
     <!-- Radial vignette -->
     <div class="aurora-vignette"></div>
   </div>
@@ -35,19 +32,6 @@ withDefaults(defineProps<Props>(), {
 }
 
 /* ============================
-   Noise Texture Overlay
-   ============================ */
-.aurora-noise {
-  position: absolute;
-  inset: -50%;
-  width: 200%;
-  height: 200%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  mix-blend-mode: overlay;
-}
-
-/* ============================
    Vignette
    ============================ */
 .aurora-vignette {
@@ -62,9 +46,10 @@ withDefaults(defineProps<Props>(), {
 .aurora-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  will-change: transform, opacity;
+  filter: blur(60px);
+  will-change: transform;
   mix-blend-mode: screen;
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 /* ============================
@@ -183,28 +168,28 @@ withDefaults(defineProps<Props>(), {
    Aurora Movement Keyframes
    ============================ */
 @keyframes auroraMove1 {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
-  25% { transform: translate(-40px, 30px) scale(1.1); opacity: 0.8; }
-  50% { transform: translate(20px, -50px) scale(0.95); opacity: 1; }
-  75% { transform: translate(40px, 20px) scale(1.05); opacity: 0.85; }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  25% { transform: translate3d(-40px, 30px, 0) scale(1.1); opacity: 0.8; }
+  50% { transform: translate3d(20px, -50px, 0) scale(0.95); opacity: 1; }
+  75% { transform: translate3d(40px, 20px, 0) scale(1.05); opacity: 0.85; }
 }
 
 @keyframes auroraMove2 {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
-  25% { transform: translate(50px, -30px) scale(1.08); opacity: 0.85; }
-  50% { transform: translate(-30px, 40px) scale(0.92); opacity: 1; }
-  75% { transform: translate(-50px, -20px) scale(1.03); opacity: 0.9; }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  25% { transform: translate3d(50px, -30px, 0) scale(1.08); opacity: 0.85; }
+  50% { transform: translate3d(-30px, 40px, 0) scale(0.92); opacity: 1; }
+  75% { transform: translate3d(-50px, -20px, 0) scale(1.03); opacity: 0.9; }
 }
 
 @keyframes auroraMove3 {
-  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.8; }
-  33% { transform: translate(60px, 40px) scale(1.15) rotate(2deg); opacity: 1; }
-  66% { transform: translate(-40px, -30px) scale(0.9) rotate(-1deg); opacity: 0.7; }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.8; }
+  33% { transform: translate3d(60px, 40px, 0) scale(1.15) rotate(2deg); opacity: 1; }
+  66% { transform: translate3d(-40px, -30px, 0) scale(0.9) rotate(-1deg); opacity: 0.7; }
 }
 
 @keyframes auroraMove4 {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
-  30% { transform: translate(-30px, -40px) scale(1.12); opacity: 1; }
-  60% { transform: translate(40px, 30px) scale(0.88); opacity: 0.6; }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.7; }
+  30% { transform: translate3d(-30px, -40px, 0) scale(1.12); opacity: 1; }
+  60% { transform: translate3d(40px, 30px, 0) scale(0.88); opacity: 0.6; }
 }
 </style>

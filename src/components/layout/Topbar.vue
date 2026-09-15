@@ -73,7 +73,7 @@
         <transition name="dropdown">
           <div
             v-if="isDropdownOpen"
-            class="absolute right-0 top-full mt-2 w-80 glass rounded-2xl shadow-2xl shadow-black/60 border border-slate-700/80 overflow-hidden z-50 bg-slate-900/95 backdrop-blur-xl"
+            class="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm glass rounded-2xl shadow-2xl shadow-black/60 border border-slate-700/80 overflow-hidden z-50 bg-slate-900/95 backdrop-blur-xl"
           >
             <!-- User Info -->
             <div class="px-5 py-4 border-b border-slate-800 flex items-center gap-3">
