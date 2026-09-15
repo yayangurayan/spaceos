@@ -1,10 +1,12 @@
-const CACHE_NAME = 'spaceos-pwa-v1';
+const CACHE_NAME = 'spaceos-pwa-v2';
 
 // Aset inti offline shell
 const CORE_ASSETS = [
   '/',
   '/manifest.json',
+  '/favicon.ico',
   '/favicon.png',
+  '/favicon.svg',
   '/icons/spaceos-icon-192.webp',
   '/icons/spaceos-icon-512.webp',
   '/icons/icon-192.png',

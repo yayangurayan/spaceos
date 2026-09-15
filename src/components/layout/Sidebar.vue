@@ -6,8 +6,8 @@
     <div class="px-5 py-4 border-b border-slate-800/80 shrink-0 space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/20 animate-pulse-glow">
-            <span class="text-white font-extrabold text-base tracking-wider">S</span>
+          <div class="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/20 shrink-0">
+            <img src="/icons/spaceos-icon-192.webp" alt="SpaceOS" class="w-full h-full object-cover" />
           </div>
           <div>
             <h1 class="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">

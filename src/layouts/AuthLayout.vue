@@ -45,8 +45,8 @@
 
         <!-- Logo -->
         <div class="flex items-center justify-center gap-3 mb-8">
-          <div class="logo-icon w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 ring-2 ring-white/10">
-            <span class="text-white font-extrabold text-xl tracking-wide">S</span>
+          <div class="logo-icon w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-cyan-500/30 ring-2 ring-white/10 shrink-0">
+            <img src="/icons/spaceos-icon-192.webp" alt="SpaceOS" class="w-full h-full object-cover" />
           </div>
           <div>
             <span class="text-2xl font-extrabold text-white tracking-tight">SpaceOS</span>

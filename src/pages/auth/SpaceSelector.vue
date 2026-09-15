@@ -18,8 +18,8 @@
     <header class="border-b border-slate-800/60 bg-slate-950/60 backdrop-blur-2xl relative z-[2]">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent to-primary flex items-center justify-center shadow-md">
-            <span class="text-white font-bold text-sm">S</span>
+          <div class="w-9 h-9 rounded-lg overflow-hidden shadow-md shrink-0">
+            <img src="/icons/spaceos-icon-192.webp" alt="SpaceOS" class="w-full h-full object-cover" />
           </div>
           <span class="text-lg font-semibold text-white tracking-tight">SpaceOS</span>
         </div>
