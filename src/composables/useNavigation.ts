@@ -72,25 +72,10 @@ export function useNavigation() {
     // Reference currentLang to ensure reactivity upon language switch
     void currentLang.value
     const space = currentSpace.value
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const spaceType = space?.type
     const category = space?.category
     const name = space?.name?.toLowerCase() || ''
-
-    if (spaceType === 'couple') {
-      return [
-        {
-          title: t('menu_couple_hub'),
-          items: [
-            { label: t('dashboard_couple'), to: '/', icon: 'home' },
-            { label: t('our_gallery'), to: '/gallery', icon: 'images' },
-            { label: t('shared_journal'), to: '/journal', icon: 'book-heart' },
-            { label: t('our_calendar'), to: '/calendar', icon: 'calendar-heart' },
-            { label: t('love_notes'), to: '/love-notes', icon: 'message-heart' },
-          ],
-        },
-      ]
-    }
-
 
     // Teacher / Guru Les Space
     if (category === 'teacher' || name.includes('guru') || name.includes('les') || name.includes('bimbel') || name.includes('tutor') || name.includes('teach') || space?.id === 'space-teacher') {
@@ -110,18 +95,34 @@ export function useNavigation() {
       ]
     }
 
-    // Trader Space & General (default)
+    // Trader Space (Trading Hub)
+    if (category === 'private' && name.includes('trading') || space?.id === 'space-trader' || (category === 'private' && !name.includes('guru') && !name.includes('les'))) {
+      return [
+        {
+          title: t('menu_trader'),
+          items: [
+            { label: t('dashboard_trading'), to: '/', icon: 'home' },
+            { label: t('trading_journal'), to: '/trading', icon: 'chart-line' },
+            { label: t('finance_tracker'), to: '/finance', icon: 'wallet' },
+            { label: t('habit_tracker'), to: '/habits', icon: 'target' },
+          ],
+        },
+      ]
+    }
+
+    // Personal Space (Default - Private Space)
     return [
       {
-        title: t('menu_trader'),
+        title: t('menu_personal'),
         items: [
-          { label: t('dashboard_trading'), to: '/', icon: 'home' },
-          { label: t('trading_journal'), to: '/trading', icon: 'chart-line' },
+          { label: t('dashboard_personal'), to: '/', icon: 'home' },
           { label: t('finance_tracker'), to: '/finance', icon: 'wallet' },
           { label: t('habit_tracker'), to: '/habits', icon: 'target' },
+          { label: t('private_diary'), to: '/diary', icon: 'book-heart' },
           { label: t('book_library'), to: '/books', icon: 'book' },
           { label: t('event_tracker'), to: '/events', icon: 'calendar' },
           { label: t('weekly_review'), to: '/review', icon: 'clipboard' },
+          { label: t('private_calendar'), to: '/personal-calendar', icon: 'calendar-heart' },
         ],
       },
     ]

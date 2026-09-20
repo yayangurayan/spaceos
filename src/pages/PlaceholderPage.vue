@@ -37,11 +37,6 @@ const pageMap: Record<string, { title: string; description: string; icon: string
   '/schedule':    { title: 'Schedule',          description: 'Class times and teaching schedule.',  icon: '📅' },
   '/materials':   { title: 'Materials',         description: 'Teaching slides, docs, and notes.',   icon: '📁' },
   '/income':      { title: 'Income Tracker',    description: 'Track lesson earnings and tuition.',  icon: '💵' },
-  // Couple Space
-  '/gallery':     { title: 'Our Gallery',       description: 'Shared photos and memories.',         icon: '📸' },
-  '/journal':     { title: 'Shared Journal',    description: 'Write together, grow together.',      icon: '📖' },
-  '/calendar':    { title: 'Our Calendar',      description: 'Shared events and plans.',            icon: '📅' },
-  '/love-notes':  { title: 'Love Notes',        description: 'Sweet messages for each other.',      icon: '💌' },
   '/settings':    { title: 'Settings',          description: 'Manage your account and preferences.', icon: '⚙️' },
 }
 

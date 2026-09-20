@@ -115,6 +115,29 @@
           {{ t('save_profile') }}
         </button>
       </div>
+
+      <!-- Couple Space Invitation (if applicable) -->
+      <div v-if="coupleSpaceInfo" class="mt-6 pt-6 border-t border-slate-800 animate-fade-in">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+          <span>💞</span>
+          <span>{{ t('couple_space_title') }}</span>
+        </h3>
+        <div class="p-4 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-between gap-4">
+          <div>
+            <p class="text-xs text-pink-200 font-semibold mb-0.5">{{ coupleSpaceInfo.name }}</p>
+            <p class="text-[10px] text-pink-400/80">{{ t('invite_code_label') }}:</p>
+            <p class="text-sm font-mono font-bold text-pink-300 tracking-widest mt-1">{{ coupleSpaceInfo.invite_code }}</p>
+          </div>
+          <button
+            type="button"
+            @click="copyInviteCode"
+            class="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white text-xs font-bold shadow-lg shadow-pink-500/30 transition-all flex items-center gap-2"
+          >
+            <span>📋</span>
+            <span>{{ t('copy_invite_code') }}</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- 4. TAB 2: AI CONFIGURATION -->
@@ -258,6 +281,14 @@
           </div>
           <input type="checkbox" checked class="w-4 h-4 text-accent rounded bg-slate-800 border-slate-700" />
         </label>
+
+        <label class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition-colors">
+          <div>
+            <span class="text-xs font-bold text-white block">{{ t('notif_couple_title') }}</span>
+            <span class="text-[11px] text-slate-400">{{ t('notif_couple_desc') }}</span>
+          </div>
+          <input type="checkbox" checked class="w-4 h-4 text-accent rounded bg-slate-800 border-slate-700" />
+        </label>
       </div>
     </div>
 
@@ -330,6 +361,7 @@
         <ul class="list-disc list-inside space-y-1 text-slate-300 text-[11px] ml-2">
           <li>{{ t('trader_space_modules') }}</li>
           <li>{{ t('teacher_space_modules') }}</li>
+          <li>{{ t('couple_space_modules') }}</li>
         </ul>
       </div>
 
@@ -400,7 +432,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -417,6 +449,25 @@ const { spaces, user } = storeToRefs(authStore)
 const activeTab = ref<'profile' | 'ai' | 'notifications' | 'backup' | 'danger'>('profile')
 const showApiKey = ref(false)
 const showResetModal = ref(false)
+
+const coupleSpaceInfo = computed(() => {
+  const coupleSpace = spaces.value.find(s => s.type === 'couple')
+  if (coupleSpace && (coupleSpace as any).invite_code) {
+    return coupleSpace as any
+  }
+  return null
+})
+
+async function copyInviteCode() {
+  if (!coupleSpaceInfo.value) return
+  const code = coupleSpaceInfo.value.invite_code
+  try {
+    await navigator.clipboard.writeText(code)
+    toast.success(t('copy_invite_code_success'), t('copy_invite_code_desc', { code }))
+  } catch {
+    toast.info(t('invite_code'), code)
+  }
+}
 
 const profileForm = reactive({
   fullName: user.value?.full_name || user.value?.email?.split('@')[0] || '',
@@ -496,6 +547,7 @@ async function executeCleanSlateReset() {
     const tables = [
       'trades', 'transactions', 'budgets', 'habits', 'books', 'events',
       'students', 'lessons', 'lesson_plans', 'materials', 'payments',
+      'albums', 'photos', 'journal_entries', 'calendar_events', 'love_notes',
     ] as const
     const results = await Promise.all(tables.map(table => supabase.from(table).delete().in('space_id', spaceIds)))
     const remoteError = results.find(result => result.error)?.error
@@ -541,6 +593,7 @@ async function executeCleanSlateReset() {
         localStorage.setItem(`spaceos_books_seeded_${space.id}`, 'true')
         localStorage.setItem(`spaceos_events_seeded_${space.id}`, 'true')
         localStorage.setItem(`spaceos_teacher_seeded_${space.id}`, 'true')
+        localStorage.setItem(`spaceos_couple_seeded_${space.id}`, 'true')
       })
     } catch { /* ignore */ }
   }

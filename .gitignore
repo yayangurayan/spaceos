@@ -1,24 +1,79 @@
-# Logs
-logs
+```
+# Backup files
+*.bak
+
+# Logs and temp files
 *.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+.env.
+
+# Editors
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+node_modules/
+.npm/
+.yarn/
+.pnpm/
+
+# Build outputs
+dist/
+build/
+target/
+out/
+coverage/
+htmlcov/
+.nyc_output/
+.eslintcache
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
+.python-version
+.mypy_cache/
+.pytest_cache/
+.tox/
+.coverage
+
+# Node.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+node_modules/
+dist/
+build/
+coverage/
+.nyc_output/
+.eslintcache
 
-node_modules
-dist
-dist-ssr
-*.local
+# TypeScript
+*.tsbuildinfo
+.next/
+.nuxt/
+output/
+.svelte-kit/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+```
