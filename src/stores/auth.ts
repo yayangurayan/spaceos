@@ -16,17 +16,6 @@ const DEFAULT_SPACES: SpaceWithMeta[] = [
     created_at: '2026-01-01T00:00:00.000Z',
   },
   {
-    id: 'space-couple',
-    name: 'Our Romantic Space 💕',
-    type: 'couple',
-    category: 'general',
-    icon: '💑',
-    owner_id: 'demo-user',
-    role: 'owner',
-    last_accessed: new Date().toISOString(),
-    created_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
     id: 'space-teacher',
     name: 'Personal — Guru Les & Bimbel',
     type: 'personal',
@@ -39,6 +28,7 @@ const DEFAULT_SPACES: SpaceWithMeta[] = [
   },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEFAULT_DEMO_USER: Profile = {
   id: 'demo-user-123',
   email: 'alex.morgan@spaceos.app',
@@ -444,82 +434,6 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Join a space using an invite code (for Couple / Shared Spaces)
-   */
-  async function joinSpaceWithInviteCode(code: string): Promise<{ success: boolean; error?: string; space?: SpaceWithMeta }> {
-    isLoading.value = true
-    const normalized = code.trim().toUpperCase()
-
-    try {
-      if (!user.value?.id || user.value.id.startsWith('demo-user')) {
-        return { success: false, error: 'Anda harus login dengan akun nyata untuk bergabung ke Couple Space.' }
-      }
-
-      // 1. Query Supabase for a couple space with this invite_code
-      const { data: spaceData, error: lookupErr } = await supabase
-        .from('spaces')
-        .select('*')
-        .eq('invite_code', normalized)
-        .eq('type', 'couple')
-        .single()
-
-      if (lookupErr || !spaceData) {
-        return { success: false, error: 'Kode undangan tidak ditemukan. Periksa kembali kode dari pasangan Anda.' }
-      }
-
-      const targetSpace = spaceData as any
-
-      // 2. Add user to space_members in Supabase
-      const { error: memberErr } = await supabase
-        .from('space_members')
-        .upsert(
-          { space_id: targetSpace.id, user_id: user.value.id, role: 'member' },
-          { onConflict: 'space_id,user_id' }
-        )
-
-      if (memberErr) {
-        return { success: false, error: 'Gagal bergabung: ' + memberErr.message }
-      }
-
-      // 3. Refresh spaces list from Supabase
-      await fetchSpaces()
-
-      // 4. Select the joined space
-      const joined: SpaceWithMeta = {
-        ...targetSpace,
-        role: 'member',
-        last_accessed: new Date().toISOString(),
-      }
-
-      await selectSpace(joined.id)
-      return { success: true, space: joined }
-    } catch (err: any) {
-      return { success: false, error: err?.message || 'Gagal bergabung ke space.' }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  /**
-   * Switch between partner accounts for simulation / testing
-   */
-  function switchPartnerAccount() {
-    if (user.value?.email === 'sarah.parker@spaceos.app') {
-      user.value = { ...DEFAULT_DEMO_USER }
-    } else {
-      user.value = {
-        id: 'partner-user-456',
-        email: 'sarah.parker@spaceos.app',
-        full_name: 'Sarah Parker',
-        avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-        created_at: '2026-01-01T00:00:00.000Z',
-      }
-    }
-    localStorage.setItem('spaceos_auth_user', JSON.stringify(user.value))
-    return user.value
-  }
-
-  /**
    * Delete a space and purge its local storage and remote records
    */
   async function deleteSpace(spaceId: string): Promise<{ success: boolean; error?: string }> {
@@ -540,14 +454,13 @@ export const useAuthStore = defineStore('auth', () => {
       if (user.value && !user.value.id.startsWith('demo-user')) {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(spaceId)
         if (isUUID) {
-          // Only delete if owner; partners should just remove themselves from space_members
           if (targetSpace.role === 'owner') {
             const { error: deleteError } = await supabase.from('spaces').delete().eq('id', spaceId)
             if (deleteError && deleteError.code !== 'PGRST116') {
               return { success: false, error: deleteError.message }
             }
           } else {
-            // Partner: just remove self from space_members
+            // Member: just remove self from space_members
             await supabase
               .from('space_members')
               .delete()
@@ -619,8 +532,6 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     loginWithProvider,
     logout,
-    joinSpaceWithInviteCode,
-    switchPartnerAccount,
     clearError,
   }
 })

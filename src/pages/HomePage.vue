@@ -9,7 +9,6 @@ import { useAuthStore } from '@/stores/auth'
 
 import TraderDashboard from '@/pages/private/TraderDashboard.vue'
 import TeacherDashboard from '@/pages/private/TeacherDashboard.vue'
-import CoupleDashboard from '@/pages/shared/CoupleDashboard.vue'
 
 const authStore = useAuthStore()
 const { currentSpace } = storeToRefs(authStore)
@@ -21,11 +20,6 @@ const activeDashboard = computed(() => {
 
   if (space.category === 'private') {
     return TraderDashboard
-  }
-
-  // Couple space
-  if (space.type === 'couple') {
-    return CoupleDashboard
   }
 
   // Teacher / Guru Les Space

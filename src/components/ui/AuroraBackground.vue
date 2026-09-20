@@ -14,7 +14,7 @@
 <script setup lang="ts">
 interface Props {
   /** Visual variant */
-  variant?: 'default' | 'auth' | 'warm' | 'couple' | 'subtle'
+  variant?: 'default' | 'auth' | 'warm' | 'subtle'
 }
 
 withDefaults(defineProps<Props>(), {
@@ -106,34 +106,6 @@ withDefaults(defineProps<Props>(), {
   bottom: 20%; right: 15%;
   background: radial-gradient(circle, hsla(280, 60%, 55%, 0.12) 0%, transparent 70%);
   animation: auroraMove4 16s ease-in-out infinite;
-}
-
-/* ============================
-   COUPLE VARIANT (Pink/Rose/Warm)
-   ============================ */
-.couple .blob-1 {
-  width: 500px; height: 500px;
-  top: -15%; right: -10%;
-  background: radial-gradient(circle, hsla(340, 80%, 55%, 0.20) 0%, transparent 70%);
-  animation: auroraMove1 15s ease-in-out infinite;
-}
-.couple .blob-2 {
-  width: 450px; height: 450px;
-  bottom: -10%; left: -8%;
-  background: radial-gradient(circle, hsla(310, 70%, 50%, 0.15) 0%, transparent 70%);
-  animation: auroraMove2 19s ease-in-out infinite;
-}
-.couple .blob-3 {
-  width: 380px; height: 380px;
-  top: 40%; left: 35%;
-  background: radial-gradient(circle, hsla(350, 75%, 60%, 0.12) 0%, transparent 70%);
-  animation: auroraMove3 13s ease-in-out infinite;
-}
-.couple .blob-4 {
-  width: 300px; height: 300px;
-  top: 10%; left: 10%;
-  background: radial-gradient(circle, hsla(20, 70%, 55%, 0.10) 0%, transparent 70%);
-  animation: auroraMove4 17s ease-in-out infinite;
 }
 
 /* ============================

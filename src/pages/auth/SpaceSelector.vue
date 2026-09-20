@@ -68,15 +68,6 @@
         <div class="flex items-center gap-2.5">
           <button
             type="button"
-            @click="showJoinModal = true"
-            class="px-4 py-2.5 rounded-xl border border-pink-500/40 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all hover:scale-102"
-          >
-            <span>🔑</span>
-            <span>{{ t('join_couple_space') }}</span>
-          </button>
-
-          <button
-            type="button"
             @click="showCreateModal = true"
             class="btn-primary flex items-center gap-2 text-xs sm:text-sm"
           >
@@ -143,9 +134,9 @@
               <!-- Space Icon -->
               <div
                 class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 shadow-md"
-                :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : space.category === 'private' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
+                :class="space.category === 'private' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
               >
-                {{ space.type === 'couple' ? '💑' : space.category === 'private' ? '🔒' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
+                {{ space.category === 'private' ? '🔒' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
               </div>
               <!-- Space Info -->
               <div class="flex-1 min-w-0">
@@ -154,15 +145,13 @@
                 </h3>
                 <span
                   class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
-                  :class="space.type === 'couple'
-                    ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
-                    : space.category === 'private'
+                  :class="space.category === 'private'
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     : (space.category === 'teacher' || space.id === 'space-teacher')
                     ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                     : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'"
                 >
-                  {{ space.type === 'couple' ? t('couple_space') : space.category === 'private' ? t('private_space') : (space.category === 'teacher' || space.id === 'space-teacher') ? t('personal_teacher') : t('personal_trader') }}
+                  {{ space.category === 'private' ? t('private_space') : (space.category === 'teacher' || space.id === 'space-teacher') ? t('personal_teacher') : t('personal_trader') }}
                 </span>
               </div>
               
@@ -187,39 +176,6 @@
                 {{ t('never_accessed') }}
               </template>
             </p>
-
-            <!-- Couple Space Invite Code Display -->
-            <div
-              v-if="space.type === 'couple'"
-              class="mt-3 pt-3 border-t border-pink-500/20"
-            >
-              <div v-if="(space as any).invite_code" class="flex items-center justify-between gap-2">
-                <div>
-                  <p class="text-[10px] text-pink-400/70 font-semibold mb-0.5">{{ t('invite_code') }}</p>
-                  <p class="text-xs font-mono font-bold text-pink-300 tracking-widest">{{ (space as any).invite_code }}</p>
-                </div>
-                <button
-                  type="button"
-                  @click.stop="copyInviteCode((space as any).invite_code)"
-                  class="p-1.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/30 text-pink-400 transition-colors flex-shrink-0"
-                  :title="t('copy_invite_code')"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
-              <div v-else class="flex items-center justify-between gap-2">
-                <p class="text-[10px] text-pink-400/70 font-semibold">{{ t('no_invite_code_yet') }}</p>
-                <button
-                  type="button"
-                  @click.stop="generateMissingInviteCode(space)"
-                  class="px-2 py-1 rounded bg-pink-500 hover:bg-pink-400 text-white text-[10px] font-bold transition-all"
-                >
-                  {{ t('generate_code') }}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -282,22 +238,6 @@
                       <span class="text-xs text-slate-400 leading-tight">{{ t('teacher_hub_desc') }}</span>
                     </div>
                   </button>
-
-                  <!-- Option 3: Couple Space -->
-                  <button
-                    type="button"
-                    @click="setSpaceTemplate('couple', 'general', '💑', 'Our Romantic Space 💕')"
-                    class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
-                    :class="newSpace.type === 'couple'
-                      ? 'border-pink-500 bg-pink-500/15 text-white shadow-lg shadow-pink-500/10 ring-1 ring-pink-500'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
-                  >
-                    <span class="text-3xl mb-2 block">💑</span>
-                    <div>
-                      <span class="text-sm font-bold text-white block">{{ t('couple_space_title') }}</span>
-                      <span class="text-xs text-slate-400 leading-tight">{{ t('couple_space_desc') }}</span>
-                    </div>
-                  </button>
                 </div>
               </div>
               <!-- Actions -->
@@ -318,65 +258,6 @@
                   <div v-if="createLoading" class="absolute inset-0 flex items-center justify-center">
                     <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   </div>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </transition>
-    </teleport>
-
-    <!-- Join Couple Space Modal -->
-    <teleport to="body">
-      <transition name="modal">
-        <div
-          v-if="showJoinModal"
-          class="fixed inset-0 z-[100] flex items-center justify-center p-4"
-        >
-          <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showJoinModal = false"></div>
-          <div class="relative z-10 w-full max-w-md glass rounded-3xl p-6 sm:p-8 border border-pink-500/40 bg-slate-950/95 animate-slide-in space-y-4">
-            <div class="w-12 h-12 rounded-2xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center text-2xl mx-auto shadow-md">
-              🔑
-            </div>
-
-            <div class="text-center space-y-1">
-              <h3 class="text-lg font-extrabold text-white">{{ t('join_space_title') }}</h3>
-              <p class="text-xs text-slate-400">
-                {{ t('join_space_desc') }}
-              </p>
-            </div>
-
-            <form @submit.prevent="handleJoinSpace" class="space-y-4 pt-2">
-              <div class="space-y-1">
-                <label class="block text-xs font-semibold text-slate-300">{{ t('invite_code_label') }}</label>
-                <input
-                  v-model="inviteCodeInput"
-                  type="text"
-                  required
-                  :placeholder="t('invite_code_placeholder')"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono uppercase tracking-wider focus:outline-none focus:border-pink-500 text-center"
-                />
-              </div>
-
-              <div class="p-3 rounded-xl bg-pink-500/10 border border-pink-500/20 text-xs text-pink-200 text-center">
-                💡 <em>{{ t('join_space_info') }}</em>
-              </div>
-
-              <div class="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  @click="showJoinModal = false"
-                  class="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
-                >
-                  {{ t('cancel') }}
-                </button>
-                <button
-                  type="submit"
-                  :disabled="joinLoading"
-                  class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-bold shadow-lg shadow-pink-500/20 transition-all"
-                >
-                  <span v-if="!joinLoading">{{ t('join_now') }}</span>
-                  <span v-else>{{ t('processing') }}</span>
                 </button>
               </div>
             </form>
@@ -444,6 +325,7 @@ import ParticleCanvas from '@/components/ui/ParticleCanvas.vue'
 import AuroraBackground from '@/components/ui/AuroraBackground.vue'
 
 const router = useRouter()
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const route = useRoute()
 const authStore = useAuthStore()
 const toast = useToastStore()
@@ -452,64 +334,7 @@ const { spaces, isLoading, userName } = storeToRefs(authStore)
 
 const showCreateModal = ref(false)
 const createLoading = ref(false)
-const showJoinModal = ref(false)
-const joinLoading = ref(false)
-const inviteCodeInput = ref('')
 const spaceToDelete = ref<SpaceWithMeta | null>(null)
-
-async function handleJoinSpace() {
-  if (!inviteCodeInput.value.trim()) return
-  joinLoading.value = true
-  const res = await authStore.joinSpaceWithInviteCode(inviteCodeInput.value.trim())
-  joinLoading.value = false
-  if (res.success) {
-    toast.success(t('join_success_title'), t('join_success_desc', { name: res.space?.name || '' }))
-    showJoinModal.value = false
-    router.push('/')
-  } else {
-    toast.error(t('join_failed_title'), res.error || t('invalid_invite_code'))
-  }
-}
-
-/**
- * Generate a local invite code for couple spaces (fallback when offline / pre-Supabase).
- * Format: 4 letters + 4 digits, e.g. "ABCD1234"
- */
-function generateLocalInviteCode(): string {
-  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
-  const digits = '0123456789'
-  let code = ''
-  for (let i = 0; i < 4; i++) code += letters[Math.floor(Math.random() * letters.length)]
-  for (let i = 0; i < 4; i++) code += digits[Math.floor(Math.random() * digits.length)]
-  return code
-}
-
-async function copyInviteCode(code: string) {
-  try {
-    await navigator.clipboard.writeText(code)
-    toast.success(t('copy_invite_code_success'), t('copy_invite_code_desc', { code }))
-  } catch {
-    toast.info(t('invite_code'), code)
-  }
-}
-
-async function generateMissingInviteCode(space: SpaceWithMeta) {
-  const newCode = generateLocalInviteCode()
-  ;(space as any).invite_code = newCode
-  
-  // Update local
-  const idx = spaces.value.findIndex(s => s.id === space.id)
-  if (idx !== -1) {
-    spaces.value[idx] = space
-    localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
-  }
-  
-  // Update remote
-  if (authStore.user && !authStore.user.id.startsWith('demo-user')) {
-    await supabase.from('spaces').update({ invite_code: newCode }).eq('id', space.id)
-  }
-  toast.success(t('code_generated_title'), t('code_generated_desc'))
-}
 
 const newSpace = reactive({
   name: 'My Trading Space',
@@ -522,7 +347,7 @@ function setSpaceTemplate(type: SpaceType, category: SpaceCategory, icon: string
   newSpace.type = type
   newSpace.category = category
   newSpace.icon = icon
-  if (!newSpace.name || newSpace.name === 'My Trading Space' || newSpace.name === 'Bimbingan Belajar' || newSpace.name === 'Our Romantic Space 💕') {
+  if (!newSpace.name || newSpace.name === 'My Trading Space' || newSpace.name === 'Bimbingan Belajar') {
     newSpace.name = defaultName
   }
 }
@@ -534,11 +359,7 @@ const firstName = computed(() => {
 
 onMounted(async () => {
   await authStore.fetchSpaces()
-  const joinParam = route.query.join as string
-  if (joinParam) {
-    inviteCodeInput.value = joinParam.trim().toUpperCase()
-    showJoinModal.value = true
-  }
+  // Join code feature removed - Couple Space deprecated
 })
 
 function formatTimeAgo(dateStr: string): string {
@@ -617,10 +438,6 @@ async function handleCreateSpace() {
 
   try {
     const userId = authStore.user?.id || 'demo-user'
-    // Generate a proper invite_code for couple spaces
-    const inviteCode = newSpace.type === 'couple'
-      ? generateLocalInviteCode()
-      : undefined
 
     // Use proper UUID for Supabase-compatible ID when authenticated
     const isRealUser = authStore.user && !authStore.user.id.startsWith('demo-user')
@@ -638,7 +455,6 @@ async function handleCreateSpace() {
       role: 'owner',
       last_accessed: new Date().toISOString(),
       created_at: new Date().toISOString(),
-      ...(inviteCode ? { invite_code: inviteCode } : {}),
     } as SpaceWithMeta
 
     // 1. Initialize 100% EMPTY arrays for all modules in this new space
@@ -648,11 +464,6 @@ async function handleCreateSpace() {
     localStorage.setItem(`spaceos_habits_${newSpaceId}`, JSON.stringify([]))
     localStorage.setItem(`spaceos_books_${newSpaceId}`, JSON.stringify([]))
     localStorage.setItem(`spaceos_events_${newSpaceId}`, JSON.stringify([]))
-    localStorage.setItem(`spaceos_couple_albums_${newSpaceId}`, JSON.stringify([]))
-    localStorage.setItem(`spaceos_couple_photos_${newSpaceId}`, JSON.stringify([]))
-    localStorage.setItem(`spaceos_couple_journals_${newSpaceId}`, JSON.stringify([]))
-    localStorage.setItem(`spaceos_couple_events_${newSpaceId}`, JSON.stringify([]))
-    localStorage.setItem(`spaceos_couple_notes_${newSpaceId}`, JSON.stringify([]))
     // Mark all modules as "already seeded" so composables never auto-populate demo data
     localStorage.setItem(`spaceos_trades_seeded_${newSpaceId}`, 'true')
     localStorage.setItem(`spaceos_finance_seeded_${newSpaceId}`, 'true')
@@ -660,7 +471,6 @@ async function handleCreateSpace() {
     localStorage.setItem(`spaceos_books_seeded_${newSpaceId}`, 'true')
     localStorage.setItem(`spaceos_events_seeded_${newSpaceId}`, 'true')
     localStorage.setItem(`spaceos_teacher_seeded_${newSpaceId}`, 'true')
-    localStorage.setItem(`spaceos_couple_seeded_${newSpaceId}`, 'true')
 
     // 2. Add to spaces list
     spaces.value.unshift(createdSpace)
@@ -676,12 +486,11 @@ async function handleCreateSpace() {
         icon: createdSpace.icon,
         owner_id: userId,
       }
-      if (inviteCode) payload.invite_code = inviteCode
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { data: insertedSpace, error: insertError } = await supabase
           .from('spaces')
           .insert(payload)
-          .select('invite_code')
           .single()
       if (insertError) {
         const pending = JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]
@@ -712,12 +521,6 @@ async function handleCreateSpace() {
           } catch {}
         }
 
-        // If Supabase generated/returned an invite_code (via trigger), use that
-        if (insertedSpace?.invite_code && createdSpace.type === 'couple') {
-          ;(createdSpace as any).invite_code = insertedSpace.invite_code
-          spaces.value[0] = { ...spaces.value[0], invite_code: insertedSpace.invite_code } as SpaceWithMeta
-          localStorage.setItem('spaceos_spaces', JSON.stringify(spaces.value))
-        }
         const pending = (JSON.parse(localStorage.getItem('spaceos_pending_spaces') || '[]') as SpaceWithMeta[]).filter(space => space.id !== createdSpace.id)
         localStorage.setItem('spaceos_pending_spaces', JSON.stringify(pending))
       }
