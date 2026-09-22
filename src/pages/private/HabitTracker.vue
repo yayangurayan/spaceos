@@ -86,7 +86,7 @@
       @select-date="handleSelectHeatmapDate"
     />
 
-    <!-- 3. View Switcher: Habit Cards Grid vs Monthly Calendar -->
+    <!-- 3. Habit Cards Grid Section Header -->
     <div class="flex items-center justify-between gap-4 pb-1">
       <div class="flex items-center gap-2">
         <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
@@ -94,29 +94,13 @@
           <span>{{ t('habit_list_title') }}</span>
         </h2>
       </div>
-
-      <div class="flex bg-dark/80 p-1 rounded-lg border border-slate-700/60 text-xs">
-        <button
-          type="button"
-          @click="activeView = 'cards'"
-          class="px-3 py-1.5 rounded-md font-medium transition-all"
-          :class="activeView === 'cards' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
-        >
-          {{ t('habit_cards_view') }}
-        </button>
-        <button
-          type="button"
-          @click="activeView = 'calendar'"
-          class="px-3 py-1.5 rounded-md font-medium transition-all"
-          :class="activeView === 'calendar' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
-        >
-          {{ t('habit_calendar_view') }}
-        </button>
-      </div>
+      <span class="text-xs text-slate-400">
+        {{ habitsWithStats.length }} habit aktif
+      </span>
     </div>
 
-    <!-- 4. VIEW A: HABIT CARDS GRID -->
-    <div v-if="activeView === 'cards'">
+    <!-- 4. HABIT CARDS GRID -->
+    <div>
       <div v-if="habitsWithStats.length === 0" class="glass rounded-xl p-12 text-center text-slate-400 space-y-3">
         <span class="text-4xl block mb-1">🌱</span>
         <h4 class="text-base font-bold text-white">{{ t('no_habits_yet') }}</h4>
@@ -144,16 +128,6 @@
       </div>
     </div>
 
-    <!-- 5. VIEW B: MONTHLY CALENDAR -->
-    <div v-else>
-      <HabitCalendarView
-        :habits="habitsWithStats"
-        :selected-date="selectedDate"
-        @update:selected-date="selectedDate = $event"
-        @toggle="handleToggle"
-      />
-    </div>
-
     <!-- Modal Form -->
     <HabitForm
       v-if="showModal"
@@ -169,7 +143,6 @@ import { ref, onMounted } from 'vue'
 import AnimatedNumber from '@/components/ui/AnimatedNumber.vue'
 import HabitCard from '@/components/habits/HabitCard.vue'
 import HabitHeatmap from '@/components/habits/HabitHeatmap.vue'
-import HabitCalendarView from '@/components/habits/HabitCalendarView.vue'
 import HabitForm from '@/components/habits/HabitForm.vue'
 import { useHabits } from '@/composables/useHabits'
 import { useI18n } from '@/composables/useI18n'
@@ -188,7 +161,6 @@ const {
   deleteHabit,
 } = useHabits()
 
-const activeView = ref<'cards' | 'calendar'>('cards')
 const showModal = ref(false)
 const selectedHabit = ref<Habit | null>(null)
 
@@ -230,7 +202,6 @@ async function confirmDelete(habitId: string) {
 
 function handleSelectHeatmapDate(date: string) {
   selectedDate.value = date
-  activeView.value = 'calendar'
 }
 
 onMounted(() => {

@@ -176,58 +176,50 @@
           </div>
         </div>
 
-        <!-- Habit Progress (Week View) -->
+        <!-- Risk Management & Discipline Widget -->
         <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-white">{{ t('habit_progress') }}</h2>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400">
-              🔥 {{ t('streak_days', { days: habitStreak }) }}
-            </span>
+            <h2 class="text-lg font-semibold text-white">🛡️ Manajemen Risiko & Disiplin</h2>
+            <router-link
+              to="/calculator"
+              class="text-xs font-semibold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 border border-cyan-500/30 transition-all"
+            >
+              📐 Buka Kalkulator Lot →
+            </router-link>
           </div>
 
-          <SkeletonLoader v-if="isLoading" type="table" :rows="3" :columns="7" />
-
-          <div v-else class="glass rounded-xl p-4 overflow-x-auto">
-            <!-- Day headers -->
-            <div class="grid grid-cols-7 gap-1 mb-3 min-w-[420px]">
-              <div
-                v-for="day in habitProgress"
-                :key="day.date"
-                class="text-center"
-              >
-                <span class="text-[10px] font-semibold text-slate-500 uppercase">{{ day.dayShort }}</span>
-              </div>
-            </div>
-
-            <!-- Habit rows -->
-            <div
-              v-for="habitIdx in 3"
-              :key="habitIdx"
-              class="grid grid-cols-7 gap-1 mb-2 min-w-[420px]"
-            >
-              <div
-                v-for="day in habitProgress"
-                :key="day.date + habitIdx"
-                class="flex items-center justify-center"
-              >
-                <div
-                  class="habit-dot w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all duration-200"
-                  :class="day.habits[habitIdx - 1]?.completed
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'bg-slate-700/30 text-slate-600'"
-                  :title="`${day.habits[habitIdx - 1]?.name}: ${day.habits[habitIdx - 1]?.completed ? t('completed_short') : t('not_done')}`"
-                >
-                  {{ day.habits[habitIdx - 1]?.icon }}
+          <div class="glass rounded-xl p-5 border border-slate-700/60 space-y-3">
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🛑</span>
+                <div>
+                  <p class="text-xs font-bold text-white">Aturan Stop Loss Otomatis</p>
+                  <p class="text-[10px] text-slate-400">Selalu tentukan SL sebelum entri posisi</p>
                 </div>
               </div>
+              <span class="text-xs font-bold font-mono text-cyan-400">Max 1-2%</span>
             </div>
 
-            <!-- Legend -->
-            <div class="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700/30">
-              <div v-for="habit in habitProgress[0]?.habits" :key="habit.name" class="flex items-center gap-1.5">
-                <span class="text-sm">{{ habit.icon }}</span>
-                <span class="text-[11px] text-slate-500">{{ habit.name }}</span>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🎯</span>
+                <div>
+                  <p class="text-xs font-bold text-white">Target Risk : Reward Ideal</p>
+                  <p class="text-[10px] text-slate-400">Hanya ambil setup dengan potensi profit memadai</p>
+                </div>
               </div>
+              <span class="text-xs font-bold font-mono text-emerald-400">Min 1 : 2</span>
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🧘</span>
+                <div>
+                  <p class="text-xs font-bold text-white">Disiplin Psikologi Pasar</p>
+                  <p class="text-[10px] text-slate-400">Jeda setelah 2x loss beruntun, hindari FOMO</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold font-mono text-amber-400">Cooling Off</span>
             </div>
           </div>
         </div>
@@ -256,8 +248,6 @@ const {
   error,
   stats,
   recentTrades,
-  habitProgress,
-  habitStreak,
   retry,
 } = useTraderDashboard()
 

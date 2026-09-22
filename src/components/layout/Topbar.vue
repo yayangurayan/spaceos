@@ -18,25 +18,31 @@
         <Icon name="menu" :size="20" />
       </button>
 
-      <!-- Current Space Badge -->
+      <!-- Current Space Badge (Desktop) -->
       <div v-if="currentSpace" class="hidden sm:flex items-center gap-2.5">
         <span class="text-xl p-1.5 rounded-xl bg-slate-800 border border-slate-700 shadow-sm">
-          {{ currentSpace.type === 'couple' ? '💑' : currentSpace.category === 'teacher' ? '🎓' : currentSpace.category === 'private' ? '🔒' : '📈' }}
+          {{ currentSpace.type === 'couple' ? '💑' : currentSpace.category === 'teacher' ? '🎓' : (currentSpace.category === 'personal' || currentSpace.category === 'private') ? '🌿' : '📈' }}
         </span>
         <div>
           <p class="text-sm font-bold text-white leading-tight flex items-center gap-1.5">
             <span>{{ currentSpace.name }}</span>
             <span
               class="text-[10px] font-extrabold px-2 py-0.2 rounded-full uppercase tracking-wider"
-              :class="currentSpace.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : currentSpace.category === 'teacher' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : currentSpace.category === 'private' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
+              :class="currentSpace.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : currentSpace.category === 'teacher' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : (currentSpace.category === 'personal' || currentSpace.category === 'private') ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
             >
-              {{ currentSpace.type === 'couple' ? t('couple_space') : currentSpace.category === 'teacher' ? t('teacher_space') : currentSpace.category === 'private' ? t('private_space') : t('trader_space') }}
+              {{ currentSpace.type === 'couple' ? t('couple_space') : currentSpace.category === 'teacher' ? t('teacher_space') : (currentSpace.category === 'personal' || currentSpace.category === 'private') ? (t('personal_space') || 'Personal Space') : (t('trading_space') || 'Trading Space') }}
             </span>
           </p>
           <p class="text-[11px] text-slate-400 leading-tight">
-            {{ currentSpace.type === 'couple' ? t('romantic_shared_hub') : currentSpace.category === 'teacher' ? t('bimbingan_belajar') : currentSpace.category === 'private' ? t('private_space_subtitle') : t('trading_habit') }}
+            {{ currentSpace.type === 'couple' ? t('romantic_shared_hub') : currentSpace.category === 'teacher' ? t('bimbingan_belajar') : (currentSpace.category === 'personal' || currentSpace.category === 'private') ? 'Keuangan, habit, dan refleksi pribadi' : t('trading_habit') }}
           </p>
         </div>
+      </div>
+
+      <!-- Current Space Badge (Mobile) -->
+      <div v-if="currentSpace" class="sm:hidden flex items-center gap-1.5 min-w-0 max-w-[150px]">
+        <span class="text-base">{{ currentSpace.type === 'couple' ? '💑' : currentSpace.category === 'teacher' ? '🎓' : (currentSpace.category === 'personal' || currentSpace.category === 'private') ? '🌿' : '📈' }}</span>
+        <span class="text-xs font-bold text-white truncate">{{ currentSpace.name }}</span>
       </div>
     </div>
 

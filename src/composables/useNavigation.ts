@@ -84,13 +84,11 @@ export function useNavigation() {
             { label: t('dashboard_couple'), to: '/', icon: 'home' },
             { label: t('our_gallery'), to: '/gallery', icon: 'images' },
             { label: t('shared_journal'), to: '/journal', icon: 'book-heart' },
-            { label: t('our_calendar'), to: '/calendar', icon: 'calendar-heart' },
             { label: t('love_notes'), to: '/love-notes', icon: 'message-heart' },
           ],
         },
       ]
     }
-
 
     // Teacher / Guru Les Space
     if (category === 'teacher' || name.includes('guru') || name.includes('les') || name.includes('bimbel') || name.includes('tutor') || name.includes('teach') || space?.id === 'space-teacher') {
@@ -110,18 +108,31 @@ export function useNavigation() {
       ]
     }
 
-    // Trader Space & General (default)
+    // Trading Space
+    if (category === 'trading' || category === 'trader' || name.includes('trading') || name.includes('trader') || space?.id === 'space-trading') {
+      return [
+        {
+          title: t('menu_trading') || 'Trading Space',
+          items: [
+            { label: t('dashboard_trading'), to: '/', icon: 'home' },
+            { label: t('trading_journal'), to: '/trading', icon: 'chart-line' },
+            { label: t('position_calculator') || 'Position Calculator', to: '/calculator', icon: 'calculator' },
+            { label: t('weekly_review'), to: '/review', icon: 'clipboard' },
+          ],
+        },
+      ]
+    }
+
+    // Personal Space (Default)
     return [
       {
-        title: t('menu_trader'),
+        title: t('menu_personal') || 'Personal Space',
         items: [
-          { label: t('dashboard_trading'), to: '/', icon: 'home' },
-          { label: t('trading_journal'), to: '/trading', icon: 'chart-line' },
+          { label: t('dashboard_personal') || 'Dashboard Personal', to: '/', icon: 'home' },
           { label: t('finance_tracker'), to: '/finance', icon: 'wallet' },
           { label: t('habit_tracker'), to: '/habits', icon: 'target' },
+          { label: t('personal_journal') || 'Jurnal Pribadi', to: '/personal-journal', icon: 'feather' },
           { label: t('book_library'), to: '/books', icon: 'book' },
-          { label: t('event_tracker'), to: '/events', icon: 'calendar' },
-          { label: t('weekly_review'), to: '/review', icon: 'clipboard' },
         ],
       },
     ]

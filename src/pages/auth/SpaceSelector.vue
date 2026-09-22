@@ -143,9 +143,9 @@
               <!-- Space Icon -->
               <div
                 class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 shadow-md"
-                :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : space.category === 'private' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
+                :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : (space.category === 'personal' || space.category === 'private') ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
               >
-                {{ space.type === 'couple' ? '💑' : space.category === 'private' ? '🔒' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
+                {{ space.type === 'couple' ? '💑' : (space.category === 'personal' || space.category === 'private') ? '🌿' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
               </div>
               <!-- Space Info -->
               <div class="flex-1 min-w-0">
@@ -156,13 +156,13 @@
                   class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
                   :class="space.type === 'couple'
                     ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
-                    : space.category === 'private'
+                    : (space.category === 'personal' || space.category === 'private')
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     : (space.category === 'teacher' || space.id === 'space-teacher')
                     ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                     : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'"
                 >
-                  {{ space.type === 'couple' ? t('couple_space') : space.category === 'private' ? t('private_space') : (space.category === 'teacher' || space.id === 'space-teacher') ? t('personal_teacher') : t('personal_trader') }}
+                  {{ space.type === 'couple' ? t('couple_space') : (space.category === 'personal' || space.category === 'private') ? (t('personal_space') || 'Personal Space') : (space.category === 'teacher' || space.id === 'space-teacher') ? t('personal_teacher') : (t('trading_space') || 'Trading Space') }}
                 </span>
               </div>
               
@@ -250,24 +250,40 @@
               <!-- Space Category / Template -->
               <div>
                 <label class="block text-sm font-medium text-slate-300 mb-1.5">{{ t('choose_category_type') }}</label>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <!-- Option 1: Trading & Habits -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- Option 1: Trading Space -->
                   <button
                     type="button"
-                    @click="setSpaceTemplate('personal', 'trader', '📈', 'My Trading Space')"
+                    @click="setSpaceTemplate('personal', 'trading', '📈', 'My Trading Space')"
                     class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
-                    :class="newSpace.category === 'trader' && newSpace.type === 'personal'
+                    :class="(newSpace.category === 'trading' || newSpace.category === 'trader') && newSpace.type === 'personal'
                       ? 'border-cyan-500 bg-cyan-500/15 text-white shadow-lg shadow-cyan-500/10 ring-1 ring-cyan-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
                     <span class="text-3xl mb-2 block">📈</span>
                     <div>
-                      <span class="text-sm font-bold text-white block">{{ t('trading_hub_title') }}</span>
-                      <span class="text-xs text-slate-400 leading-tight">{{ t('trading_hub_desc') }}</span>
+                      <span class="text-sm font-bold text-white block">Trading Space</span>
+                      <span class="text-xs text-slate-400 leading-tight">Jurnal trading harian, analisa win rate, evaluasi risiko, dan kalkulator posisi.</span>
                     </div>
                   </button>
 
-                  <!-- Option 2: Guru Les & Bimbel -->
+                  <!-- Option 2: Personal Space -->
+                  <button
+                    type="button"
+                    @click="setSpaceTemplate('personal', 'personal', '🌿', 'My Personal Space')"
+                    class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
+                    :class="newSpace.category === 'personal' && newSpace.type === 'personal'
+                      ? 'border-emerald-500 bg-emerald-500/15 text-white shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
+                  >
+                    <span class="text-3xl mb-2 block">🌿</span>
+                    <div>
+                      <span class="text-sm font-bold text-white block">Personal Space</span>
+                      <span class="text-xs text-slate-400 leading-tight">Finance tracker, habit streak, dan jurnal refleksi diri pribadi.</span>
+                    </div>
+                  </button>
+
+                  <!-- Option 3: Teacher Space -->
                   <button
                     type="button"
                     @click="setSpaceTemplate('personal', 'teacher', '🎓', 'Bimbingan Belajar')"
@@ -278,12 +294,12 @@
                   >
                     <span class="text-3xl mb-2 block">🎓</span>
                     <div>
-                      <span class="text-sm font-bold text-white block">{{ t('teacher_hub_title') }}</span>
-                      <span class="text-xs text-slate-400 leading-tight">{{ t('teacher_hub_desc') }}</span>
+                      <span class="text-sm font-bold text-white block">Teacher Space</span>
+                      <span class="text-xs text-slate-400 leading-tight">Manajemen siswa les, materi ajar via cloud, jadwal sesi, dan honor.</span>
                     </div>
                   </button>
 
-                  <!-- Option 3: Couple Space -->
+                  <!-- Option 4: Couple Space -->
                   <button
                     type="button"
                     @click="setSpaceTemplate('couple', 'general', '💑', 'Our Romantic Space 💕')"

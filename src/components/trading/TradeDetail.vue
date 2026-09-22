@@ -232,7 +232,7 @@
             </div>
           </div>
 
-          <!-- 5. Screenshots Gallery -->
+          <!-- 5. Screenshots Gallery (Supports Google Drive & Direct Images) -->
           <div v-if="trade.screenshot_urls && trade.screenshot_urls.length > 0" class="space-y-3">
             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <span>🖼️</span>
@@ -243,13 +243,12 @@
               <div
                 v-for="(url, idx) in trade.screenshot_urls"
                 :key="idx"
-                @click="openLightbox(url)"
-                class="group relative aspect-video rounded-xl overflow-hidden border border-slate-700 bg-dark cursor-pointer shadow-md hover:border-accent transition-all"
               >
-                <img :src="url" alt="Trade Screenshot" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
-                  🔍 Perbesar
-                </div>
+                <GDriveImagePreview
+                  :url="url"
+                  title="Klik untuk perbesar chart screenshot"
+                  thumbnail-class="w-full h-48 rounded-xl object-cover"
+                />
               </div>
             </div>
           </div>
@@ -286,30 +285,14 @@
         </div>
       </div>
     </div>
-
-    <!-- Lightbox Modal for Screenshots -->
-    <div
-      v-if="lightboxUrl"
-      class="fixed inset-0 z-60 bg-black/95 flex items-center justify-center p-4"
-      @click="lightboxUrl = null"
-    >
-      <div class="relative max-w-5xl max-h-[90vh] flex flex-col items-center">
-        <img :src="lightboxUrl" alt="Zoomed Screenshot" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
-        <button
-          @click="lightboxUrl = null"
-          class="absolute top-2 right-2 px-3 py-1.5 rounded-lg bg-slate-800/80 text-white text-xs font-bold hover:bg-slate-700"
-        >
-          ✕ Tutup
-        </button>
-      </div>
-    </div>
   </teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type { Trade } from '@/types'
 import { useToastStore } from '@/stores/toast'
+import GDriveImagePreview from '@/components/ui/GDriveImagePreview.vue'
 
 const props = defineProps<{
   trade: Trade
@@ -322,7 +305,6 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToastStore()
-const lightboxUrl = ref<string | null>(null)
 
 const bannerStyle = computed(() => {
   if (props.trade.status === 'Win') {
@@ -363,10 +345,6 @@ function getMoodLabel(emoji: string | null): string {
     '🤬': 'Kesal / Tilt',
   }
   return map[emoji] || 'Terpilih'
-}
-
-function openLightbox(url: string) {
-  lightboxUrl.value = url
 }
 
 function copyTradeSummary() {

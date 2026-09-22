@@ -9,13 +9,16 @@ export const translations = {
     'couple_space': 'Couple Space',
     'teacher_space': 'Guru Les Space',
     'trader_space': 'Trader Space',
+    'trading_space': 'Trading Space',
+    'personal_space': 'Personal Space',
+    'position_calculator': 'Kalkulator Posisi & Risiko',
     'personal_trader': 'Personal: Trader',
     'personal_teacher': 'Personal: Guru Les',
     'romantic_shared_hub': 'Romantic Shared Hub',
     'bimbingan_belajar': 'Bimbingan Belajar & Les Privat',
     'trading_habit': 'Trading & Habit Performance',
-    'private_space': 'Private Space',
-    'private_space_subtitle': 'Perpustakaan, diary, kalender & kehidupan pribadi',
+    'private_space': 'Personal Space',
+    'private_space_subtitle': 'Keuangan, habit harian & jurnal refleksi pribadi',
     'active': 'Aktif',
 
     // Sidebar & Navigation Sections
@@ -23,8 +26,12 @@ export const translations = {
     'dashboard_couple': 'Dashboard Couple',
     'our_gallery': 'Our Gallery',
     'shared_journal': 'Shared Journal',
-    'our_calendar': 'Our Calendar',
     'love_notes': 'Love Notes',
+
+    'menu_trading': 'Trading Space',
+    'menu_personal': 'Personal Space',
+    'dashboard_personal': 'Dashboard Personal',
+    'personal_journal': 'Jurnal Pribadi',
 
     'menu_teacher': 'Menu Guru Les & Bimbel',
     'dashboard_tutor': 'Dashboard Tutor',
@@ -530,14 +537,17 @@ export const translations = {
     // Space Names & Categories
     'couple_space': 'Paarbereich',
     'teacher_space': 'Nachhilfebereich',
-    'trader_space': 'Händlerbereich',
-    'personal_trader': 'Persönlich: Händler',
+    'trader_space': 'Trading-Bereich',
+    'trading_space': 'Trading-Bereich',
+    'personal_space': 'Persönlicher Bereich',
+    'position_calculator': 'Positionsgrößen- & Risikorechner',
+    'personal_trader': 'Persönlich: Trading',
     'personal_teacher': 'Persönlich: Nachhilfe',
     'romantic_shared_hub': 'Romantischer gemeinsamer Hub',
     'bimbingan_belajar': 'Nachhilfe & Privatunterricht',
     'trading_habit': 'Handel & Gewohnheitsleistung',
-    'private_space': 'Privater Bereich',
-    'private_space_subtitle': 'Bibliothek, Tagebuch, Kalender & Privatleben',
+    'private_space': 'Persönlicher Bereich',
+    'private_space_subtitle': 'Finanzen, Gewohnheiten & persönliches Tagebuch',
     'active': 'Aktiv',
 
     // Sidebar & Navigation Sections
@@ -545,8 +555,12 @@ export const translations = {
     'dashboard_couple': 'Paar Dashboard',
     'our_gallery': 'Unsere Galerie',
     'shared_journal': 'Gemeinsames Tagebuch',
-    'our_calendar': 'Unser Kalender',
     'love_notes': 'Liebesbriefe',
+
+    'menu_trading': 'Trading-Bereich',
+    'menu_personal': 'Persönlicher Bereich',
+    'dashboard_personal': 'Persönliches Dashboard',
+    'personal_journal': 'Persönliches Tagebuch',
 
     'menu_teacher': 'Nachhilfelehrer Menü',
     'dashboard_tutor': 'Tutor Dashboard',

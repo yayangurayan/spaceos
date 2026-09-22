@@ -151,6 +151,15 @@
             {{ mat.description }}
           </p>
 
+          <!-- GDrive Image Preview (if image or GDrive file) -->
+          <div v-if="mat.file_url" class="my-1">
+            <GDriveImagePreview
+              :url="mat.file_url"
+              :title="mat.title"
+              thumbnail-class="w-full h-36 rounded-xl object-cover"
+            />
+          </div>
+
           <!-- Tags -->
           <div v-if="mat.tags && mat.tags.length > 0" class="flex flex-wrap gap-1">
             <span
@@ -211,6 +220,7 @@
 import { ref, computed, onMounted } from 'vue'
 import Icon from '@/components/ui/Icon.vue'
 import MaterialModal from '@/components/teacher/MaterialModal.vue'
+import GDriveImagePreview from '@/components/ui/GDriveImagePreview.vue'
 import { useTeacher, TEACHER_SUBJECTS, GRADE_LEVELS } from '@/composables/useTeacher'
 import type { TeacherMaterial, MaterialFormData } from '@/types'
 

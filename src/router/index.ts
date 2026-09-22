@@ -47,12 +47,23 @@ const routes: RouteRecordRaw[] = [
         name: 'Home',
         component: () => import('@/pages/HomePage.vue'),
       },
-      // Personal Space (Trader) routes
+      // Trading Space routes
       {
         path: 'trading',
         name: 'Trading',
         component: () => import('@/pages/private/TradingJournal.vue'),
       },
+      {
+        path: 'calculator',
+        name: 'PositionCalculator',
+        component: () => import('@/components/trading/PositionCalculator.vue'),
+      },
+      {
+        path: 'review',
+        name: 'Review',
+        component: () => import('@/pages/private/WeeklyReview.vue'),
+      },
+      // Personal Space routes
       {
         path: 'finance',
         name: 'Finance',
@@ -64,31 +75,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/private/HabitTracker.vue'),
       },
       {
+        path: 'personal-journal',
+        name: 'PersonalJournal',
+        component: () => import('@/pages/private/PersonalJournal.vue'),
+      },
+      {
         path: 'books',
         name: 'Books',
         component: () => import('@/pages/private/BookLibrary.vue'),
       },
-      {
-        path: 'events',
-        name: 'Events',
-        component: () => import('@/pages/private/EventTracker.vue'),
-      },
-      {
-        path: 'review',
-        name: 'Review',
-        component: () => import('@/pages/private/WeeklyReview.vue'),
-      },
-      {
-        path: 'diary',
-        name: 'PrivateDiary',
-        component: () => import('@/pages/private/PrivateDiary.vue'),
-      },
-      {
-        path: 'personal-calendar',
-        name: 'PrivateCalendar',
-        component: () => import('@/pages/private/PrivateCalendar.vue'),
-      },
-      // Personal Space (Guru Les / Teacher) routes
+      // Teacher Space routes
       {
         path: 'students',
         name: 'Students',
@@ -144,11 +140,6 @@ const routes: RouteRecordRaw[] = [
         path: 'journal/:id',
         name: 'JournalEntry',
         component: () => import('@/pages/shared/JournalEntry.vue'),
-      },
-      {
-        path: 'calendar',
-        name: 'Calendar',
-        component: () => import('@/pages/shared/Calendar.vue'),
       },
       {
         path: 'love-notes',
