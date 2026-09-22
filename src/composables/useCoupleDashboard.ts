@@ -47,7 +47,7 @@ export function useCoupleDashboard() {
 
   // Couple info
   const coupleNames = computed(() => currentSpace.value?.name || 'Couple Space')
-  const togetherSince = ref(new Date().toISOString().split('T')[0])
+  const togetherSince = ref('2026-08-01')
 
   /**
    * Dynamic greeting based on time of day
@@ -165,11 +165,22 @@ export function useCoupleDashboard() {
 
   async function loadData() {
     const spaceId = currentSpace.value?.id
+    const defaultDate = '2026-08-01'
     if (spaceId) {
       const savedTogetherSince = localStorage.getItem(`spaceos_couple_together_since_${spaceId}`)
-      togetherSince.value = savedTogetherSince || currentSpace.value?.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
+      togetherSince.value = savedTogetherSince || defaultDate
+    } else {
+      togetherSince.value = defaultDate
     }
     await fetchCoupleData()
+  }
+
+  function updateTogetherSince(dateStr: string) {
+    togetherSince.value = dateStr
+    const spaceId = currentSpace.value?.id
+    if (spaceId) {
+      localStorage.setItem(`spaceos_couple_together_since_${spaceId}`, dateStr)
+    }
   }
 
   function retry() {
@@ -188,6 +199,7 @@ export function useCoupleDashboard() {
     daysTogether,
     anniversaryCountdown,
     togetherSince,
+    updateTogetherSince,
     upcomingEvents,
     recentJournals,
     recentPhotos,

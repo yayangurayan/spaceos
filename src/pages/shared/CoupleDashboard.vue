@@ -39,15 +39,25 @@
           <!-- Days together + Anniversary countdown -->
           <div class="flex flex-wrap gap-6">
             <!-- Days together -->
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-xl bg-rose-500/15 flex items-center justify-center text-xl">
+            <div
+              class="flex items-center gap-3 group cursor-pointer p-1.5 -m-1.5 rounded-2xl hover:bg-white/5 transition-all"
+              @click="openDateModal"
+              title="Klik untuk ubah tanggal jadian / mulai bersama"
+            >
+              <div class="w-12 h-12 rounded-xl bg-rose-500/15 group-hover:bg-rose-500/25 flex items-center justify-center text-xl transition-colors">
                 💕
               </div>
               <div>
-                <p class="text-2xl font-bold text-white">
-                  <AnimatedNumber :value="daysTogether" :duration="1500" />
+                <div class="flex items-center gap-1.5">
+                  <p class="text-2xl font-bold text-white">
+                    <AnimatedNumber :value="daysTogether" :duration="1500" />
+                  </p>
+                  <span class="text-[11px] text-rose-300 opacity-60 group-hover:opacity-100 transition-opacity">✏️</span>
+                </div>
+                <p class="text-xs text-slate-400 flex items-center gap-1">
+                  <span>{{ t('days_together') }}</span>
+                  <span class="text-[10px] text-slate-500 hidden sm:inline">(sejak {{ formatDate(togetherSince) }})</span>
                 </p>
-                <p class="text-xs text-slate-400">{{ t('days_together') }}</p>
               </div>
             </div>
 
@@ -279,20 +289,72 @@
             <span>Tulis Journal</span>
           </router-link>
           <router-link
-            to="/calendar"
+            to="/journal"
             class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-rose-500/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
-            <span class="text-lg">📅</span>
-            <span>Kalender & Buat Agenda</span>
+            <span class="text-lg">📖</span>
+            <span>Shared Journal</span>
           </router-link>
         </div>
       </div>
     </template>
+
+    <!-- Modal Atur Tanggal Mulai Bersama -->
+    <teleport to="body">
+      <transition name="fade">
+        <div
+          v-if="showDateModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          @click.self="showDateModal = false"
+        >
+          <div class="glass rounded-2xl p-6 w-full max-w-sm border border-rose-500/40 shadow-2xl space-y-4 animate-slide-in">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <span>💕</span>
+                <span>Tanggal Mulai Bersama</span>
+              </h3>
+              <button @click="showDateModal = false" class="text-slate-400 hover:text-white text-sm">✕</button>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                Tanggal Jadian / Bersama Sejak
+              </label>
+              <input
+                v-model="tempDate"
+                type="date"
+                class="input-field w-full text-sm font-mono"
+              />
+              <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">
+                Tanggal ini digunakan untuk menghitung jumlah hari bersama dan hitung mundur anniversary secara otomatis.
+              </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                @click="showDateModal = false"
+                class="px-3.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white border border-slate-700"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                @click="handleSaveDate"
+                class="btn-primary px-4 py-1.5 rounded-xl text-xs font-bold"
+              >
+                Simpan Tanggal
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import AnimatedNumber from '@/components/ui/AnimatedNumber.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
@@ -305,6 +367,9 @@ const authStore = useAuthStore()
 const toast = useToastStore()
 const { currentLang, t } = useI18n()
 const { user: currentUser, currentSpace } = storeToRefs(authStore)
+
+const showDateModal = ref(false)
+const tempDate = ref('')
 
 const isSpaceOwner = computed(() => {
   return currentSpace.value?.owner_id === currentUser.value?.id || !currentSpace.value?.owner_id
@@ -337,12 +402,27 @@ const {
   coupleNames,
   daysTogether,
   anniversaryCountdown,
+  togetherSince,
+  updateTogetherSince,
   upcomingEvents,
   recentJournals,
   recentPhotos,
   onThisDay,
   retry,
 } = useCoupleDashboard()
+
+function openDateModal() {
+  tempDate.value = togetherSince.value || '2026-08-01'
+  showDateModal.value = true
+}
+
+function handleSaveDate() {
+  if (tempDate.value) {
+    updateTogetherSince(tempDate.value)
+    toast.success('Tanggal Diperbarui', 'Tanggal mulai bersama berhasil diperbarui.')
+    showDateModal.value = false
+  }
+}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(currentLang.value === 'de' ? 'de-DE' : 'id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
