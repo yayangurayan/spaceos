@@ -22,6 +22,11 @@
       <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
     </template>
 
+    <!-- Zap / Lightning (Backtesting) -->
+    <template v-else-if="name === 'zap'">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </template>
+
     <!-- Wallet -->
     <template v-else-if="name === 'wallet'">
       <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />

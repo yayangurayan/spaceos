@@ -54,6 +54,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/private/TradingJournal.vue'),
       },
       {
+        path: 'backtesting',
+        name: 'Backtesting',
+        component: () => import('@/pages/private/Backtesting.vue'),
+      },
+      {
         path: 'calculator',
         name: 'PositionCalculator',
         component: () => import('@/components/trading/PositionCalculator.vue'),

@@ -10,12 +10,22 @@
         <p class="text-slate-400 text-xs sm:text-sm">{{ currentSpace?.category === 'private' ? t('private_space_subtitle') : t('trading_habit') }}</p>
       </div>
 
-      <router-link
-        to="/trading"
-        class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5"
-      >
-        <span>{{ t('add_new_trade') }}</span>
-      </router-link>
+      <div class="flex items-center gap-2">
+        <router-link
+          to="/backtesting"
+          class="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 text-xs font-bold border border-cyan-500/30 transition-all flex items-center gap-1.5 shadow-sm"
+        >
+          <span>🔬</span>
+          <span>Lab Backtesting</span>
+        </router-link>
+
+        <router-link
+          to="/trading"
+          class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5"
+        >
+          <span>{{ t('add_new_trade') }}</span>
+        </router-link>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -77,6 +87,9 @@
           suffix=" hari"
         />
       </div>
+
+      <!-- Trading Plan & Active Strategy (Editable) -->
+      <TradingPlanCard :show-backtest-link="true" class="mb-8 animate-fade-in" />
 
       <!-- Recent Trades Table -->
       <div class="mb-8 animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
@@ -167,11 +180,18 @@
               {{ t('add_new_trade') }}
             </button>
             <button
-              @click="router.push('/trading')"
-              class="flex-1 glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5"
+              @click="router.push('/backtesting')"
+              class="flex-1 glass rounded-lg py-3 px-4 text-xs sm:text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
-              <span class="text-lg mr-2">📋</span>
-              {{ t('open_trading_journal') }}
+              <span class="text-lg">🔬</span>
+              <span>Uji Backtesting</span>
+            </button>
+            <button
+              @click="router.push('/calculator')"
+              class="flex-1 glass rounded-lg py-3 px-4 text-xs sm:text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            >
+              <span class="text-lg">📐</span>
+              <span>Kalkulator Lot</span>
             </button>
           </div>
         </div>
@@ -233,6 +253,7 @@ import { useRouter } from 'vue-router'
 import StatCard from '@/components/ui/StatCard.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
+import TradingPlanCard from '@/components/trading/TradingPlanCard.vue'
 import { useTraderDashboard } from '@/composables/useTraderDashboard'
 import { useI18n } from '@/composables/useI18n'
 import type { TradeEntry } from '@/composables/useTraderDashboard'

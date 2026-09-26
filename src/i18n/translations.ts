@@ -29,6 +29,8 @@ export const translations = {
     'love_notes': 'Love Notes',
 
     'menu_trading': 'Trading Space',
+    'backtesting': 'Backtesting Lab',
+    'backtesting_desc': 'Uji strategi masa lalu dengan input data cepat dan kalkulasi rasio otomatis',
     'menu_personal': 'Personal Space',
     'dashboard_personal': 'Dashboard Personal',
     'personal_journal': 'Jurnal Pribadi',
@@ -558,6 +560,8 @@ export const translations = {
     'love_notes': 'Liebesbriefe',
 
     'menu_trading': 'Trading-Bereich',
+    'backtesting': 'Backtesting Labor',
+    'backtesting_desc': 'Strategien mit schneller Dateneingabe und automatischen Kennzahlen testen',
     'menu_personal': 'Persönlicher Bereich',
     'dashboard_personal': 'Persönliches Dashboard',
     'personal_journal': 'Persönliches Tagebuch',

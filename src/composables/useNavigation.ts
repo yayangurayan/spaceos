@@ -116,6 +116,7 @@ export function useNavigation() {
           items: [
             { label: t('dashboard_trading'), to: '/', icon: 'home' },
             { label: t('trading_journal'), to: '/trading', icon: 'chart-line' },
+            { label: t('backtesting') || 'Backtesting Lab', to: '/backtesting', icon: 'zap' },
             { label: t('position_calculator') || 'Position Calculator', to: '/calculator', icon: 'calculator' },
             { label: t('weekly_review'), to: '/review', icon: 'clipboard' },
           ],
