@@ -34,16 +34,7 @@
           </span>
         </button>
 
-        <!-- Demo Dataset Button (if empty) -->
-        <button
-          v-if="trades.length === 0"
-          type="button"
-          @click="loadDemoDataset"
-          class="px-3.5 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold border border-cyan-500/40 flex items-center gap-1.5 transition-all"
-        >
-          <span>📥</span>
-          <span>Muat Demo</span>
-        </button>
+
 
         <!-- Export CSV -->
         <button
@@ -478,15 +469,8 @@
           <span class="text-3xl block mb-2">📊</span>
           <p class="text-xs sm:text-sm text-slate-300 font-semibold">Belum Ada Trade Tercatat</p>
           <p class="text-[11px] text-slate-500 mt-1 max-w-sm">
-            Klik salah satu tombol 1-klik di atas atau muat dataset contoh untuk melihat grafik pertumbuhan akun.
+            Klik salah satu tombol 1-klik di atas untuk mulai mencatat trade backtest pertamamu.
           </p>
-          <button
-            type="button"
-            @click="loadDemoDataset"
-            class="mt-3 px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/30 transition-colors"
-          >
-            Muat Dataset Contoh Sekarang
-          </button>
         </div>
 
         <!-- Tooltip overlay on hover -->
@@ -846,7 +830,6 @@ const {
   deleteTrade,
   undoLastTrade,
   resetBacktest,
-  loadDemoDataset,
   updateSettings,
 } = useBacktesting()
 

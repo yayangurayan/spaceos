@@ -6,6 +6,10 @@ import App from './App.vue'
 import router from './router'
 
 import './assets/main.css'
+import { purgeLegacyDummyData } from './utils/cleanSlate'
+
+// Clean legacy dummy records once
+purgeLegacyDummyData()
 
 const app = createApp(App)
 

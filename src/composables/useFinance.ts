@@ -45,119 +45,6 @@ export const FINANCE_CATEGORIES = {
   ],
 }
 
-/* ============================================================
-   Initial Demo Transactions
-   ============================================================ */
-const DEMO_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx-1',
-    space_id: '',
-    type: 'income',
-    amount: 1250.00,
-    category: 'Prop Firm Payout',
-    description: 'Payout perdana dari funded account 50k',
-    date: new Date().toISOString().split('T')[0],
-    wallet: 'Bank BCA',
-    receipt_url: null,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'tx-2',
-    space_id: '',
-    type: 'expense',
-    amount: 145.00,
-    category: 'Funded Account Fee',
-    description: 'Beli challenge akun 100k discount 20%',
-    date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
-    wallet: 'Crypto USDT',
-    receipt_url: null,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'tx-3',
-    space_id: '',
-    type: 'expense',
-    amount: 29.99,
-    category: 'Trading Tools & Subscriptions',
-    description: 'TradingView Premium Monthly',
-    date: new Date(Date.now() - 86400000 * 5).toISOString().split('T')[0],
-    wallet: 'Kartu Kredit',
-    receipt_url: null,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'tx-4',
-    space_id: '',
-    type: 'expense',
-    amount: 65.00,
-    category: 'Food & Dining',
-    description: 'Makan malam + kopi mingguan',
-    date: new Date(Date.now() - 86400000 * 6).toISOString().split('T')[0],
-    wallet: 'Cash / GoPay',
-    receipt_url: null,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'tx-5',
-    space_id: '',
-    type: 'income',
-    amount: 580.00,
-    category: 'Trading Profit',
-    description: 'Withdraw profit personal account swing trade Gold',
-    date: new Date(Date.now() - 86400000 * 12).toISOString().split('T')[0],
-    wallet: 'Bank BCA',
-    receipt_url: null,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'tx-6',
-    space_id: '',
-    type: 'expense',
-    amount: 85.00,
-    category: 'Education & Mentorship',
-    description: 'Beli buku Trading in the Zone & Market Wizards',
-    date: new Date(Date.now() - 86400000 * 18).toISOString().split('T')[0],
-    wallet: 'Bank BCA',
-    receipt_url: null,
-    created_at: new Date().toISOString(),
-  },
-]
-
-const DEMO_BUDGETS: Budget[] = [
-  {
-    id: 'b-1',
-    space_id: '',
-    category: 'Funded Account Fee',
-    monthly_limit: 300.00,
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-  },
-  {
-    id: 'b-2',
-    space_id: '',
-    category: 'Trading Tools & Subscriptions',
-    monthly_limit: 50.00,
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-  },
-  {
-    id: 'b-3',
-    space_id: '',
-    category: 'Food & Dining',
-    monthly_limit: 250.00,
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-  },
-  {
-    id: 'b-4',
-    space_id: '',
-    category: 'Education & Mentorship',
-    monthly_limit: 150.00,
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-  },
-]
-
 export function useFinance() {
   const authStore = useAuthStore()
   const toast = useToastStore()
@@ -483,9 +370,6 @@ export function useFinance() {
   }
 
   function loadFromLocalStorage(spaceId: string) {
-    const isCleanSlate = localStorage.getItem('spaceos_clean_slate') === 'true'
-    const isLegacyDemoSpace = spaceId === 'space-trader'
-    const hasBeenSeeded = localStorage.getItem(`spaceos_finance_seeded_${spaceId}`) === 'true'
     try {
       const txKey = `spaceos_tx_${spaceId}`
       const bgKey = `spaceos_bg_${spaceId}`
@@ -494,14 +378,6 @@ export function useFinance() {
 
       if (savedTx) {
         transactions.value = JSON.parse(savedTx)
-      } else if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
-        const initial = DEMO_TRANSACTIONS.map(t => ({
-          ...t,
-          space_id: spaceId,
-        }))
-        transactions.value = initial
-        saveToLocalStorage(spaceId)
-        localStorage.setItem(`spaceos_finance_seeded_${spaceId}`, 'true')
       } else {
         transactions.value = []
         saveToLocalStorage(spaceId)
@@ -509,12 +385,6 @@ export function useFinance() {
 
       if (savedBg) {
         budgets.value = JSON.parse(savedBg)
-      } else if (!isCleanSlate && isLegacyDemoSpace && !hasBeenSeeded) {
-        const initialBg = DEMO_BUDGETS.map(b => ({
-          ...b,
-          space_id: spaceId,
-        }))
-        budgets.value = initialBg
       } else {
         budgets.value = []
       }

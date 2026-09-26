@@ -318,25 +318,6 @@
             <span>{{ t('download_json_btn') }}</span>
           </button>
         </div>
-
-        <!-- Restore Demo Presets -->
-        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3 flex flex-col justify-between">
-          <div>
-            <span class="text-2xl block mb-1">✨</span>
-            <h3 class="text-sm font-bold text-white">{{ t('restore_demo_title') }}</h3>
-            <p class="text-xs text-slate-400 leading-relaxed mt-1">
-              {{ t('restore_demo_desc') }}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            @click="restoreDemoPresets"
-            class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-colors"
-          >
-            <span>{{ t('restore_demo_btn') }}</span>
-          </button>
-        </div>
       </div>
     </div>
 
@@ -606,39 +587,7 @@ async function executeCleanSlateReset() {
   }, 800)
 }
 
-function restoreDemoPresets() {
-  localStorage.removeItem('spaceos_clean_slate')
-  const savedSpaces = localStorage.getItem('spaceos_spaces')
-  const savedCurrentSpaceId = localStorage.getItem('spaceos_current_space_id')
 
-  // Purge data keys so composables re-seed sample presets fresh
-  const keysToRemove: string[] = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && key.startsWith('spaceos_')) {
-      if (
-        key !== 'spaceos_auth_user' &&
-        key !== 'spaceos_ai_settings' &&
-        key !== 'spaceos_lang' &&
-        key !== 'spaceos_spaces' &&
-        key !== 'spaceos_current_space_id'
-      ) {
-        keysToRemove.push(key)
-      }
-    }
-  }
-
-  keysToRemove.forEach(k => {
-    localStorage.removeItem(k)
-  })
-  if (savedSpaces) localStorage.setItem('spaceos_spaces', savedSpaces)
-  if (savedCurrentSpaceId) localStorage.setItem('spaceos_current_space_id', savedCurrentSpaceId)
-
-  toast.success(t('demo_data_restored'), t('demo_data_restored_desc'))
-  setTimeout(() => {
-    window.location.reload()
-  }, 800)
-}
 
 onMounted(() => {
   const currentSettings = getSettings()

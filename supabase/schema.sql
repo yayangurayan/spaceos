@@ -1550,6 +1550,249 @@ BEGIN
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 END $$;
 
+-- ============================================================
+-- 15. Backtesting Engine Tables (Trading Space)
+-- ============================================================
+
+-- Backtest Trades Table
+CREATE TABLE IF NOT EXISTS public.backtest_trades (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES public.spaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  trade_number INT NOT NULL,
+  date DATE NOT NULL,
+  pair VARCHAR(20) NOT NULL,
+  direction VARCHAR(4) NOT NULL CHECK (direction IN ('BUY', 'SELL')),
+  result VARCHAR(10) NOT NULL CHECK (result IN ('WIN', 'LOSS', 'BE')),
+  r_multiple DECIMAL(6,2) NOT NULL DEFAULT 0,
+  pnl DECIMAL(12,2) NOT NULL DEFAULT 0,
+  balance_after DECIMAL(14,2) NOT NULL DEFAULT 0,
+  setup TEXT,
+  session VARCHAR(50) DEFAULT 'London',
+  chart_url TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Backtest Settings Table
+CREATE TABLE IF NOT EXISTS public.backtest_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES public.spaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  initial_balance DECIMAL(14,2) NOT NULL DEFAULT 10000.00,
+  risk_percent DECIMAL(5,2) NOT NULL DEFAULT 1.00,
+  risk_type VARCHAR(10) NOT NULL DEFAULT 'percent' CHECK (risk_type IN ('percent', 'fixed')),
+  fixed_risk_amount DECIMAL(12,2) NOT NULL DEFAULT 100.00,
+  compounding BOOLEAN NOT NULL DEFAULT FALSE,
+  strategy_name TEXT NOT NULL DEFAULT 'Smart Money Concept - Liquidity Sweep',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_backtest_settings_space UNIQUE (space_id)
+);
+
+-- Trading Plans Table
+CREATE TABLE IF NOT EXISTS public.trading_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES public.spaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  strategy_name TEXT NOT NULL DEFAULT 'Smart Money Concept',
+  market_session TEXT DEFAULT 'London Open & NY Session',
+  pairs TEXT[] DEFAULT ARRAY['XAUUSD', 'EURUSD', 'GBPUSD'],
+  timeframes TEXT DEFAULT 'HTF: 4H/1H | LTF: 15m/5m',
+  risk_per_trade TEXT DEFAULT '1% per trade (Maksimal 2 posisi aktif)',
+  entry_rules TEXT,
+  invalidation_rules TEXT,
+  exit_rules TEXT,
+  psychology_rules TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_trading_plans_space UNIQUE (space_id)
+);
+
+-- Indexes for Backtesting Engine
+CREATE INDEX IF NOT EXISTS idx_backtest_trades_space_id ON public.backtest_trades(space_id);
+CREATE INDEX IF NOT EXISTS idx_backtest_trades_user_id ON public.backtest_trades(user_id);
+CREATE INDEX IF NOT EXISTS idx_backtest_trades_space_date ON public.backtest_trades(space_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_backtest_settings_space_id ON public.backtest_settings(space_id);
+CREATE INDEX IF NOT EXISTS idx_trading_plans_space_id ON public.trading_plans(space_id);
+
+-- Enable RLS
+ALTER TABLE public.backtest_trades ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.backtest_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trading_plans ENABLE ROW LEVEL SECURITY;
+
+-- Backtest Trades RLS Policies
+DROP POLICY IF EXISTS "Users can view backtest trades in their spaces" ON public.backtest_trades;
+DROP POLICY IF EXISTS "Users can insert backtest trades in their spaces" ON public.backtest_trades;
+DROP POLICY IF EXISTS "Users can update their backtest trades" ON public.backtest_trades;
+DROP POLICY IF EXISTS "Users can delete their backtest trades" ON public.backtest_trades;
+
+CREATE POLICY "Users can view backtest trades in their spaces"
+  ON public.backtest_trades FOR SELECT
+  TO authenticated
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert backtest trades in their spaces"
+  ON public.backtest_trades FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND public.is_space_member(space_id, (SELECT auth.uid()))
+  );
+
+CREATE POLICY "Users can update their backtest trades"
+  ON public.backtest_trades FOR UPDATE
+  TO authenticated
+  USING (user_id = (SELECT auth.uid()))
+  WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "Users can delete their backtest trades"
+  ON public.backtest_trades FOR DELETE
+  TO authenticated
+  USING (user_id = (SELECT auth.uid()));
+
+-- Backtest Settings RLS Policies
+DROP POLICY IF EXISTS "Users can view backtest settings in their spaces" ON public.backtest_settings;
+DROP POLICY IF EXISTS "Users can insert backtest settings in their spaces" ON public.backtest_settings;
+DROP POLICY IF EXISTS "Users can update backtest settings in their spaces" ON public.backtest_settings;
+
+CREATE POLICY "Users can view backtest settings in their spaces"
+  ON public.backtest_settings FOR SELECT
+  TO authenticated
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert backtest settings in their spaces"
+  ON public.backtest_settings FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND public.is_space_member(space_id, (SELECT auth.uid()))
+  );
+
+CREATE POLICY "Users can update backtest settings in their spaces"
+  ON public.backtest_settings FOR UPDATE
+  TO authenticated
+  USING (public.is_space_member(space_id, (SELECT auth.uid())))
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- Trading Plans RLS Policies
+DROP POLICY IF EXISTS "Users can view trading plans in their spaces" ON public.trading_plans;
+DROP POLICY IF EXISTS "Users can insert trading plans in their spaces" ON public.trading_plans;
+DROP POLICY IF EXISTS "Users can update trading plans in their spaces" ON public.trading_plans;
+
+CREATE POLICY "Users can view trading plans in their spaces"
+  ON public.trading_plans FOR SELECT
+  TO authenticated
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert trading plans in their spaces"
+  ON public.trading_plans FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND public.is_space_member(space_id, (SELECT auth.uid()))
+  );
+
+CREATE POLICY "Users can update trading plans in their spaces"
+  ON public.trading_plans FOR UPDATE
+  TO authenticated
+  USING (public.is_space_member(space_id, (SELECT auth.uid())))
+  WITH CHECK (public.is_space_member(space_id, (SELECT auth.uid())));
+
+-- ============================================================
+-- 16. Personal Journals Table (Personal Space)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.personal_journals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES public.spaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  mood VARCHAR(30) DEFAULT 'Calmed',
+  tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Personal Journals Indexes
+CREATE INDEX IF NOT EXISTS idx_personal_journals_space_id ON public.personal_journals(space_id);
+CREATE INDEX IF NOT EXISTS idx_personal_journals_user_id ON public.personal_journals(user_id);
+CREATE INDEX IF NOT EXISTS idx_personal_journals_date ON public.personal_journals(space_id, created_at DESC);
+
+-- Personal Journals RLS Policies
+ALTER TABLE public.personal_journals ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view personal journals in their spaces" ON public.personal_journals;
+DROP POLICY IF EXISTS "Users can insert personal journals in their spaces" ON public.personal_journals;
+DROP POLICY IF EXISTS "Users can update their personal journals" ON public.personal_journals;
+DROP POLICY IF EXISTS "Users can delete their personal journals" ON public.personal_journals;
+
+CREATE POLICY "Users can view personal journals in their spaces"
+  ON public.personal_journals FOR SELECT
+  TO authenticated
+  USING (public.is_space_member(space_id, (SELECT auth.uid())));
+
+CREATE POLICY "Users can insert personal journals in their spaces"
+  ON public.personal_journals FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND public.is_space_member(space_id, (SELECT auth.uid()))
+  );
+
+CREATE POLICY "Users can update their personal journals"
+  ON public.personal_journals FOR UPDATE
+  TO authenticated
+  USING (user_id = (SELECT auth.uid()))
+  WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "Users can delete their personal journals"
+  ON public.personal_journals FOR DELETE
+  TO authenticated
+  USING (user_id = (SELECT auth.uid()));
+
+-- Triggers for updated_at
+DO $$
+BEGIN
+  DROP TRIGGER IF EXISTS trigger_backtest_trades_updated_at ON public.backtest_trades;
+  CREATE TRIGGER trigger_backtest_trades_updated_at
+    BEFORE UPDATE ON public.backtest_trades
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  DROP TRIGGER IF EXISTS trigger_backtest_settings_updated_at ON public.backtest_settings;
+  CREATE TRIGGER trigger_backtest_settings_updated_at
+    BEFORE UPDATE ON public.backtest_settings
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  DROP TRIGGER IF EXISTS trigger_trading_plans_updated_at ON public.trading_plans;
+  CREATE TRIGGER trigger_trading_plans_updated_at
+    BEFORE UPDATE ON public.trading_plans
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+  DROP TRIGGER IF EXISTS trigger_personal_journals_updated_at ON public.personal_journals;
+  CREATE TRIGGER trigger_personal_journals_updated_at
+    BEFORE UPDATE ON public.personal_journals
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+END $$;
+
+-- Realtime Publication for new tables
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.backtest_trades;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.trading_plans;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.personal_journals;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+END $$;
+
 
 
 

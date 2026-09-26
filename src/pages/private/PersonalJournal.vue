@@ -333,18 +333,7 @@ function loadEntries() {
     if (raw) {
       entries.value = JSON.parse(raw)
     } else {
-      // Seed an initial welcoming journal entry
-      entries.value = [
-        {
-          id: 'welcome-journal',
-          title: 'Selamat Datang di Jurnal Pribadi SpaceOS',
-          content: 'Ini adalah ruang aman pribadimu untuk mencatat pemikiran, emosi, dan refleksi harian tanpa batasan. Semua tulisan tersimpan aman dan privat.',
-          mood: 'Calmed',
-          tags: ['AwalBaru', 'SpaceOS'],
-          createdAt: new Date().toISOString(),
-        },
-      ]
-      saveToStorage()
+      entries.value = []
     }
   } catch {
     entries.value = []

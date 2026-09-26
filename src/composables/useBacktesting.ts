@@ -109,96 +109,6 @@ const DEFAULT_TRADING_PLAN: TradingPlan = {
   updated_at: new Date().toISOString(),
 }
 
-const DEMO_TRADES_SEED: Array<Omit<BacktestTrade, 'id' | 'tradeNumber' | 'pnl' | 'balanceAfter' | 'created_at'>> = [
-  {
-    date: '2026-09-10',
-    pair: 'XAUUSD',
-    direction: 'BUY',
-    result: 'WIN',
-    rMultiple: 2.5,
-    setup: 'London Asian Low Sweep + M5 FVG',
-    session: 'London',
-    notes: 'Clean reaction di FVG discount',
-    chartUrl: '',
-  },
-  {
-    date: '2026-09-11',
-    pair: 'EURUSD',
-    direction: 'SELL',
-    result: 'WIN',
-    rMultiple: 2.0,
-    setup: '4H Bearish OB Retest',
-    session: 'New York',
-    notes: 'TP tercapai sebelum penutupan NY',
-    chartUrl: '',
-  },
-  {
-    date: '2026-09-12',
-    pair: 'GBPUSD',
-    direction: 'BUY',
-    result: 'LOSS',
-    rMultiple: -1.0,
-    setup: 'Trendline breakout false',
-    session: 'London',
-    notes: 'News GBP memicu slippage SL',
-    chartUrl: '',
-  },
-  {
-    date: '2026-09-15',
-    pair: 'XAUUSD',
-    direction: 'BUY',
-    result: 'WIN',
-    rMultiple: 3.2,
-    setup: 'Asian High Sweep + MSS M15',
-    session: 'London',
-    notes: 'Runner position menyentuh TP2',
-    chartUrl: '',
-  },
-  {
-    date: '2026-09-16',
-    pair: 'EURUSD',
-    direction: 'BUY',
-    result: 'BE',
-    rMultiple: 0.0,
-    setup: 'FVG Mitigation',
-    session: 'New York',
-    notes: 'Harga naik 1.5R lalu berbalik mengenai BE',
-    chartUrl: '',
-  },
-  {
-    date: '2026-09-17',
-    pair: 'XAUUSD',
-    direction: 'SELL',
-    result: 'WIN',
-    rMultiple: 2.0,
-    setup: 'London High Liquidity Grab',
-    session: 'London',
-    notes: 'Eksekusi presisi di order block',
-    chartUrl: '',
-  },
-  {
-    date: '2026-09-18',
-    pair: 'BTCUSD',
-    direction: 'BUY',
-    result: 'LOSS',
-    rMultiple: -1.0,
-    setup: 'Range Low deviation',
-    session: 'Any',
-    notes: 'Breakout gagal, SL kena disiplin',
-    chartUrl: '',
-  },
-  {
-    date: '2026-09-21',
-    pair: 'XAUUSD',
-    direction: 'BUY',
-    result: 'WIN',
-    rMultiple: 3.0,
-    setup: 'Equal Lows Sweep + FVG Expansion',
-    session: 'London',
-    notes: 'Momentum kuat setelah sweep',
-    chartUrl: '',
-  },
-]
 
 /* ============================================================
    Composable Definition
@@ -255,8 +165,7 @@ export function useBacktesting() {
           trades.value = parsed
         }
       } else {
-        // Pre-fill demo trades on first time so trader sees immediate analytics
-        recalculateAndSetTrades(DEMO_TRADES_SEED)
+        trades.value = []
       }
     } catch (e) {
       console.error('Failed to load backtest data from localStorage:', e)
@@ -621,13 +530,7 @@ export function useBacktesting() {
     toast.info('Reset Selesai', 'Log backtesting berhasil di-reset ke saldo awal.')
   }
 
-  /**
-   * Load Demo Dataset
-   */
-  function loadDemoDataset() {
-    recalculateAndSetTrades(DEMO_TRADES_SEED)
-    toast.success('Demo Dimuat', 'Sample data backtesting berhasil dimuat.')
-  }
+
 
   /**
    * Update Settings
@@ -668,7 +571,6 @@ export function useBacktesting() {
     deleteTrade,
     undoLastTrade,
     resetBacktest,
-    loadDemoDataset,
     updateSettings,
     updateTradingPlan,
     recomputeAllTrades,
