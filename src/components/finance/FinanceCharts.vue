@@ -1,38 +1,38 @@
 <template>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Chart 1: Expense Breakdown by Category (Doughnut) -->
-    <div class="glass rounded-xl p-5 border border-slate-700/60 flex flex-col justify-between">
+    <div class="surface-card p-5 flex flex-col justify-between">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-            <span>🍕</span>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Icon name="pie-chart" class="w-4 h-4 text-sky-500" />
             <span>Distribusi Pengeluaran</span>
           </h3>
-          <p class="text-xs text-slate-400">Proporsi alokasi belanja per kategori</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Proporsi alokasi belanja per kategori</p>
         </div>
       </div>
 
       <div class="relative w-full h-[240px] flex items-center justify-center">
-        <div v-if="categoryExpenseData.labels.length === 0" class="text-center text-slate-500 text-xs">
-          <span class="text-3xl block mb-2">📊</span>
+        <div v-if="categoryExpenseData.labels.length === 0" class="text-center text-slate-500 dark:text-slate-400 text-xs">
+          <Icon name="pie-chart" class="w-8 h-8 mx-auto mb-2 text-slate-400 dark:text-slate-500 opacity-60" />
           Belum ada data pengeluaran di periode ini
         </div>
         <canvas v-show="categoryExpenseData.labels.length > 0" ref="doughnutCanvasRef" class="w-full h-full"></canvas>
       </div>
 
       <!-- Quick Legend Summary -->
-      <div v-if="categoryExpenseData.labels.length > 0" class="mt-4 pt-3 border-t border-slate-700/40 flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+      <div v-if="categoryExpenseData.labels.length > 0" class="mt-4 pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-wrap gap-2 max-h-24 overflow-y-auto">
         <div
           v-for="(label, idx) in categoryExpenseData.labels"
           :key="idx"
-          class="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded bg-dark/60 border border-slate-800"
+          class="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded bg-slate-100 dark:bg-dark-surface/60 border border-slate-200 dark:border-slate-800"
         >
           <span
             class="w-2.5 h-2.5 rounded-full inline-block"
             :style="{ backgroundColor: categoryExpenseData.colors[idx] }"
           ></span>
-          <span class="text-slate-300 font-medium">{{ label }}:</span>
-          <span class="text-white font-mono font-bold">
+          <span class="text-slate-600 dark:text-slate-300 font-medium">{{ label }}:</span>
+          <span class="text-slate-900 dark:text-white font-mono font-bold">
             Rp {{ (categoryExpenseData.data[idx] || 0).toLocaleString('id-ID') }}
           </span>
         </div>
@@ -40,24 +40,24 @@
     </div>
 
     <!-- Chart 2: Income vs Expense per Month (Last 6 Months Bar Chart) -->
-    <div class="glass rounded-xl p-5 border border-slate-700/60 flex flex-col justify-between">
+    <div class="surface-card p-5 flex flex-col justify-between">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-            <span>📊</span>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Icon name="bar-chart-2" class="w-4 h-4 text-sky-500" />
             <span>Arus Kas 6 Bulan Terakhir</span>
           </h3>
-          <p class="text-xs text-slate-400">Perbandingan pemasukan vs pengeluaran</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Perbandingan pemasukan vs pengeluaran</p>
         </div>
 
         <div class="flex items-center gap-3 text-xs">
           <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-            <span class="text-slate-400">Pemasukan</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-slate-500 dark:text-slate-400">Pemasukan</span>
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
-            <span class="text-slate-400">Pengeluaran</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+            <span class="text-slate-500 dark:text-slate-400">Pengeluaran</span>
           </div>
         </div>
       </div>
@@ -67,9 +67,9 @@
       </div>
 
       <!-- Net Growth Badge -->
-      <div class="mt-4 pt-3 border-t border-slate-700/40 flex items-center justify-between text-xs text-slate-400">
+      <div class="mt-4 pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <span>Rata-rata Saldo 6 Bulan</span>
-        <span class="font-mono font-bold text-accent">
+        <span class="font-mono font-bold text-sky-600 dark:text-accent">
           Rp {{ averageNet6Months.toLocaleString('id-ID') }} / bulan
         </span>
       </div>
@@ -79,6 +79,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import Icon from '@/components/ui/Icon.vue'
 import {
   Chart,
   DoughnutController,

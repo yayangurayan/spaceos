@@ -349,10 +349,10 @@ function getMoodLabel(emoji: string | null): string {
 
 function copyTradeSummary() {
   const t = props.trade
-  const summary = `📊 SpaceOS Trade Log: ${t.pair} (${t.position})\n• Date: ${new Date(t.date).toLocaleDateString()}\n• Entry: ${t.entry_price} | Exit: ${t.exit_price ?? 'Open'}\n• Lot: ${t.lot_size} | P&L: ${t.pnl !== null ? (t.pnl >= 0 ? '+' : '') + '$' + t.pnl.toFixed(2) : '--'}\n• Status: ${t.status}\n• Setup: ${t.setup || '-'}`
+  const summary = `SpaceOS Trade Log: ${t.pair} (${t.position})\n• Date: ${new Date(t.date).toLocaleDateString()}\n• Entry: ${t.entry_price} | Exit: ${t.exit_price ?? 'Open'}\n• Lot: ${t.lot_size} | P&L: ${t.pnl !== null ? (t.pnl >= 0 ? '+' : '') + '$' + t.pnl.toFixed(2) : '--'}\n• Status: ${t.status}\n• Setup: ${t.setup || '-'}`
 
   navigator.clipboard.writeText(summary)
-  toast.success('Disalin ke Clipboard! 📋', 'Ringkasan trade berhasil disalin.')
+  toast.success('Disalin ke Clipboard!', 'Ringkasan trade berhasil disalin.')
 }
 
 function onClose() {

@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { supabase } from '@/utils/supabase'
 
 /* ============================================================
    Interfaces & Types
@@ -109,13 +110,18 @@ const DEFAULT_TRADING_PLAN: TradingPlan = {
   updated_at: new Date().toISOString(),
 }
 
+/* Helper to validate UUID RFC 4122 */
+function isValidUUID(str?: string | null): boolean {
+  if (!str) return false
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
+}
 
 /* ============================================================
    Composable Definition
    ============================================================ */
 export function useBacktesting() {
   const authStore = useAuthStore()
-  const { currentSpace } = storeToRefs(authStore)
+  const { currentSpace, user } = storeToRefs(authStore)
   const toast = useToastStore()
 
   const spaceId = computed(() => currentSpace.value?.id || 'space-trading')
@@ -130,6 +136,9 @@ export function useBacktesting() {
   const settings = ref<BacktestSettings>({ ...DEFAULT_SETTINGS })
   const tradingPlan = ref<TradingPlan>({ ...DEFAULT_TRADING_PLAN })
   const isLoaded = ref(false)
+  const isSyncing = ref(false)
+  const isCloudSynced = ref(false)
+  const syncError = ref<string | null>(null)
 
   // Rapid form sticky inputs (remembers last choice for maximum speed)
   const activePair = ref<string>('XAUUSD')
@@ -137,12 +146,144 @@ export function useBacktesting() {
   const activeSession = ref<string>('London')
 
   /* ============================================================
-     Load & Save State
+     Database Row Mappers
+     ============================================================ */
+  function formatDbRowToTrade(row: any): BacktestTrade {
+    return {
+      id: row.id,
+      tradeNumber: Number(row.trade_number) || 1,
+      date: row.date,
+      pair: row.pair,
+      direction: row.direction as BacktestDirection,
+      result: row.result as BacktestResult,
+      rMultiple: Number(row.r_multiple) || 0,
+      pnl: Number(row.pnl) || 0,
+      balanceAfter: Number(row.balance_after) || 0,
+      setup: row.setup || '',
+      session: row.session || 'London',
+      chartUrl: row.chart_url || '',
+      notes: row.notes || '',
+      created_at: row.created_at || new Date().toISOString(),
+    }
+  }
+
+  function formatTradeToDbRow(t: BacktestTrade, targetSpaceId: string, targetUserId: string) {
+    return {
+      id: isValidUUID(t.id) ? t.id : crypto.randomUUID(),
+      space_id: targetSpaceId,
+      user_id: targetUserId,
+      trade_number: t.tradeNumber,
+      date: t.date || new Date().toISOString().split('T')[0],
+      pair: t.pair || 'XAUUSD',
+      direction: t.direction || 'BUY',
+      result: t.result || 'WIN',
+      r_multiple: t.rMultiple,
+      pnl: t.pnl,
+      balance_after: t.balanceAfter,
+      setup: t.setup || null,
+      session: t.session || 'London',
+      chart_url: t.chartUrl || null,
+      notes: t.notes || null,
+      created_at: t.created_at || new Date().toISOString(),
+    }
+  }
+
+  /* ============================================================
+     Resolve Supabase Space ID (UUID)
+     Guarantees that an authenticated user has a real remote space
+     in Postgres `spaces` table so foreign keys and RLS succeed.
+     ============================================================ */
+  async function resolveSpaceId(): Promise<string | null> {
+    const currentId = currentSpace.value?.id
+    if (isValidUUID(currentId)) {
+      return currentId!
+    }
+
+    const userId = user.value?.id
+    if (!userId || !isValidUUID(userId) || userId.startsWith('demo-user')) {
+      return null
+    }
+
+    try {
+      // 1. Check if user belongs to any space in space_members
+      const { data: members, error: memErr } = await supabase
+        .from('space_members')
+        .select('space_id, spaces(id, name, category)')
+        .eq('user_id', userId)
+
+      if (!memErr && members && members.length > 0) {
+        const tradingMem = members.find((m: any) =>
+          m.spaces?.category === 'trading' ||
+          m.spaces?.name?.toLowerCase().includes('trading')
+        )
+        if (tradingMem && isValidUUID(tradingMem.space_id)) {
+          return tradingMem.space_id
+        }
+        const firstValid = members.find((m: any) => isValidUUID(m.space_id))
+        if (firstValid) {
+          return firstValid.space_id
+        }
+      }
+
+      // 2. Check if user owns any spaces in spaces table
+      const { data: ownedSpaces, error: ownErr } = await supabase
+        .from('spaces')
+        .select('id, name, category')
+        .eq('owner_id', userId)
+
+      if (!ownErr && ownedSpaces && ownedSpaces.length > 0) {
+        const tradingSpace = ownedSpaces.find(s =>
+          s.category === 'trading' || s.name.toLowerCase().includes('trading')
+        )
+        if (tradingSpace && isValidUUID(tradingSpace.id)) {
+          return tradingSpace.id
+        }
+        if (isValidUUID(ownedSpaces[0].id)) {
+          return ownedSpaces[0].id
+        }
+      }
+
+      // 3. If no space exists in Supabase yet, auto-create a Trading Space in Supabase
+      const { data: newSpace, error: createErr } = await supabase
+        .from('spaces')
+        .insert({
+          name: 'Trading Space',
+          type: 'personal',
+          category: 'trading',
+          icon: '📈',
+          owner_id: userId,
+        })
+        .select()
+        .single()
+
+      if (!createErr && newSpace && isValidUUID(newSpace.id)) {
+        await supabase.from('space_members').insert({
+          space_id: newSpace.id,
+          user_id: userId,
+          role: 'owner',
+        })
+        if (currentSpace.value && currentSpace.value.id === 'space-trading') {
+          currentSpace.value.id = newSpace.id
+        }
+        return newSpace.id
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Error resolving Supabase space ID:', e)
+    }
+
+    return null
+  }
+
+  /* ============================================================
+     Load & Save State (Local Preservation First)
      ============================================================ */
   function loadFromStorage() {
     try {
-      // 1. Settings
-      const savedSettings = localStorage.getItem(settingsKey.value)
+      // 1. Settings (Check current space, fallback to space-trading if missing)
+      let savedSettings = localStorage.getItem(settingsKey.value)
+      if (!savedSettings && settingsKey.value !== 'spaceos_backtest_settings_space-trading') {
+        savedSettings = localStorage.getItem('spaceos_backtest_settings_space-trading')
+      }
       if (savedSettings) {
         settings.value = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) }
       } else {
@@ -150,21 +291,33 @@ export function useBacktesting() {
       }
 
       // 2. Trading Plan
-      const savedPlan = localStorage.getItem(planKey.value)
+      let savedPlan = localStorage.getItem(planKey.value)
+      if (!savedPlan && planKey.value !== 'spaceos_trading_plan_space-trading') {
+        savedPlan = localStorage.getItem('spaceos_trading_plan_space-trading')
+      }
       if (savedPlan) {
         tradingPlan.value = { ...DEFAULT_TRADING_PLAN, ...JSON.parse(savedPlan) }
       } else {
         tradingPlan.value = { ...DEFAULT_TRADING_PLAN }
       }
 
-      // 3. Trades
-      const savedTrades = localStorage.getItem(tradesKey.value)
+      // 3. Trades (Safely load existing user trades, NEVER wipe them)
+      let savedTrades = localStorage.getItem(tradesKey.value)
+      if (!savedTrades && tradesKey.value !== 'spaceos_backtest_trades_space-trading') {
+        savedTrades = localStorage.getItem('spaceos_backtest_trades_space-trading')
+      }
       if (savedTrades) {
         const parsed = JSON.parse(savedTrades)
-        if (Array.isArray(parsed)) {
-          trades.value = parsed
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          trades.value = parsed.map((t, idx) => ({
+            ...t,
+            id: isValidUUID(t.id) ? t.id : (t.id || crypto.randomUUID()),
+            tradeNumber: t.tradeNumber || (idx + 1),
+          }))
+          // Ensure backed up to current tradesKey
+          persistTrades()
         }
-      } else {
+      } else if (trades.value.length === 0) {
         trades.value = []
       }
     } catch (e) {
@@ -198,10 +351,180 @@ export function useBacktesting() {
     }
   }
 
-  // Watch for space change to reload scoped data
+  /* ============================================================
+     Cloud Synchronization with Supabase
+     Guarantees local data is migrated & uploaded to database
+     without duplicating or losing any recorded backtest.
+     ============================================================ */
+  async function syncWithSupabase() {
+    if (isSyncing.value) return
+    isSyncing.value = true
+    syncError.value = null
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      const userId = user.value?.id
+
+      if (!targetSpaceId || !userId || !isValidUUID(userId) || userId.startsWith('demo-user')) {
+        // Guest or offline mode: Local memory remains 100% active and safe
+        isCloudSynced.value = false
+        return
+      }
+
+      // 1. Sync Settings with Supabase
+      try {
+        const { data: remoteSettings, error: sErr } = await supabase
+          .from('backtest_settings')
+          .select('*')
+          .eq('space_id', targetSpaceId)
+          .maybeSingle()
+
+        if (!sErr && remoteSettings) {
+          settings.value = {
+            initialBalance: Number(remoteSettings.initial_balance) || 10000,
+            riskPercent: Number(remoteSettings.risk_percent) || 1.0,
+            riskType: (remoteSettings.risk_type as 'percent' | 'fixed') || 'percent',
+            fixedRiskAmount: Number(remoteSettings.fixed_risk_amount) || 100,
+            compounding: Boolean(remoteSettings.compounding),
+            strategyName: remoteSettings.strategy_name || DEFAULT_SETTINGS.strategyName,
+          }
+          persistSettings()
+        } else if (!remoteSettings && !sErr) {
+          await supabase.from('backtest_settings').upsert({
+            space_id: targetSpaceId,
+            user_id: userId,
+            initial_balance: settings.value.initialBalance,
+            risk_percent: settings.value.riskPercent,
+            risk_type: settings.value.riskType,
+            fixed_risk_amount: settings.value.fixedRiskAmount,
+            compounding: settings.value.compounding,
+            strategy_name: settings.value.strategyName,
+          }, { onConflict: 'space_id' })
+        }
+      } catch (e) {
+        console.warn('[Backtesting] Settings sync warning:', e)
+      }
+
+      // 2. Sync Trading Plan with Supabase
+      try {
+        const { data: remotePlan, error: pErr } = await supabase
+          .from('trading_plans')
+          .select('*')
+          .eq('space_id', targetSpaceId)
+          .maybeSingle()
+
+        if (!pErr && remotePlan) {
+          tradingPlan.value = {
+            strategyName: remotePlan.strategy_name || DEFAULT_TRADING_PLAN.strategyName,
+            marketSession: remotePlan.market_session || DEFAULT_TRADING_PLAN.marketSession,
+            pairs: Array.isArray(remotePlan.pairs) ? remotePlan.pairs : DEFAULT_TRADING_PLAN.pairs,
+            timeframes: remotePlan.timeframes || DEFAULT_TRADING_PLAN.timeframes,
+            riskPerTrade: remotePlan.risk_per_trade || DEFAULT_TRADING_PLAN.riskPerTrade,
+            entryRules: remotePlan.entry_rules || DEFAULT_TRADING_PLAN.entryRules,
+            invalidationRules: remotePlan.invalidation_rules || DEFAULT_TRADING_PLAN.invalidationRules,
+            exitRules: remotePlan.exit_rules || DEFAULT_TRADING_PLAN.exitRules,
+            psychologyRules: remotePlan.psychology_rules || DEFAULT_TRADING_PLAN.psychologyRules,
+            updated_at: remotePlan.updated_at || new Date().toISOString(),
+          }
+          persistPlan()
+        } else if (!remotePlan && !pErr) {
+          await supabase.from('trading_plans').upsert({
+            space_id: targetSpaceId,
+            user_id: userId,
+            strategy_name: tradingPlan.value.strategyName,
+            market_session: tradingPlan.value.marketSession,
+            pairs: tradingPlan.value.pairs,
+            timeframes: tradingPlan.value.timeframes,
+            risk_per_trade: tradingPlan.value.riskPerTrade,
+            entry_rules: tradingPlan.value.entryRules,
+            invalidation_rules: tradingPlan.value.invalidationRules,
+            exit_rules: tradingPlan.value.exitRules,
+            psychology_rules: tradingPlan.value.psychologyRules,
+          }, { onConflict: 'space_id' })
+        }
+      } catch (e) {
+        console.warn('[Backtesting] Plan sync warning:', e)
+      }
+
+      // 3. Sync Backtest Trades with Supabase
+      const { data: remoteTrades, error: tErr } = await supabase
+        .from('backtest_trades')
+        .select('*')
+        .eq('space_id', targetSpaceId)
+        .order('trade_number', { ascending: true })
+
+      if (tErr) {
+        console.warn('[Backtesting] Query remote trades notice:', tErr.message)
+        isCloudSynced.value = false
+        return
+      }
+
+      const remoteList: BacktestTrade[] = (remoteTrades || []).map(formatDbRowToTrade)
+
+      // CASE A: Remote has NO trades, but user has existing local trades
+      // -> Upload ALL local trades to Supabase so they are permanently backed up!
+      if (remoteList.length === 0 && trades.value.length > 0) {
+        const validatedLocalTrades = trades.value.map((t, idx) => ({
+          ...t,
+          id: isValidUUID(t.id) ? t.id : crypto.randomUUID(),
+          tradeNumber: idx + 1,
+        }))
+        trades.value = validatedLocalTrades
+        persistTrades()
+
+        const payload = validatedLocalTrades.map(t => formatTradeToDbRow(t, targetSpaceId, userId))
+        const { error: insErr } = await supabase.from('backtest_trades').insert(payload)
+        if (insErr) {
+          console.warn('[Backtesting] Failed to upload local trades to Supabase:', insErr.message)
+          isCloudSynced.value = false
+        } else {
+          isCloudSynced.value = true
+          toast.success('Pencadangan Berhasil', `${validatedLocalTrades.length} trade lokal berhasil dicadangkan ke database Supabase!`)
+        }
+      }
+      // CASE B: Remote has trades
+      else if (remoteList.length > 0) {
+        const remoteIds = new Set(remoteList.map(t => t.id))
+        const unsavedLocalTrades = trades.value.filter(t => !remoteIds.has(t.id))
+
+        if (unsavedLocalTrades.length > 0) {
+          const validatedUnsaved = unsavedLocalTrades.map(t => ({
+            ...t,
+            id: isValidUUID(t.id) ? t.id : crypto.randomUUID(),
+          }))
+          const payload = validatedUnsaved.map(t => formatTradeToDbRow(t, targetSpaceId, userId))
+          await supabase.from('backtest_trades').insert(payload)
+
+          const merged = [...remoteList, ...validatedUnsaved]
+          recalculateAndSetTrades(merged)
+          isCloudSynced.value = true
+        } else {
+          // Local is fully synchronized with remote
+          recalculateAndSetTrades(remoteList)
+          isCloudSynced.value = true
+        }
+      } else {
+        isCloudSynced.value = true
+      }
+    } catch (err: any) {
+      console.error('[Backtesting] syncWithSupabase error:', err)
+      syncError.value = err?.message || 'Gagal sinkronisasi data cloud.'
+      isCloudSynced.value = false
+    } finally {
+      isSyncing.value = false
+    }
+  }
+
+  // Watch for space change to reload and sync
   watch(spaceId, () => {
     loadFromStorage()
+    syncWithSupabase()
   }, { immediate: true })
+
+  // Watch user authentication changes
+  watch(user, () => {
+    syncWithSupabase()
+  })
 
   /* ============================================================
      Core Calculation Engine
@@ -234,7 +557,7 @@ export function useBacktesting() {
       runningBalance = Math.round((runningBalance + pnl) * 100) / 100
 
       calculated.push({
-        id: t.id || `bt-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+        id: isValidUUID(t.id) ? t.id! : (t.id || crypto.randomUUID()),
         tradeNumber,
         date: t.date || new Date().toISOString().split('T')[0],
         pair: t.pair || 'XAUUSD',
@@ -255,9 +578,6 @@ export function useBacktesting() {
     persistTrades()
   }
 
-  /**
-   * Recalculates all balances whenever settings (initial balance / risk) change
-   */
   function recomputeAllTrades() {
     recalculateAndSetTrades(trades.value)
   }
@@ -309,13 +629,11 @@ export function useBacktesting() {
     let bestTrade = -Infinity
     let worstTrade = Infinity
 
-    // Consecutive calculations
     let currentWinStreak = 0
     let maxWinStreak = 0
     let currentLossStreak = 0
     let maxLossStreak = 0
 
-    // Drawdown calculation
     let peakBalance = initial
     let maxDrawdownDollar = 0
     let maxDrawdownPercent = 0
@@ -345,7 +663,6 @@ export function useBacktesting() {
         currentLossStreak = 0
       }
 
-      // Track Peak & Drawdown
       if (t.balanceAfter > peakBalance) {
         peakBalance = t.balanceAfter
       } else {
@@ -370,7 +687,6 @@ export function useBacktesting() {
     const avgLossR = lossCount > 0 ? Math.round((lossRSum / lossCount) * 100) / 100 : 0
     const avgRR = avgLossR > 0 ? Math.round((avgWinR / avgLossR) * 100) / 100 : avgWinR
 
-    // Expectancy
     const winProb = winCount / total
     const lossProb = lossCount / total
     const expectancyR = Math.round(((winProb * avgWinR) - (lossProb * avgLossR)) * 100) / 100
@@ -404,7 +720,7 @@ export function useBacktesting() {
   })
 
   /* ============================================================
-     Equity Curve Data Points for Chart / Visual Curve
+     Equity Curve Data Points for Chart
      ============================================================ */
   const equityCurve = computed((): EquityPoint[] => {
     const initial = Number(settings.value.initialBalance) || 10000
@@ -434,14 +750,9 @@ export function useBacktesting() {
   })
 
   /* ============================================================
-     Fast Trade Entry Methods (SPEED IS KING)
+     Fast Trade Entry Methods
      ============================================================ */
-
-  /**
-   * One-Click Instant Trade Add
-   * Takes 1 single click to record a trade during fast backtesting!
-   */
-  function addQuickTrade(
+  async function addQuickTrade(
     result: BacktestResult,
     rMultiple: number,
     setup?: string,
@@ -449,6 +760,7 @@ export function useBacktesting() {
     chartUrl?: string
   ) {
     const newTrade: Partial<BacktestTrade> = {
+      id: crypto.randomUUID(),
       pair: activePair.value || 'XAUUSD',
       direction: activeDirection.value || 'BUY',
       session: activeSession.value || 'London',
@@ -458,12 +770,12 @@ export function useBacktesting() {
       setup: setup || '',
       notes: notes || '',
       chartUrl: chartUrl || '',
+      created_at: new Date().toISOString(),
     }
 
     const updatedList = [...trades.value, newTrade]
     recalculateAndSetTrades(updatedList)
 
-    // Notify user with concise feedback
     const sign = rMultiple > 0 ? '+' : ''
     const msg = `Trade #${trades.value.length}: ${newTrade.pair} (${sign}${rMultiple}R ${result})`
     if (result === 'WIN') {
@@ -473,54 +785,122 @@ export function useBacktesting() {
     } else {
       toast.info('Trade Breakeven Tercatat', msg)
     }
+
+    // Background push to Supabase
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      const userId = user.value?.id
+      if (targetSpaceId && userId && isValidUUID(userId) && !userId.startsWith('demo-user')) {
+        const latest = trades.value[trades.value.length - 1]
+        if (latest) {
+          const payload = formatTradeToDbRow(latest, targetSpaceId, userId)
+          await supabase.from('backtest_trades').insert(payload)
+          isCloudSynced.value = true
+        }
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async insert to Supabase notice:', e)
+    }
   }
 
-  /**
-   * Add trade with full or custom parameters
-   */
-  function addCustomTrade(data: Partial<BacktestTrade>) {
-    const updatedList = [...trades.value, data]
+  async function addCustomTrade(data: Partial<BacktestTrade>) {
+    const tradeWithId: Partial<BacktestTrade> = {
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+      ...data,
+    }
+    const updatedList = [...trades.value, tradeWithId]
     recalculateAndSetTrades(updatedList)
     toast.success('Trade Tersimpan', `Trade #${trades.value.length} berhasil ditambahkan!`)
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      const userId = user.value?.id
+      if (targetSpaceId && userId && isValidUUID(userId) && !userId.startsWith('demo-user')) {
+        const latest = trades.value[trades.value.length - 1]
+        if (latest) {
+          const payload = formatTradeToDbRow(latest, targetSpaceId, userId)
+          await supabase.from('backtest_trades').insert(payload)
+          isCloudSynced.value = true
+        }
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async insert to Supabase notice:', e)
+    }
   }
 
-  /**
-   * Edit existing trade inline
-   */
-  function updateTrade(id: string, updates: Partial<BacktestTrade>) {
+  async function updateTrade(id: string, updates: Partial<BacktestTrade>) {
     const idx = trades.value.findIndex(t => t.id === id)
     if (idx === -1) return
 
     const updatedList = [...trades.value]
     updatedList[idx] = { ...updatedList[idx], ...updates }
     recalculateAndSetTrades(updatedList)
-
     toast.info('Trade Diperbarui', 'Perubahan trade berhasil disimpan.')
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      const userId = user.value?.id
+      if (targetSpaceId && userId && isValidUUID(userId) && !userId.startsWith('demo-user')) {
+        const updated = trades.value[idx]
+        if (updated) {
+          await supabase.from('backtest_trades').update({
+            pair: updated.pair,
+            direction: updated.direction,
+            session: updated.session,
+            date: updated.date,
+            result: updated.result,
+            r_multiple: updated.rMultiple,
+            pnl: updated.pnl,
+            balance_after: updated.balanceAfter,
+            setup: updated.setup || null,
+            notes: updated.notes || null,
+            chart_url: updated.chartUrl || null,
+            updated_at: new Date().toISOString(),
+          }).eq('id', id)
+          isCloudSynced.value = true
+        }
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async update to Supabase notice:', e)
+    }
   }
 
-  /**
-   * Delete specific trade
-   */
-  function deleteTrade(id: string) {
+  async function deleteTrade(id: string) {
     const filtered = trades.value.filter(t => t.id !== id)
     recalculateAndSetTrades(filtered)
     toast.info('Trade Dihapus', 'Trade telah dihapus dari log backtest.')
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      if (targetSpaceId) {
+        await supabase.from('backtest_trades').delete().eq('id', id)
+        isCloudSynced.value = true
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async delete from Supabase notice:', e)
+    }
   }
 
-  /**
-   * Delete latest trade (Undo last trade)
-   */
-  function undoLastTrade() {
+  async function undoLastTrade() {
     if (trades.value.length === 0) return
+    const last = trades.value[trades.value.length - 1]
     const popped = trades.value.slice(0, -1)
     recalculateAndSetTrades(popped)
     toast.info('Undo Berhasil', 'Trade terakhir telah dibatalkan.')
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      if (targetSpaceId && last) {
+        await supabase.from('backtest_trades').delete().eq('id', last.id)
+        isCloudSynced.value = true
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async undo from Supabase notice:', e)
+    }
   }
 
-  /**
-   * Reset all backtest trades to zero
-   */
-  function resetBacktest(newInitialBalance?: number) {
+  async function resetBacktest(newInitialBalance?: number) {
     if (newInitialBalance !== undefined && newInitialBalance > 0) {
       settings.value.initialBalance = newInitialBalance
       persistSettings()
@@ -528,24 +908,47 @@ export function useBacktesting() {
     trades.value = []
     persistTrades()
     toast.info('Reset Selesai', 'Log backtesting berhasil di-reset ke saldo awal.')
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      if (targetSpaceId) {
+        await supabase.from('backtest_trades').delete().eq('space_id', targetSpaceId)
+        isCloudSynced.value = true
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async reset in Supabase notice:', e)
+    }
   }
 
-
-
-  /**
-   * Update Settings
-   */
-  function updateSettings(newSettings: Partial<BacktestSettings>) {
+  async function updateSettings(newSettings: Partial<BacktestSettings>) {
     settings.value = { ...settings.value, ...newSettings }
     persistSettings()
     recomputeAllTrades()
     toast.success('Pengaturan Disimpan', 'Saldo awal & risiko backtest berhasil diperbarui.')
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      const userId = user.value?.id
+      if (targetSpaceId && userId && isValidUUID(userId) && !userId.startsWith('demo-user')) {
+        await supabase.from('backtest_settings').upsert({
+          space_id: targetSpaceId,
+          user_id: userId,
+          initial_balance: settings.value.initialBalance,
+          risk_percent: settings.value.riskPercent,
+          risk_type: settings.value.riskType,
+          fixed_risk_amount: settings.value.fixedRiskAmount,
+          compounding: settings.value.compounding,
+          strategy_name: settings.value.strategyName,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'space_id' })
+        isCloudSynced.value = true
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async settings update notice:', e)
+    }
   }
 
-  /**
-   * Update Trading Plan
-   */
-  function updateTradingPlan(newPlan: Partial<TradingPlan>) {
+  async function updateTradingPlan(newPlan: Partial<TradingPlan>) {
     tradingPlan.value = {
       ...tradingPlan.value,
       ...newPlan,
@@ -553,6 +956,103 @@ export function useBacktesting() {
     }
     persistPlan()
     toast.success('Trading Plan Disimpan', 'Strategi & aturan trading berhasil diperbarui!')
+
+    try {
+      const targetSpaceId = await resolveSpaceId()
+      const userId = user.value?.id
+      if (targetSpaceId && userId && isValidUUID(userId) && !userId.startsWith('demo-user')) {
+        await supabase.from('trading_plans').upsert({
+          space_id: targetSpaceId,
+          user_id: userId,
+          strategy_name: tradingPlan.value.strategyName,
+          market_session: tradingPlan.value.marketSession,
+          pairs: tradingPlan.value.pairs,
+          timeframes: tradingPlan.value.timeframes,
+          risk_per_trade: tradingPlan.value.riskPerTrade,
+          entry_rules: tradingPlan.value.entryRules,
+          invalidation_rules: tradingPlan.value.invalidationRules,
+          exit_rules: tradingPlan.value.exitRules,
+          psychology_rules: tradingPlan.value.psychologyRules,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'space_id' })
+        isCloudSynced.value = true
+      }
+    } catch (e) {
+      console.warn('[Backtesting] Async plan update notice:', e)
+    }
+  }
+
+  /* ============================================================
+     Reliable CSV Export
+     - UTF-8 BOM (\uFEFF) for Microsoft Excel compatibility
+     - RFC 4180 quote escaping
+     - Blob + URL.createObjectURL for 100% browser/mobile reliability
+     ============================================================ */
+  function exportToCsv() {
+    if (trades.value.length === 0) {
+      toast.warning('Data Kosong', 'Tidak ada data trade backtest untuk diekspor.')
+      return
+    }
+
+    const headers = [
+      'Trade #',
+      'Tanggal',
+      'Pair',
+      'Arah',
+      'Sesi',
+      'Hasil',
+      'R-Multiple',
+      'P&L ($)',
+      'Saldo ($)',
+      'Setup',
+      'Catatan',
+      'Link Chart',
+      'Waktu Dicatat'
+    ]
+
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '""'
+      const str = String(val).replace(/"/g, '""')
+      return `"${str}"`
+    }
+
+    const rows = trades.value.map(t => [
+      t.tradeNumber,
+      escapeCsv(t.date),
+      escapeCsv(t.pair),
+      escapeCsv(t.direction),
+      escapeCsv(t.session || 'London'),
+      escapeCsv(t.result),
+      t.rMultiple,
+      t.pnl,
+      t.balanceAfter,
+      escapeCsv(t.setup || ''),
+      escapeCsv(t.notes || ''),
+      escapeCsv(t.chartUrl || ''),
+      escapeCsv(t.created_at || ''),
+    ])
+
+    // Prepend UTF-8 BOM (\uFEFF) for seamless Excel UTF-8 support
+    const csvContent = '\uFEFF' + [
+      headers.map(escapeCsv).join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\r\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const timestamp = new Date().toISOString().split('T')[0]
+    const filename = `spaceos_backtest_${activePair.value || 'all'}_${timestamp}.csv`
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+
+    toast.success('Export Berhasil', `File ${filename} berhasil diunduh.`)
   }
 
   return {
@@ -560,6 +1060,9 @@ export function useBacktesting() {
     settings,
     tradingPlan,
     isLoaded,
+    isSyncing,
+    isCloudSynced,
+    syncError,
     stats,
     equityCurve,
     activePair,
@@ -574,5 +1077,7 @@ export function useBacktesting() {
     updateSettings,
     updateTradingPlan,
     recomputeAllTrades,
+    syncWithSupabase,
+    exportToCsv,
   }
 }

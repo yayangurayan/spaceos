@@ -71,7 +71,7 @@
             @click="showJoinModal = true"
             class="px-4 py-2.5 rounded-xl border border-pink-500/40 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all hover:scale-102"
           >
-            <span>🔑</span>
+            <Icon name="lock" :size="14" />
             <span>{{ t('join_couple_space') }}</span>
           </button>
 
@@ -107,8 +107,8 @@
         v-else-if="spaces.length === 0"
         class="glass rounded-2xl p-12 text-center animate-fade-in"
       >
-        <div class="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
-          <span class="text-3xl">🚀</span>
+        <div class="w-16 h-16 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto mb-4">
+          <Icon name="zap" :size="32" />
         </div>
         <h3 class="text-lg font-semibold text-white mb-2">{{ t('no_spaces_yet') }}</h3>
         <p class="text-slate-400 text-sm mb-6 max-w-sm mx-auto">
@@ -145,7 +145,10 @@
                 class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 shadow-md"
                 :class="space.type === 'couple' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : (space.category === 'personal' || space.category === 'private') ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'"
               >
-                {{ space.type === 'couple' ? '💑' : (space.category === 'personal' || space.category === 'private') ? '🌿' : (space.category === 'teacher' || space.id === 'space-teacher') ? '🎓' : '📈' }}
+                <Icon
+                  :name="space.type === 'couple' ? 'heart' : (space.category === 'personal' || space.category === 'private') ? 'user' : (space.category === 'teacher' || space.id === 'space-teacher') ? 'graduation-cap' : 'chart-line'"
+                  :size="24"
+                />
               </div>
               <!-- Space Info -->
               <div class="flex-1 min-w-0">
@@ -254,13 +257,13 @@
                   <!-- Option 1: Trading Space -->
                   <button
                     type="button"
-                    @click="setSpaceTemplate('personal', 'trading', '📈', 'My Trading Space')"
+                    @click="setSpaceTemplate('personal', 'trading', 'chart-line', 'My Trading Space')"
                     class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
                     :class="(newSpace.category === 'trading' || newSpace.category === 'trader') && newSpace.type === 'personal'
-                      ? 'border-cyan-500 bg-cyan-500/15 text-white shadow-lg shadow-cyan-500/10 ring-1 ring-cyan-500'
+                      ? 'border-sky-500 bg-sky-500/15 text-white shadow-lg shadow-sky-500/10 ring-1 ring-sky-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-3xl mb-2 block">📈</span>
+                    <Icon name="chart-line" :size="28" class="text-sky-400 mb-2" />
                     <div>
                       <span class="text-sm font-bold text-white block">Trading Space</span>
                       <span class="text-xs text-slate-400 leading-tight">Jurnal trading harian, analisa win rate, evaluasi risiko, dan kalkulator posisi.</span>
@@ -270,13 +273,13 @@
                   <!-- Option 2: Personal Space -->
                   <button
                     type="button"
-                    @click="setSpaceTemplate('personal', 'personal', '🌿', 'My Personal Space')"
+                    @click="setSpaceTemplate('personal', 'personal', 'user', 'My Personal Space')"
                     class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
                     :class="newSpace.category === 'personal' && newSpace.type === 'personal'
                       ? 'border-emerald-500 bg-emerald-500/15 text-white shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-3xl mb-2 block">🌿</span>
+                    <Icon name="user" :size="28" class="text-emerald-400 mb-2" />
                     <div>
                       <span class="text-sm font-bold text-white block">Personal Space</span>
                       <span class="text-xs text-slate-400 leading-tight">Finance tracker, habit streak, dan jurnal refleksi diri pribadi.</span>
@@ -286,13 +289,13 @@
                   <!-- Option 3: Teacher Space -->
                   <button
                     type="button"
-                    @click="setSpaceTemplate('personal', 'teacher', '🎓', 'Bimbingan Belajar')"
+                    @click="setSpaceTemplate('personal', 'teacher', 'graduation-cap', 'Bimbingan Belajar')"
                     class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
                     :class="newSpace.category === 'teacher' && newSpace.type === 'personal'
                       ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-3xl mb-2 block">🎓</span>
+                    <Icon name="graduation-cap" :size="28" class="text-indigo-400 mb-2" />
                     <div>
                       <span class="text-sm font-bold text-white block">Teacher Space</span>
                       <span class="text-xs text-slate-400 leading-tight">Manajemen siswa les, materi ajar via cloud, jadwal sesi, dan honor.</span>
@@ -302,13 +305,13 @@
                   <!-- Option 4: Couple Space -->
                   <button
                     type="button"
-                    @click="setSpaceTemplate('couple', 'general', '💑', 'Our Romantic Space 💕')"
+                    @click="setSpaceTemplate('couple', 'general', 'heart', 'Our Romantic Space 💕')"
                     class="p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between hover:scale-[1.02]"
                     :class="newSpace.type === 'couple'
                       ? 'border-pink-500 bg-pink-500/15 text-white shadow-lg shadow-pink-500/10 ring-1 ring-pink-500'
                       : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600'"
                   >
-                    <span class="text-3xl mb-2 block">💑</span>
+                    <Icon name="heart" :size="28" class="text-pink-400 mb-2" />
                     <div>
                       <span class="text-sm font-bold text-white block">{{ t('couple_space_title') }}</span>
                       <span class="text-xs text-slate-400 leading-tight">{{ t('couple_space_desc') }}</span>
@@ -350,46 +353,47 @@
           class="fixed inset-0 z-[100] flex items-center justify-center p-4"
         >
           <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showJoinModal = false"></div>
-          <div class="relative z-10 w-full max-w-md glass rounded-3xl p-6 sm:p-8 border border-pink-500/40 bg-slate-950/95 animate-slide-in space-y-4">
-            <div class="w-12 h-12 rounded-2xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center text-2xl mx-auto shadow-md">
-              🔑
+          <div class="relative z-10 w-full max-w-md surface-card rounded-3xl p-6 sm:p-8 border-rose-500/40 animate-slide-in space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center mx-auto shadow-md">
+              <Icon name="lock" :size="22" />
             </div>
 
             <div class="text-center space-y-1">
-              <h3 class="text-lg font-extrabold text-white">{{ t('join_space_title') }}</h3>
-              <p class="text-xs text-slate-400">
+              <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">{{ t('join_space_title') }}</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
                 {{ t('join_space_desc') }}
               </p>
             </div>
 
             <form @submit.prevent="handleJoinSpace" class="space-y-4 pt-2">
               <div class="space-y-1">
-                <label class="block text-xs font-semibold text-slate-300">{{ t('invite_code_label') }}</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ t('invite_code_label') }}</label>
                 <input
                   v-model="inviteCodeInput"
                   type="text"
                   required
                   :placeholder="t('invite_code_placeholder')"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono uppercase tracking-wider focus:outline-none focus:border-pink-500 text-center"
+                  class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white font-mono uppercase tracking-wider focus:outline-none focus:border-rose-500 text-center"
                 />
               </div>
 
-              <div class="p-3 rounded-xl bg-pink-500/10 border border-pink-500/20 text-xs text-pink-200 text-center">
-                💡 <em>{{ t('join_space_info') }}</em>
+              <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-200 text-center flex items-center justify-center gap-1.5">
+                <Icon name="lightbulb" :size="14" />
+                <em>{{ t('join_space_info') }}</em>
               </div>
 
               <div class="flex gap-3 pt-2">
                 <button
                   type="button"
                   @click="showJoinModal = false"
-                  class="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+                  class="btn-secondary flex-1 py-2.5 text-xs font-semibold"
                 >
                   {{ t('cancel') }}
                 </button>
                 <button
                   type="submit"
                   :disabled="joinLoading"
-                  class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-bold shadow-lg shadow-pink-500/20 transition-all"
+                  class="btn-primary flex-1 py-2.5 text-xs font-bold"
                 >
                   <span v-if="!joinLoading">{{ t('join_now') }}</span>
                   <span v-else>{{ t('processing') }}</span>
@@ -409,16 +413,16 @@
           class="fixed inset-0 z-[110] flex items-center justify-center p-4"
         >
           <div class="absolute inset-0 bg-black/80 backdrop-blur-md" @click="spaceToDelete = null"></div>
-          <div class="relative z-10 w-full max-w-md glass rounded-3xl p-6 sm:p-8 border border-rose-500/50 shadow-2xl space-y-5 bg-slate-950/95 animate-slide-in">
-            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-3xl mx-auto shadow-lg">
-              🗑️
+          <div class="relative z-10 w-full max-w-md surface-card rounded-3xl p-6 sm:p-8 border-rose-500/50 shadow-2xl space-y-5 animate-slide-in">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center mx-auto shadow-lg">
+              <Icon name="trash" :size="24" />
             </div>
 
             <div class="text-center space-y-1.5">
-              <h3 class="text-lg font-extrabold text-white">
+              <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">
                 {{ t('delete_space_confirm_title') }}
               </h3>
-              <p class="text-xs text-slate-300 leading-relaxed">
+              <p class="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">
                 {{ t('delete_space_confirm_desc', { name: spaceToDelete.name }) }}
               </p>
             </div>
@@ -427,7 +431,7 @@
               <button
                 type="button"
                 @click="spaceToDelete = null"
-                class="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+                class="btn-secondary flex-1 py-2.5 text-xs font-semibold"
               >
                 {{ t('cancel') }}
               </button>
@@ -455,6 +459,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useI18n } from '@/composables/useI18n'
 import { supabase } from '@/utils/supabase'
+import Icon from '@/components/ui/Icon.vue'
 import type { SpaceType, SpaceCategory, SpaceWithMeta } from '@/types'
 import ParticleCanvas from '@/components/ui/ParticleCanvas.vue'
 import AuroraBackground from '@/components/ui/AuroraBackground.vue'

@@ -1,41 +1,44 @@
 <template>
-  <div>
+  <div class="space-y-6">
     <!-- Page Header -->
-    <div class="mb-6 animate-fade-in flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="animate-fade-in flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-2">
-          <span>🎓</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight mb-1 flex items-center gap-2.5">
+          <Icon name="graduation-cap" size="26" class="text-accent" />
           <span>{{ t('dashboard_teacher_title') }}</span>
         </h1>
-        <p class="text-slate-400 text-xs sm:text-sm">{{ t('dashboard_teacher_desc') }}</p>
+        <p class="text-text-tertiary text-xs sm:text-sm">{{ t('dashboard_teacher_desc') }}</p>
       </div>
 
       <router-link
         to="/students"
-        class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5"
+        class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 active:scale-98"
       >
-        <span>➕ {{ t('add_new_student') }}</span>
+        <Icon name="plus" size="14" />
+        <span>{{ t('add_new_student') }}</span>
       </router-link>
     </div>
 
     <!-- Error State -->
-    <div v-if="error" class="glass rounded-xl p-8 text-center animate-fade-in">
-      <span class="text-4xl block mb-3">⚠️</span>
-      <p class="text-white font-medium mb-1">{{ t('failed_load_data') }}</p>
-      <p class="text-sm text-slate-400 mb-4">{{ error }}</p>
+    <div v-if="error" class="surface-card p-8 text-center animate-fade-in border border-rose-500/30">
+      <div class="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-3">
+        <Icon name="alert-triangle" size="24" />
+      </div>
+      <p class="text-text-primary font-semibold mb-1">{{ t('failed_load_data') }}</p>
+      <p class="text-xs text-text-tertiary mb-4">{{ error }}</p>
       <button class="btn-primary" @click="retry">{{ t('try_again') }}</button>
     </div>
 
     <template v-else>
       <!-- Stats Cards (Loading) -->
-      <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SkeletonLoader v-for="i in 4" :key="i" type="card" />
       </div>
 
       <!-- Stats Cards -->
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon="👥"
+          icon="users"
           :value="stats.totalStudents"
           :label="t('total_students_active')"
           :change="stats.totalStudentsChange"
@@ -43,7 +46,7 @@
           :delay="0"
         />
         <StatCard
-          icon="📚"
+          icon="book-open"
           :value="stats.lessonsThisWeek"
           :label="t('lessons_this_week')"
           :change="stats.lessonsThisWeekChange"
@@ -51,7 +54,7 @@
           :delay="100"
         />
         <StatCard
-          icon="💰"
+          icon="wallet"
           :value="formatCurrency(stats.monthlyIncome)"
           :label="t('income_this_month')"
           :change="stats.monthlyIncomeChange"
@@ -59,7 +62,7 @@
           :delay="200"
         />
         <StatCard
-          icon="📅"
+          icon="calendar"
           :value="stats.upcomingLessons"
           :label="t('lessons_today')"
           :change="stats.upcomingLabel"
@@ -69,10 +72,13 @@
       </div>
 
       <!-- Today's Schedule + Recent Students -->
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <!-- Today's Schedule (3/5 width) -->
-        <div class="lg:col-span-3 animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">📅 {{ t('schedule_today') }}</h2>
+        <div class="lg:col-span-3 animate-fade-in" :style="{ animationDelay: '250ms', opacity: 0 }">
+          <div class="flex items-center gap-2 mb-3.5">
+            <Icon name="calendar" size="18" class="text-accent" />
+            <h2 class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ t('schedule_today') }}</h2>
+          </div>
 
           <SkeletonLoader v-if="isLoading" type="table" :rows="4" :columns="4" />
 
@@ -80,47 +86,47 @@
             <div
               v-for="lesson in todaySchedule"
               :key="lesson.id"
-              class="lesson-card glass rounded-xl p-4 flex items-center gap-4"
+              class="lesson-card surface-card p-4 flex items-center gap-4 transition-all"
             >
               <!-- Time -->
-              <div class="shrink-0 text-center">
-                <span class="text-lg font-bold text-white font-mono block">{{ lesson.time }}</span>
-                <span class="text-[10px] text-slate-500">{{ lesson.duration }}</span>
+              <div class="shrink-0 text-center min-w-[56px]">
+                <span class="text-base font-bold text-text-primary font-mono tabular-nums block">{{ lesson.time }}</span>
+                <span class="text-[10px] text-text-tertiary">{{ lesson.duration }}</span>
               </div>
 
               <!-- Divider -->
               <div
                 class="w-0.5 h-10 rounded-full shrink-0"
                 :class="{
-                  'bg-emerald-500': lesson.status === 'done',
+                  'bg-profit': lesson.status === 'done',
                   'bg-accent': lesson.status === 'in-progress',
-                  'bg-slate-600': lesson.status === 'upcoming',
+                  'bg-border-default': lesson.status === 'upcoming',
                 }"
               />
 
               <!-- Info -->
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-white truncate">{{ lesson.studentName }}</p>
-                <p class="text-xs text-slate-400 truncate">{{ lesson.subject }}</p>
+                <p class="text-sm font-bold text-text-primary truncate">{{ lesson.studentName }}</p>
+                <p class="text-xs text-text-tertiary truncate">{{ lesson.subject }}</p>
               </div>
 
               <!-- Status / Action -->
               <div class="shrink-0">
                 <span
                   v-if="lesson.status === 'done'"
-                  class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400"
+                  class="text-xs font-semibold px-2.5 py-1 rounded-full bg-profit/15 text-profit"
                 >
-                  ✓ {{ t('completed') }}
+                  {{ t('completed') }}
                 </span>
-                <button
+                <span
                   v-else-if="lesson.status === 'in-progress'"
                   class="text-xs font-semibold px-3 py-1.5 rounded-full bg-accent/20 text-accent animate-pulse"
                 >
-                  🔴 {{ t('in_progress') }}
-                </button>
+                  {{ t('in_progress') }}
+                </span>
                 <button
                   v-else
-                  class="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/20 text-sky-400 hover:bg-primary/30 transition-colors"
+                  class="text-xs font-semibold px-3 py-1.5 rounded-full bg-accent/15 text-accent hover:bg-accent/25 transition-colors"
                 >
                   {{ t('start_lesson') }}
                 </button>
@@ -128,16 +134,19 @@
             </div>
 
             <!-- Empty state -->
-            <div v-if="todaySchedule.length === 0" class="glass rounded-xl p-8 text-center">
-              <span class="text-3xl block mb-2">🎉</span>
-              <p class="text-sm text-slate-400">{{ t('no_schedule_today') }}</p>
+            <div v-if="todaySchedule.length === 0" class="surface-card p-8 text-center">
+              <Icon name="calendar" size="32" class="text-text-tertiary mx-auto mb-2 opacity-50" />
+              <p class="text-sm text-text-secondary">{{ t('no_schedule_today') }}</p>
             </div>
           </div>
         </div>
 
         <!-- Recent Students Progress (2/5 width) -->
-        <div class="lg:col-span-2 animate-fade-in" :style="{ animationDelay: '450ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">📈 {{ t('student_progress') }}</h2>
+        <div class="lg:col-span-2 animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
+          <div class="flex items-center gap-2 mb-3.5">
+            <Icon name="trending-up" size="18" class="text-accent" />
+            <h2 class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ t('student_progress') }}</h2>
+          </div>
 
           <SkeletonLoader v-if="isLoading" type="circle" />
 
@@ -145,14 +154,16 @@
             <div
               v-for="student in recentStudents"
               :key="student.id"
-              class="student-card glass rounded-xl p-4"
+              class="student-card surface-card p-4 transition-all"
             >
               <!-- Student header -->
               <div class="flex items-center gap-3 mb-3">
-                <span class="text-2xl">{{ student.avatar }}</span>
+                <div class="w-9 h-9 rounded-xl bg-accent/10 text-accent font-bold text-xs flex items-center justify-center shrink-0 border border-accent/20">
+                  {{ student.name.charAt(0) }}
+                </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-white truncate">{{ student.name }}</p>
-                  <p class="text-[11px] text-slate-500">{{ student.subject }} · {{ formatDate(student.lastLesson) }}</p>
+                  <p class="text-sm font-bold text-text-primary truncate">{{ student.name }}</p>
+                  <p class="text-[11px] text-text-tertiary">{{ student.subject }} · {{ formatDate(student.lastLesson) }}</p>
                 </div>
               </div>
 
@@ -166,7 +177,7 @@
               />
 
               <!-- Note -->
-              <p class="text-[11px] text-slate-400 mt-2.5 leading-relaxed">
+              <p class="text-[11px] text-text-tertiary mt-2.5 leading-relaxed">
                 {{ student.progressNote }}
               </p>
             </div>
@@ -175,28 +186,28 @@
       </div>
 
       <!-- Quick Actions -->
-      <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
-        <h2 class="text-lg font-semibold text-white mb-4">{{ t('quick_actions') }}</h2>
+      <div class="surface-card p-5 animate-fade-in" :style="{ animationDelay: '450ms', opacity: 0 }">
+        <h2 class="text-sm font-bold text-text-primary uppercase tracking-wider mb-3.5">{{ t('quick_actions') }}</h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <router-link
             to="/students"
-            class="btn-primary flex items-center justify-center gap-2 py-3 text-sm font-bold shadow-lg shadow-cyan-500/10"
+            class="btn-primary flex items-center justify-center gap-2 py-2.5 text-xs font-bold"
           >
-            <span class="text-lg">👤</span>
+            <Icon name="users" size="15" />
             <span>{{ t('manage_add_student') }}</span>
           </router-link>
           <router-link
             to="/lessons"
-            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            class="btn-secondary flex items-center justify-center gap-2 py-2.5 text-xs font-medium"
           >
-            <span class="text-lg">📅</span>
+            <Icon name="calendar" size="15" />
             <span>{{ t('schedule_lesson') }}</span>
           </router-link>
           <router-link
             to="/income"
-            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            class="btn-secondary flex items-center justify-center gap-2 py-2.5 text-xs font-medium"
           >
-            <span class="text-lg">💵</span>
+            <Icon name="wallet" size="15" />
             <span>{{ t('student_billing') }}</span>
           </router-link>
         </div>
@@ -206,6 +217,7 @@
 </template>
 
 <script setup lang="ts">
+import Icon from '@/components/ui/Icon.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
@@ -238,19 +250,8 @@ function formatDate(dateStr: string): string {
 </script>
 
 <style scoped>
-.lesson-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.lesson-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.25);
-}
-
-.student-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+.lesson-card:hover,
 .student-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.25);
 }
 </style>

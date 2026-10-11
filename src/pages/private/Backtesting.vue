@@ -1,50 +1,88 @@
 <template>
-  <div class="space-y-6 animate-fade-in w-full max-w-full pb-12">
+  <div class="space-y-6 w-full max-w-full pb-12">
     <!-- ============================================================
          PAGE HEADER
          ============================================================ -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="text-2xl sm:text-3xl">🔬</span>
-          <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center">
+            <Icon name="zap" :size="18" />
+          </div>
+          <h1 class="text-xl sm:text-2xl font-bold dark:text-white text-slate-900 tracking-tight">
             Backtesting Engine & Strategy Lab
           </h1>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
             Speed Entry
           </span>
+
+          <!-- Cloud Sync Status Indicator -->
+          <span
+            v-if="isCloudSynced"
+            class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1"
+            title="Tersinkronisasi secara otomatis ke database Supabase"
+          >
+            <Icon name="check" :size="12" />
+            <span>Cloud Synced</span>
+          </span>
+          <span
+            v-else-if="isSyncing"
+            class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center gap-1 animate-pulse"
+          >
+            <span>Menyinkronkan...</span>
+          </span>
+          <button
+            v-else
+            type="button"
+            @click="syncWithSupabase"
+            class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border dark:border-white/10 border-slate-200 flex items-center gap-1 transition-colors"
+            title="Klik untuk menyinkronkan data lokal ke database Supabase"
+          >
+            <Icon name="upload" :size="12" />
+            <span>Sync Cloud</span>
+          </button>
         </div>
-        <p class="text-xs sm:text-sm text-slate-400">
-          Uji strategi masa lalu dengan input data super cepat, kalkulasi rasio otomatis, dan saldo awal dinamis.
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Uji strategi historis dengan pencatatan instan, rasio otomatis, dan saldo awal dinamis.
         </p>
       </div>
 
       <!-- Action Buttons -->
       <div class="flex flex-wrap items-center gap-2">
+        <!-- Sync Cloud Button -->
+        <button
+          type="button"
+          @click="syncWithSupabase"
+          :disabled="isSyncing"
+          class="btn-secondary text-xs disabled:opacity-50"
+          :title="isCloudSynced ? 'Data sudah tersinkron ke cloud Supabase' : 'Sinkronkan data lokal ke database Supabase sekarang'"
+        >
+          <Icon name="upload" :size="14" />
+          <span class="hidden sm:inline">{{ isSyncing ? 'Menyinkronkan...' : isCloudSynced ? 'Synced' : 'Sync Cloud' }}</span>
+        </button>
+
         <!-- Settings Button -->
         <button
           type="button"
           @click="isSettingsModalOpen = true"
-          class="px-3.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition-all shadow-sm"
+          class="btn-secondary text-xs"
         >
-          <span>⚙️</span>
+          <Icon name="settings" :size="14" />
           <span>Saldo & Risiko</span>
-          <span class="px-1.5 py-0.2 rounded bg-slate-900 text-cyan-300 font-mono text-[10px] font-bold">
+          <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-sky-600 dark:text-sky-400 font-mono text-[10px] font-bold">
             ${{ Number(settings.initialBalance).toLocaleString('en-US') }}
           </span>
         </button>
-
-
 
         <!-- Export CSV -->
         <button
           v-if="trades.length > 0"
           type="button"
           @click="exportToCsv"
-          class="px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1.5"
+          class="btn-secondary text-xs"
           title="Download log trade backtest (.csv)"
         >
-          <span>📊</span>
+          <Icon name="download" :size="14" />
           <span class="hidden sm:inline">Export CSV</span>
         </button>
 
@@ -53,9 +91,9 @@
           v-if="trades.length > 0"
           type="button"
           @click="confirmReset"
-          class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold border border-rose-500/30 transition-all flex items-center gap-1.5"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-colors"
         >
-          <span>🗑️</span>
+          <Icon name="trash" :size="14" />
           <span>Reset</span>
         </button>
       </div>
@@ -66,87 +104,81 @@
          ============================================================ -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <!-- 1. Saldo Akhir & PnL -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 relative overflow-hidden">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+      <div class="surface-card p-3.5">
+        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
           <span>Saldo Akhir</span>
-          <span class="text-xs">💰</span>
         </div>
-        <div class="text-base sm:text-lg font-mono font-extrabold" :class="stats.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+        <div class="text-base sm:text-lg font-mono font-bold tabular-nums" :class="stats.netPnl >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'">
           ${{ stats.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}
         </div>
-        <div class="text-[11px] font-mono mt-0.5" :class="stats.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+        <div class="text-[11px] font-mono tabular-nums mt-0.5" :class="stats.netPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
           {{ stats.netPnl >= 0 ? '+' : '' }}${{ stats.netPnl.toLocaleString('en-US') }} ({{ stats.netPnlPercent >= 0 ? '+' : '' }}{{ stats.netPnlPercent }}%)
         </div>
       </div>
 
       <!-- 2. Win Rate -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+      <div class="surface-card p-3.5">
+        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
           <span>Win Rate</span>
-          <span class="text-xs">🎯</span>
         </div>
-        <div class="text-base sm:text-lg font-mono font-extrabold text-cyan-300">
+        <div class="text-base sm:text-lg font-mono font-bold text-sky-600 dark:text-sky-400 tabular-nums">
           {{ stats.winRate }}%
         </div>
-        <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
-          <span class="text-emerald-400 font-bold">{{ stats.winCount }}W</span> -
-          <span class="text-rose-400 font-bold">{{ stats.lossCount }}L</span> -
-          <span class="text-slate-400 font-bold">{{ stats.beCount }}BE</span>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono tabular-nums">
+          <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ stats.winCount }}W</span> /
+          <span class="text-rose-600 dark:text-rose-400 font-semibold">{{ stats.lossCount }}L</span> /
+          <span class="text-slate-500 font-semibold">{{ stats.beCount }}BE</span>
         </div>
       </div>
 
       <!-- 3. Profit Factor -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+      <div class="surface-card p-3.5">
+        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
           <span>Profit Factor</span>
-          <span class="text-xs">⚖️</span>
         </div>
-        <div class="text-base sm:text-lg font-mono font-extrabold" :class="stats.profitFactor >= 1.5 ? 'text-emerald-400' : stats.profitFactor >= 1 ? 'text-cyan-300' : 'text-rose-400'">
+        <div class="text-base sm:text-lg font-mono font-bold tabular-nums" :class="stats.profitFactor >= 1.5 ? 'text-emerald-500 dark:text-emerald-400' : stats.profitFactor >= 1 ? 'text-sky-600 dark:text-sky-400' : 'text-rose-500 dark:text-rose-400'">
           {{ stats.profitFactor.toFixed(2) }}
         </div>
-        <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
-          Gross: ${{ stats.grossProfit.toFixed(0) }} / ${{ stats.grossLoss.toFixed(0) }}
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono tabular-nums">
+          ${{ stats.grossProfit.toFixed(0) }} / ${{ stats.grossLoss.toFixed(0) }}
         </div>
       </div>
 
       <!-- 4. Total Net R & Avg R:R -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+      <div class="surface-card p-3.5">
+        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
           <span>Total Net R</span>
-          <span class="text-xs">📐</span>
         </div>
-        <div class="text-base sm:text-lg font-mono font-extrabold" :class="stats.totalR >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+        <div class="text-base sm:text-lg font-mono font-bold tabular-nums" :class="stats.totalR >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'">
           {{ stats.totalR >= 0 ? '+' : '' }}{{ stats.totalR }}R
         </div>
-        <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
-          Avg R:R: <span class="text-cyan-300 font-bold">1:{{ stats.avgRR.toFixed(1) }}</span>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono tabular-nums">
+          Avg R:R: <span class="text-sky-600 dark:text-sky-400 font-semibold">1:{{ stats.avgRR.toFixed(1) }}</span>
         </div>
       </div>
 
       <!-- 5. Expectancy per Trade -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+      <div class="surface-card p-3.5">
+        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
           <span>Expectancy</span>
-          <span class="text-xs">✨</span>
         </div>
-        <div class="text-base sm:text-lg font-mono font-extrabold" :class="stats.expectancyR >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+        <div class="text-base sm:text-lg font-mono font-bold tabular-nums" :class="stats.expectancyR >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'">
           {{ stats.expectancyR >= 0 ? '+' : '' }}{{ stats.expectancyR }}R
         </div>
-        <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono tabular-nums">
           {{ stats.expectancyDollar >= 0 ? '+' : '' }}${{ stats.expectancyDollar }} / trade
         </div>
       </div>
 
       <!-- 6. Max Drawdown -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+      <div class="surface-card p-3.5">
+        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
           <span>Max Drawdown</span>
-          <span class="text-xs">🛡️</span>
         </div>
-        <div class="text-base sm:text-lg font-mono font-extrabold text-rose-400">
+        <div class="text-base sm:text-lg font-mono font-bold text-rose-500 dark:text-rose-400 tabular-nums">
           -{{ stats.maxDrawdownPercent.toFixed(1) }}%
         </div>
-        <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono tabular-nums">
           -${{ stats.maxDrawdownDollar.toFixed(0) }} (Streak: {{ stats.consecutiveLosses }}L)
         </div>
       </div>
@@ -155,13 +187,13 @@
     <!-- ============================================================
          2. SPEED LOG: RAPID 1-CLICK ENTRY BAR (SPEED IS KING)
          ============================================================ -->
-    <div class="glass rounded-2xl p-5 sm:p-6 border-2 border-cyan-500/40 shadow-xl bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-slate-900/90 space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/40 pb-3">
+    <div class="surface-card p-5 border dark:border-sky-500/30 border-slate-300 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-white/[0.08] border-slate-200 pb-3">
         <div class="flex items-center gap-2">
-          <span class="text-xl">⚡</span>
-          <h2 class="text-base font-bold text-white tracking-tight">Rapid Log (Input 1-Klik Cepat)</h2>
-          <span class="text-[11px] text-slate-400 hidden md:inline">
-            — Pilih pair, klik tombol hasil, trade langsung tercatat otomatis!
+          <Icon name="zap" :size="17" class="text-sky-500 dark:text-sky-400" />
+          <h2 class="text-sm font-bold dark:text-white text-slate-900 tracking-tight">Rapid Log (Input 1-Klik Cepat)</h2>
+          <span class="text-[11px] text-slate-500 dark:text-slate-400 hidden md:inline">
+            (Pilih pair, tentukan arah, klik hasil untuk mencatat trade secara instan)
           </span>
         </div>
 
@@ -169,19 +201,19 @@
           <button
             type="button"
             @click="isCustomModeOpen = !isCustomModeOpen"
-            class="text-xs font-semibold px-2.5 py-1 rounded-lg text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+            class="text-xs font-semibold px-2.5 py-1 rounded-lg dark:text-slate-300 text-slate-700 dark:bg-white/[0.06] bg-slate-100 hover:bg-slate-200 dark:hover:bg-white/[0.1] border dark:border-white/10 border-slate-200 transition-colors"
           >
-            {{ isCustomModeOpen ? '▲ Tutup Detail Kustom' : '▼ Mode Detail & Chart' }}
+            {{ isCustomModeOpen ? 'Tutup Detail Kustom' : 'Mode Detail & Chart' }}
           </button>
 
           <button
             v-if="trades.length > 0"
             type="button"
             @click="undoLastTrade"
-            class="text-xs font-semibold px-2.5 py-1 rounded-lg text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors flex items-center gap-1"
+            class="text-xs font-semibold px-2.5 py-1 rounded-lg text-amber-600 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors flex items-center gap-1"
             title="Hapus trade terakhir yang baru saja diinput"
           >
-            <span>↩</span>
+            <Icon name="arrow-left" :size="12" />
             <span class="hidden sm:inline">Undo</span>
           </button>
         </div>
@@ -190,7 +222,7 @@
       <!-- Quick Selector Controls (Pair, Direction, Session) -->
       <div class="flex flex-wrap items-center gap-4">
         <!-- Pair Pills -->
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 flex-wrap">
           <span class="text-xs font-bold text-slate-400 mr-1">Pair:</span>
           <button
             v-for="p in ['XAUUSD', 'EURUSD', 'GBPUSD', 'BTCUSD', 'US30', 'NAS100']"
@@ -198,41 +230,45 @@
             type="button"
             @click="activePair = p"
             class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all"
-            :class="activePair === p ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20 scale-105' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'"
+            :class="activePair === p
+              ? 'bg-sky-500 text-white shadow-sm'
+              : 'dark:bg-white/[0.05] bg-slate-100 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white dark:hover:bg-white/[0.08]'"
           >
             {{ p }}
           </button>
         </div>
 
         <!-- Direction Toggle -->
-        <div class="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-1 dark:bg-black/40 bg-slate-100 p-0.5 rounded-lg border dark:border-white/10 border-slate-200">
           <button
             type="button"
             @click="activeDirection = 'BUY'"
-            class="px-3 py-1 rounded-lg text-xs font-bold transition-all"
-            :class="activeDirection === 'BUY' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'"
+            class="px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5"
+            :class="activeDirection === 'BUY' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            🟢 BUY / LONG
+            <span class="w-1.5 h-1.5 rounded-full" :class="activeDirection === 'BUY' ? 'bg-white' : 'bg-emerald-500'"></span>
+            <span>BUY / LONG</span>
           </button>
           <button
             type="button"
             @click="activeDirection = 'SELL'"
-            class="px-3 py-1 rounded-lg text-xs font-bold transition-all"
-            :class="activeDirection === 'SELL' ? 'bg-rose-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'"
+            class="px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5"
+            :class="activeDirection === 'SELL' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            🔴 SELL / SHORT
+            <span class="w-1.5 h-1.5 rounded-full" :class="activeDirection === 'SELL' ? 'bg-white' : 'bg-rose-500'"></span>
+            <span>SELL / SHORT</span>
           </button>
         </div>
 
         <!-- Session Pills -->
-        <div class="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-1 dark:bg-black/40 bg-slate-100 p-0.5 rounded-lg border dark:border-white/10 border-slate-200">
           <button
             v-for="s in ['London', 'New York', 'Asia']"
             :key="s"
             type="button"
             @click="activeSession = s"
-            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all"
-            :class="activeSession === s ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-300'"
+            class="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+            :class="activeSession === s ? 'dark:bg-slate-700 bg-white text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
           >
             {{ s }}
           </button>
@@ -245,68 +281,68 @@
         <button
           type="button"
           @click="handleQuickLog('WIN', 3.0)"
-          class="group py-3 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 hover:border-emerald-400 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-md shadow-emerald-500/5 hover:shadow-emerald-500/20"
+          class="py-2.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-sm"
         >
-          <span class="text-xs font-bold group-hover:scale-110 transition-transform">🚀 +3.0 R</span>
-          <span class="text-[10px] text-emerald-400/80 font-mono">Win Besar</span>
+          <span class="text-xs font-bold font-mono">+3.0 R</span>
+          <span class="text-[10px] text-emerald-700 dark:text-emerald-400/80 font-mono">Win Besar</span>
         </button>
 
-        <!-- +2R Win (Most Standard TP) -->
+        <!-- +2R Win (Standard TP) -->
         <button
           type="button"
           @click="handleQuickLog('WIN', 2.0)"
-          class="group py-3 px-3 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-200 border-2 border-emerald-500/60 hover:border-emerald-400 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/30"
+          class="py-2.5 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-sm font-semibold"
         >
-          <span class="text-sm font-extrabold group-hover:scale-110 transition-transform">🎯 +2.0 R</span>
-          <span class="text-[10px] text-emerald-300 font-mono">Target Standar</span>
+          <span class="text-xs font-bold font-mono">+2.0 R</span>
+          <span class="text-[10px] text-emerald-700 dark:text-emerald-300 font-mono">Target Standar</span>
         </button>
 
         <!-- +1.5R Win -->
         <button
           type="button"
           @click="handleQuickLog('WIN', 1.5)"
-          class="group py-3 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 hover:border-emerald-400 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-md shadow-emerald-500/5"
+          class="py-2.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-sm"
         >
-          <span class="text-xs font-bold group-hover:scale-110 transition-transform">✓ +1.5 R</span>
-          <span class="text-[10px] text-emerald-400/80 font-mono">Win Menengah</span>
+          <span class="text-xs font-bold font-mono">+1.5 R</span>
+          <span class="text-[10px] text-emerald-700 dark:text-emerald-400/80 font-mono">Win Menengah</span>
         </button>
 
         <!-- +1R Win -->
         <button
           type="button"
           @click="handleQuickLog('WIN', 1.0)"
-          class="group py-3 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95"
+          class="py-2.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-sm"
         >
-          <span class="text-xs font-bold group-hover:scale-110 transition-transform">✓ +1.0 R</span>
-          <span class="text-[10px] text-emerald-400/80 font-mono">TP 1 / Scalp</span>
+          <span class="text-xs font-bold font-mono">+1.0 R</span>
+          <span class="text-[10px] text-emerald-700 dark:text-emerald-400/80 font-mono">TP 1 / Scalp</span>
         </button>
 
         <!-- -1R Loss (Discipline Stop Loss) -->
         <button
           type="button"
           @click="handleQuickLog('LOSS', -1.0)"
-          class="group py-3 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 border-2 border-rose-500/50 hover:border-rose-400 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-lg shadow-rose-500/10"
+          class="py-2.5 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-sm font-semibold"
         >
-          <span class="text-sm font-extrabold group-hover:scale-110 transition-transform">🛑 -1.0 R</span>
-          <span class="text-[10px] text-rose-300 font-mono">Hit Stop Loss</span>
+          <span class="text-xs font-bold font-mono">-1.0 R</span>
+          <span class="text-[10px] text-rose-700 dark:text-rose-400 font-mono">Stop Loss</span>
         </button>
 
         <!-- 0R Breakeven -->
         <button
           type="button"
           @click="handleQuickLog('BE', 0.0)"
-          class="group py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95"
+          class="py-2.5 px-3 rounded-lg dark:bg-white/[0.05] bg-slate-100 hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 border dark:border-white/10 border-slate-200 transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-sm"
         >
-          <span class="text-xs font-bold group-hover:scale-110 transition-transform">⚪ 0.0 R</span>
-          <span class="text-[10px] text-slate-400 font-mono">Breakeven (BE)</span>
+          <span class="text-xs font-bold font-mono">0.0 R</span>
+          <span class="text-[10px] text-slate-500 font-mono">Breakeven</span>
         </button>
       </div>
 
       <!-- EXPANDABLE: Custom / Detailed Inputs (Setup tag, custom R, chart preview link, notes) -->
       <transition name="fade">
-        <div v-if="isCustomModeOpen" class="pt-3 border-t border-slate-800 space-y-3 bg-slate-950/40 p-4 rounded-xl">
-          <div class="text-xs font-bold text-slate-300 flex items-center gap-2">
-            <span>📝</span>
+        <div v-if="isCustomModeOpen" class="pt-3 border-t dark:border-white/[0.08] border-slate-200 space-y-3 p-3.5 rounded-lg dark:bg-black/30 bg-slate-50">
+          <div class="text-xs font-bold dark:text-slate-300 text-slate-700 flex items-center gap-1.5">
+            <Icon name="edit" :size="14" class="text-sky-500" />
             <span>Detail Tambahan & Lampiran Setup (Opsional)</span>
           </div>
 
@@ -381,12 +417,12 @@
     <!-- ============================================================
          3. VISUAL EQUITY CURVE (DYNAMIC SVG CHART)
          ============================================================ -->
-    <div class="glass rounded-2xl p-5 sm:p-6 border border-slate-700/60 space-y-4">
+    <div class="surface-card p-5 sm:p-6 space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <span class="text-xl">📈</span>
-          <h2 class="text-base font-bold text-white tracking-tight">Kurva Pertumbuhan Saldo (Equity Curve)</h2>
-          <span class="text-xs text-slate-400 font-mono">
+          <Icon name="chart-line" :size="18" class="text-sky-500 dark:text-sky-400" />
+          <h2 class="text-sm font-bold dark:text-white text-slate-900 tracking-tight">Kurva Pertumbuhan Saldo (Equity Curve)</h2>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">
             ({{ trades.length }} Trades Selesai)
           </span>
         </div>
@@ -394,11 +430,11 @@
         <div class="flex items-center gap-3 text-xs font-mono">
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-0.5 bg-slate-500 border-dashed"></span>
-            <span class="text-slate-400">Modal Awal: ${{ Number(settings.initialBalance).toLocaleString('en-US') }}</span>
+            <span class="text-slate-500 dark:text-slate-400">Modal Awal: ${{ Number(settings.initialBalance).toLocaleString('en-US') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="w-3 h-0.5" :class="stats.netPnl >= 0 ? 'bg-emerald-400' : 'bg-rose-400'"></span>
-            <span :class="stats.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+            <span class="w-3 h-0.5" :class="stats.netPnl >= 0 ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+            <span :class="stats.netPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
               Saldo: ${{ stats.currentBalance.toLocaleString('en-US') }}
             </span>
           </div>
@@ -406,7 +442,7 @@
       </div>
 
       <!-- SVG Chart Viewport -->
-      <div class="relative w-full h-56 sm:h-64 bg-slate-950/60 rounded-xl border border-slate-800 overflow-hidden flex items-center justify-center p-2">
+      <div class="relative w-full h-56 sm:h-64 dark:bg-black/40 bg-slate-100 rounded-lg border dark:border-white/10 border-slate-200 overflow-hidden flex items-center justify-center p-2">
         <svg
           v-if="chartData.points.length > 1"
           class="w-full h-full overflow-visible"
@@ -415,7 +451,7 @@
         >
           <defs>
             <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" :stop-color="stats.netPnl >= 0 ? '#10b981' : '#f43f5e'" stop-opacity="0.35" />
+              <stop offset="0%" :stop-color="stats.netPnl >= 0 ? '#10b981' : '#f43f5e'" stop-opacity="0.25" />
               <stop offset="100%" :stop-color="stats.netPnl >= 0 ? '#10b981' : '#f43f5e'" stop-opacity="0.0" />
             </linearGradient>
           </defs>
@@ -466,8 +502,8 @@
 
         <!-- Empty State -->
         <div v-else class="text-center py-8">
-          <span class="text-3xl block mb-2">📊</span>
-          <p class="text-xs sm:text-sm text-slate-300 font-semibold">Belum Ada Trade Tercatat</p>
+          <Icon name="chart-line" :size="32" class="text-slate-400 mx-auto mb-2" />
+          <p class="text-xs sm:text-sm font-semibold dark:text-slate-200 text-slate-700">Belum Ada Trade Tercatat</p>
           <p class="text-[11px] text-slate-500 mt-1 max-w-sm">
             Klik salah satu tombol 1-klik di atas untuk mulai mencatat trade backtest pertamamu.
           </p>
@@ -476,17 +512,17 @@
         <!-- Tooltip overlay on hover -->
         <div
           v-if="hoveredPoint"
-          class="absolute bottom-3 left-3 bg-slate-900/95 border border-slate-700 px-3 py-2 rounded-xl text-xs shadow-2xl backdrop-blur-sm pointer-events-none flex items-center gap-3 font-mono"
+          class="absolute bottom-3 left-3 dark:bg-dark-elevated bg-white border dark:border-white/10 border-slate-200 px-3 py-2 rounded-lg text-xs shadow-lg pointer-events-none flex items-center gap-3 font-mono"
         >
           <div>
-            <span class="text-slate-400 text-[10px] block">Trade #{{ hoveredPoint.tradeNum }} ({{ hoveredPoint.pair || 'START' }})</span>
-            <span class="font-bold text-white">${{ hoveredPoint.balance.toLocaleString('en-US') }}</span>
+            <span class="text-slate-500 text-[10px] block">Trade #{{ hoveredPoint.tradeNum }} ({{ hoveredPoint.pair || 'START' }})</span>
+            <span class="font-bold dark:text-white text-slate-900">${{ hoveredPoint.balance.toLocaleString('en-US') }}</span>
           </div>
           <div v-if="hoveredPoint.tradeNum > 0">
-            <span class="text-[10px] block" :class="hoveredPoint.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+            <span class="text-[10px] block" :class="hoveredPoint.pnl >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'">
               {{ hoveredPoint.pnl >= 0 ? '+' : '' }}${{ hoveredPoint.pnl }} ({{ hoveredPoint.r >= 0 ? '+' : '' }}{{ hoveredPoint.r }}R)
             </span>
-            <span class="text-[10px] font-bold px-1.5 py-0.2 rounded" :class="hoveredPoint.result === 'WIN' ? 'bg-emerald-500/20 text-emerald-400' : hoveredPoint.result === 'LOSS' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-700 text-slate-300'">
+            <span class="text-[10px] font-bold px-1.5 py-0.2 rounded" :class="hoveredPoint.result === 'WIN' ? 'bg-emerald-500/10 text-emerald-500' : hoveredPoint.result === 'LOSS' ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
               {{ hoveredPoint.result }}
             </span>
           </div>
@@ -502,12 +538,12 @@
     <!-- ============================================================
          5. BACKTEST TRADE LOG TABLE
          ============================================================ -->
-    <div class="glass rounded-2xl p-5 sm:p-6 border border-slate-700/60 space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700/40 pb-3">
+    <div class="surface-card p-5 sm:p-6 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b dark:border-white/[0.08] border-slate-200 pb-3">
         <div class="flex items-center gap-2">
-          <span class="text-xl">📋</span>
-          <h2 class="text-base font-bold text-white tracking-tight">Log Riwayat Trade Backtest</h2>
-          <span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-800 text-slate-300">
+          <Icon name="clipboard" :size="18" class="text-sky-500 dark:text-sky-400" />
+          <h2 class="text-sm font-bold dark:text-white text-slate-900 tracking-tight">Log Riwayat Trade Backtest</h2>
+          <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border dark:border-white/10 border-slate-200">
             {{ filteredTrades.length }} Trades
           </span>
         </div>
@@ -515,14 +551,16 @@
         <!-- Filters (Result pills & Search) -->
         <div class="flex flex-wrap items-center gap-2">
           <!-- Filter Result Pills -->
-          <div class="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800 text-xs">
+          <div class="flex items-center gap-1 dark:bg-black/40 bg-slate-100 p-0.5 rounded-lg border dark:border-white/10 border-slate-200 text-xs font-mono">
             <button
               v-for="f in ['ALL', 'WIN', 'LOSS', 'BE']"
               :key="f"
               type="button"
               @click="filterResult = f"
-              class="px-2.5 py-1 rounded-lg font-bold transition-all"
-              :class="filterResult === f ? 'bg-cyan-500 text-slate-950' : 'text-slate-400 hover:text-white'"
+              class="px-2.5 py-1 rounded-md font-bold transition-all"
+              :class="filterResult === f
+                ? 'bg-sky-500 text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
             >
               {{ f }}
             </button>
@@ -539,85 +577,89 @@
       </div>
 
       <!-- Table Container -->
-      <div v-if="filteredTrades.length > 0" class="overflow-x-auto rounded-xl border border-slate-800">
+      <div v-if="filteredTrades.length > 0" class="overflow-x-auto rounded-lg border dark:border-white/[0.08] border-slate-200">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-900/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-              <th class="py-3 px-3">#</th>
-              <th class="py-3 px-3">Tanggal / Sesi</th>
-              <th class="py-3 px-3">Pair & Arah</th>
-              <th class="py-3 px-3">Setup / Catatan</th>
-              <th class="py-3 px-3 text-center">Hasil</th>
-              <th class="py-3 px-3 text-right">R-Multiple</th>
-              <th class="py-3 px-3 text-right">P&L ($)</th>
-              <th class="py-3 px-3 text-right">Saldo</th>
-              <th class="py-3 px-3 text-center">Chart</th>
-              <th class="py-3 px-3 text-center">Aksi</th>
+            <tr class="dark:bg-white/[0.03] bg-slate-50 text-[10px] font-mono font-bold dark:text-slate-400 text-slate-500 uppercase tracking-wider border-b dark:border-white/[0.08] border-slate-200">
+              <th class="py-2.5 px-3">#</th>
+              <th class="py-2.5 px-3">Tanggal / Sesi</th>
+              <th class="py-2.5 px-3">Pair & Arah</th>
+              <th class="py-2.5 px-3">Setup / Catatan</th>
+              <th class="py-2.5 px-3 text-center">Hasil</th>
+              <th class="py-2.5 px-3 text-right">R-Multiple</th>
+              <th class="py-2.5 px-3 text-right">P&L ($)</th>
+              <th class="py-2.5 px-3 text-right">Saldo</th>
+              <th class="py-2.5 px-3 text-center">Chart</th>
+              <th class="py-2.5 px-3 text-center">Aksi</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/60">
+          <tbody class="divide-y dark:divide-white/[0.04] divide-slate-100">
             <tr
               v-for="trade in filteredTrades"
               :key="trade.id"
-              class="hover:bg-slate-800/40 transition-colors"
+              class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
             >
               <!-- Trade # -->
-              <td class="py-3 px-3 font-mono font-bold text-slate-400">
+              <td class="py-2.5 px-3 font-mono font-bold text-slate-400">
                 #{{ trade.tradeNumber }}
               </td>
 
               <!-- Date & Session -->
-              <td class="py-3 px-3">
-                <div class="text-slate-200 font-mono">{{ trade.date }}</div>
-                <div class="text-[10px] text-slate-500">{{ trade.session || 'London' }}</div>
+              <td class="py-2.5 px-3">
+                <div class="dark:text-slate-200 text-slate-800 font-mono">{{ trade.date }}</div>
+                <div class="text-[10px] text-slate-400">{{ trade.session || 'London' }}</div>
               </td>
 
               <!-- Pair & Direction -->
-              <td class="py-3 px-3">
-                <div class="font-mono font-bold text-white">{{ trade.pair }}</div>
+              <td class="py-2.5 px-3">
+                <div class="font-mono font-bold dark:text-white text-slate-900">{{ trade.pair }}</div>
                 <span
-                  class="text-[10px] font-bold px-1.5 py-0.2 rounded"
-                  :class="trade.direction === 'BUY' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'"
+                  class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded"
+                  :class="trade.direction === 'BUY' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'"
                 >
                   {{ trade.direction }}
                 </span>
               </td>
 
               <!-- Setup & Notes -->
-              <td class="py-3 px-3 max-w-xs">
-                <div v-if="trade.setup" class="text-cyan-300 font-semibold truncate" :title="trade.setup">
+              <td class="py-2.5 px-3 max-w-xs">
+                <div v-if="trade.setup" class="text-sky-600 dark:text-sky-400 font-medium truncate" :title="trade.setup">
                   {{ trade.setup }}
                 </div>
-                <div v-if="trade.notes" class="text-[11px] text-slate-400 truncate" :title="trade.notes">
+                <div v-if="trade.notes" class="text-[11px] text-slate-500 dark:text-slate-400 truncate" :title="trade.notes">
                   {{ trade.notes }}
                 </div>
-                <div v-if="!trade.setup && !trade.notes" class="text-slate-600 text-[11px] italic">
+                <div v-if="!trade.setup && !trade.notes" class="text-slate-400 text-[11px] italic">
                   -
                 </div>
               </td>
 
               <!-- Result Badge -->
-              <td class="py-3 px-3 text-center">
+              <td class="py-2.5 px-3 text-center">
                 <span
-                  class="text-[11px] font-bold px-2.5 py-1 rounded-full inline-block"
-                  :class="trade.result === 'WIN' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : trade.result === 'LOSS' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'bg-slate-700/60 text-slate-300 border border-slate-600'"
+                  class="text-[10px] font-mono font-bold px-2 py-0.5 rounded inline-block"
+                  :class="trade.result === 'WIN'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                    : trade.result === 'LOSS'
+                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'"
                 >
-                  {{ trade.result === 'WIN' ? '✓ WIN' : trade.result === 'LOSS' ? '✗ LOSS' : '⚪ BE' }}
+                  {{ trade.result }}
                 </span>
               </td>
 
               <!-- R-Multiple -->
-              <td class="py-3 px-3 text-right font-mono font-bold text-xs" :class="trade.rMultiple > 0 ? 'text-emerald-400' : trade.rMultiple < 0 ? 'text-rose-400' : 'text-slate-400'">
+              <td class="py-2.5 px-3 text-right font-mono font-bold text-xs tabular-nums" :class="trade.rMultiple > 0 ? 'text-emerald-600 dark:text-emerald-400' : trade.rMultiple < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'">
                 {{ trade.rMultiple > 0 ? '+' : '' }}{{ trade.rMultiple }}R
               </td>
 
               <!-- P&L ($) -->
-              <td class="py-3 px-3 text-right font-mono font-bold text-xs" :class="trade.pnl > 0 ? 'text-emerald-400' : trade.pnl < 0 ? 'text-rose-400' : 'text-slate-400'">
+              <td class="py-2.5 px-3 text-right font-mono font-bold text-xs tabular-nums" :class="trade.pnl > 0 ? 'text-emerald-600 dark:text-emerald-400' : trade.pnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'">
                 {{ trade.pnl > 0 ? '+' : '' }}${{ trade.pnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
               </td>
 
               <!-- Balance After -->
-              <td class="py-3 px-3 text-right font-mono text-slate-300 text-xs">
+              <td class="py-2.5 px-3 text-right font-mono dark:text-slate-300 text-slate-700 text-xs tabular-nums">
                 ${{ trade.balanceAfter.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
               </td>
 
@@ -633,14 +675,14 @@
               </td>
 
               <!-- Actions (Delete) -->
-              <td class="py-3 px-3 text-center">
+              <td class="py-2.5 px-3 text-center">
                 <button
                   type="button"
                   @click="deleteTrade(trade.id)"
-                  class="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                   title="Hapus Trade"
                 >
-                  🗑️
+                  <Icon name="trash" :size="14" />
                 </button>
               </td>
             </tr>
@@ -649,9 +691,9 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="p-8 text-center text-slate-400 border border-dashed border-slate-800 rounded-xl">
-        <span class="text-3xl block mb-2">📋</span>
-        <p class="text-xs sm:text-sm text-slate-300 font-semibold">Tidak Ada Trade yang Sesuai Filter</p>
+      <div v-else class="p-8 text-center text-slate-400 border border-dashed dark:border-white/10 border-slate-200 rounded-lg">
+        <Icon name="clipboard" :size="28" class="text-slate-400 mx-auto mb-2" />
+        <p class="text-xs sm:text-sm font-semibold dark:text-slate-200 text-slate-700">Tidak Ada Trade yang Sesuai Filter</p>
         <p class="text-[11px] text-slate-500 mt-1">Coba reset filter atau gunakan tombol Rapid Log di atas untuk menambah trade.</p>
       </div>
     </div>
@@ -662,28 +704,28 @@
     <teleport to="body">
       <div
         v-if="isSettingsModalOpen"
-        class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+        class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
         @click.self="isSettingsModalOpen = false"
       >
-        <div class="glass-modal max-w-lg w-full rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-5 animate-scale-in">
-          <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+        <div class="max-w-lg w-full rounded-xl p-5 sm:p-6 border dark:bg-dark-elevated bg-white dark:border-white/10 border-slate-200 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b dark:border-white/[0.08] border-slate-100 pb-3">
             <div class="flex items-center gap-2">
-              <span class="text-xl">⚙️</span>
-              <h3 class="text-base sm:text-lg font-bold text-white">Pengaturan Saldo Awal & Risiko</h3>
+              <Icon name="settings" :size="18" class="text-sky-500 dark:text-sky-400" />
+              <h3 class="text-sm sm:text-base font-bold dark:text-white text-slate-900">Pengaturan Saldo Awal & Risiko</h3>
             </div>
             <button
               type="button"
               @click="isSettingsModalOpen = false"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
             >
-              ✕
+              <Icon name="x" :size="16" />
             </button>
           </div>
 
           <div class="space-y-4">
             <!-- Saldo Awal (Initial Capital) -->
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label class="block text-xs font-semibold dark:text-slate-300 text-slate-700 mb-1">
                 Saldo Awal Akun (Initial Capital)
               </label>
               <div class="relative">
@@ -825,6 +867,10 @@ const {
   activePair,
   activeDirection,
   activeSession,
+  isSyncing,
+  isCloudSynced,
+  syncWithSupabase,
+  exportToCsv,
   addQuickTrade,
   addCustomTrade,
   deleteTrade,
@@ -996,35 +1042,6 @@ function confirmReset() {
   if (confirm('Yakin ingin mereset seluruh log backtesting? Data trade yang ada akan dihapus.')) {
     resetBacktest()
   }
-}
-
-function exportToCsv() {
-  if (trades.value.length === 0) return
-
-  const headers = ['Trade #', 'Date', 'Pair', 'Direction', 'Session', 'Result', 'R-Multiple', 'PnL ($)', 'Balance After', 'Setup', 'Notes', 'Chart URL']
-  const rows = trades.value.map(t => [
-    t.tradeNumber,
-    t.date,
-    t.pair,
-    t.direction,
-    t.session,
-    t.result,
-    t.rMultiple,
-    t.pnl,
-    t.balanceAfter,
-    `"${(t.setup || '').replace(/"/g, '""')}"`,
-    `"${(t.notes || '').replace(/"/g, '""')}"`,
-    t.chartUrl || '',
-  ])
-
-  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
-  const encodedUri = encodeURI(csvContent)
-  const link = document.createElement('a')
-  link.setAttribute('href', encodedUri)
-  link.setAttribute('download', `spaceos_backtest_${new Date().toISOString().split('T')[0]}.csv`)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
 }
 </script>
 

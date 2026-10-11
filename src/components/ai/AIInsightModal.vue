@@ -1,20 +1,20 @@
 <template>
-  <div class="fixed inset-0 z-50 overflow-y-auto bg-dark/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+  <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fade-in">
     <div
-      class="relative w-full max-w-2xl bg-surface border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden my-6 max-h-[90vh] flex flex-col"
+      class="relative w-full max-w-2xl surface-card rounded-2xl shadow-2xl overflow-hidden my-6 max-h-[90vh] flex flex-col"
       @click.stop
     >
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700/60 bg-surface/50">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center text-xl shadow-md">
-            {{ icon || '🤖' }}
+          <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center shadow-sm">
+            <Icon :name="icon || 'bot'" :size="20" />
           </div>
           <div>
-            <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
               {{ title || 'AI Insight & Analisis' }}
             </h2>
-            <p class="text-xs text-slate-400">
+            <p class="text-xs text-slate-500 dark:text-slate-400">
               Didukung oleh AI SpaceOS Intelligence System
             </p>
           </div>
@@ -23,7 +23,7 @@
         <button
           type="button"
           @click="$emit('close')"
-          class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           <Icon name="x" :size="18" />
         </button>
@@ -40,29 +40,30 @@
         <!-- Rendered Content -->
         <div
           v-else
-          class="prose prose-invert max-w-none text-xs sm:text-sm text-slate-200 leading-relaxed space-y-3 font-sans"
+          class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed space-y-3 font-sans"
         >
           <div v-html="renderedMarkdown"></div>
         </div>
       </div>
 
       <!-- Footer Buttons -->
-      <div class="flex items-center justify-between px-6 py-4 border-t border-slate-700/60 bg-surface/50">
+      <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
         <div class="flex items-center gap-2">
           <button
             v-if="!isLoading && content"
             type="button"
             @click="copyContent"
-            class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-300 transition-colors flex items-center gap-1.5"
+            class="btn-secondary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5"
           >
-            <span>{{ isCopied ? '✓ Tersalin' : '📋 Salin Teks' }}</span>
+            <Icon :name="isCopied ? 'check' : 'clipboard'" :size="14" />
+            <span>{{ isCopied ? 'Tersalin' : 'Salin Teks' }}</span>
           </button>
         </div>
 
         <button
           type="button"
           @click="$emit('close')"
-          class="btn-primary px-6 py-2 rounded-xl text-xs font-bold shadow-md"
+          class="btn-primary px-5 py-2 text-xs font-bold"
         >
           Selesai & Tutup
         </button>

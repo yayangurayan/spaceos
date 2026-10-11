@@ -4,12 +4,14 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <div class="flex items-center gap-2.5">
-          <span class="text-2xl sm:text-3xl">🔥</span>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <span class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-500/20">
+            <Icon name="flame" :size="20" />
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {{ t('habit_tracker_title') }}
           </h1>
         </div>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           {{ t('habit_tracker_desc') }}
         </p>
       </div>
@@ -19,9 +21,9 @@
         <button
           type="button"
           @click="openAddModal"
-          class="btn-primary flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
+          class="btn-primary flex-1 sm:flex-none px-4 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
         >
-          <span class="text-base leading-none">+</span>
+          <Icon name="plus" :size="16" />
           <span>{{ t('new_habit') }}</span>
         </button>
       </div>
@@ -30,53 +32,61 @@
     <!-- 1. Stats Overview Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
       <!-- Total Habits -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">🎯</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Total</span>
+          <span class="p-1.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <Icon name="target" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Total</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-white">
+        <p class="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
           <AnimatedNumber :value="streakOverview.totalActiveHabits" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('habit_active_count') }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('habit_active_count') }}</p>
       </div>
 
       <!-- Today's Completion -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">✅</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">{{ t('habit_today_label') }}</span>
+          <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <Icon name="check" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">{{ t('habit_today_label') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-emerald-400">
+        <p class="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
           <AnimatedNumber :value="streakOverview.todayCompletionRate" suffix="%" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
           {{ streakOverview.completedTodayCount }} / {{ streakOverview.totalActiveHabits }} {{ t('today_completion_label') }}
         </p>
       </div>
 
       <!-- Longest Streak -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">🔥</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">{{ t('habit_streak_record') }}</span>
+          <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <Icon name="flame" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">{{ t('habit_streak_record') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-amber-400">
+        <p class="text-2xl font-bold font-mono tabular-nums text-amber-600 dark:text-amber-400">
           <AnimatedNumber :value="streakOverview.longestStreak" :suffix="t('days_suffix')" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('streak_record_label') }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('streak_record_label') }}</p>
       </div>
 
       <!-- 30-Day Average Rate -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">📈</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300">{{ t('habit_30d_label') }}</span>
+          <span class="p-1.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <Icon name="activity" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-300">{{ t('habit_30d_label') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-accent">
+        <p class="text-2xl font-bold font-mono tabular-nums text-sky-600 dark:text-sky-400">
           <AnimatedNumber :value="streakOverview.averageCompletionRate" suffix="%" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('consistency_30d_label') }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('consistency_30d_label') }}</p>
       </div>
     </div>
 
@@ -89,21 +99,23 @@
     <!-- 3. Habit Cards Grid Section Header -->
     <div class="flex items-center justify-between gap-4 pb-1">
       <div class="flex items-center gap-2">
-        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-          <span>📋</span>
+        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Icon name="clipboard" :size="18" class="text-sky-500" />
           <span>{{ t('habit_list_title') }}</span>
         </h2>
       </div>
-      <span class="text-xs text-slate-400">
+      <span class="text-xs text-slate-500 dark:text-slate-400">
         {{ habitsWithStats.length }} habit aktif
       </span>
     </div>
 
     <!-- 4. HABIT CARDS GRID -->
     <div>
-      <div v-if="habitsWithStats.length === 0" class="glass rounded-xl p-12 text-center text-slate-400 space-y-3">
-        <span class="text-4xl block mb-1">🌱</span>
-        <h4 class="text-base font-bold text-white">{{ t('no_habits_yet') }}</h4>
+      <div v-if="habitsWithStats.length === 0" class="surface-card rounded-xl p-12 text-center text-slate-500 space-y-3">
+        <span class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-500 mx-auto flex items-center justify-center">
+          <Icon name="target" :size="24" />
+        </span>
+        <h4 class="text-base font-bold text-slate-900 dark:text-white">{{ t('no_habits_yet') }}</h4>
         <p class="text-xs text-slate-500 max-w-sm mx-auto">
           {{ t('no_habits_desc') }}
         </p>
@@ -144,6 +156,7 @@ import AnimatedNumber from '@/components/ui/AnimatedNumber.vue'
 import HabitCard from '@/components/habits/HabitCard.vue'
 import HabitHeatmap from '@/components/habits/HabitHeatmap.vue'
 import HabitForm from '@/components/habits/HabitForm.vue'
+import Icon from '@/components/ui/Icon.vue'
 import { useHabits } from '@/composables/useHabits'
 import { useI18n } from '@/composables/useI18n'
 import type { Habit, HabitWithStats, HabitFormData } from '@/types'

@@ -1,13 +1,13 @@
 <template>
-  <div class="glass rounded-xl p-5 mb-8">
+  <div class="surface-card p-5 mb-8">
     <!-- Header: Title + Chart Type Switcher + Timeframe grouping -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
       <div>
         <div class="flex items-center gap-2">
-          <span class="text-xl">📈</span>
-          <h2 class="text-base sm:text-lg font-bold text-white">Analisis Kurva P&L</h2>
+          <Icon name="chart-line" size="18" class="text-accent" />
+          <h2 class="text-base sm:text-lg font-bold text-text-primary">Analisis Kurva P&L</h2>
         </div>
-        <p class="text-xs text-slate-400 mt-0.5">
+        <p class="text-xs text-text-tertiary mt-0.5">
           Visualisasi performa kumulatif dan distribusi keuntungan per periode
         </p>
       </div>
@@ -15,37 +15,37 @@
       <!-- Controls -->
       <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
         <!-- Chart Mode Toggle: Cumulative Line vs Period Bar -->
-        <div class="flex bg-dark/80 p-1 rounded-lg border border-slate-700/60 text-xs">
+        <div class="flex bg-surface-elevated/70 p-1 rounded-xl border border-border-subtle text-xs">
           <button
             @click="chartMode = 'cumulative'"
-            class="px-3 py-1.5 rounded-md font-medium transition-all"
+            class="px-3 py-1.5 rounded-lg font-medium transition-all"
             :class="chartMode === 'cumulative'
               ? 'bg-accent text-dark font-bold shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'"
+              : 'text-text-tertiary hover:text-text-primary'"
           >
             Kumulatif (Equity)
           </button>
           <button
             @click="chartMode = 'bar'"
-            class="px-3 py-1.5 rounded-md font-medium transition-all"
+            class="px-3 py-1.5 rounded-lg font-medium transition-all"
             :class="chartMode === 'bar'
               ? 'bg-accent text-dark font-bold shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'"
+              : 'text-text-tertiary hover:text-text-primary'"
           >
             Distribusi P&L
           </button>
         </div>
 
         <!-- Grouping (for Bar chart) -->
-        <div v-if="chartMode === 'bar'" class="flex bg-dark/80 p-1 rounded-lg border border-slate-700/60 text-xs">
+        <div v-if="chartMode === 'bar'" class="flex bg-surface-elevated/70 p-1 rounded-xl border border-border-subtle text-xs">
           <button
             v-for="grp in groupOptions"
             :key="grp.id"
             @click="grouping = grp.id"
-            class="px-2 py-1 rounded-md font-medium transition-all"
+            class="px-2.5 py-1 rounded-lg font-medium transition-all"
             :class="grouping === grp.id
-              ? 'bg-slate-700 text-white font-semibold'
-              : 'text-slate-400 hover:text-slate-200'"
+              ? 'bg-surface text-text-primary font-bold shadow-sm'
+              : 'text-text-tertiary hover:text-text-primary'"
           >
             {{ grp.label }}
           </button>
@@ -55,41 +55,41 @@
 
     <!-- Chart Container -->
     <div class="relative w-full h-[260px] sm:h-[320px]">
-      <div v-if="trades.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-center">
-        <span class="text-3xl mb-2">📉</span>
-        <p class="text-sm font-medium">Belum ada data trade untuk grafik</p>
-        <p class="text-xs text-slate-600">Catat trade baru untuk melihat kurva performa kamu.</p>
+      <div v-if="trades.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-text-tertiary text-center">
+        <Icon name="chart-line" size="32" class="mb-2 opacity-50" />
+        <p class="text-sm font-medium text-text-secondary">Belum ada data trade untuk grafik</p>
+        <p class="text-xs text-text-tertiary">Catat trade baru untuk melihat kurva performa kamu.</p>
       </div>
 
       <canvas ref="canvasRef" class="w-full h-full"></canvas>
     </div>
 
     <!-- Quick Insights Footer -->
-    <div class="mt-4 pt-4 border-t border-slate-700/40 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center sm:text-left">
+    <div class="mt-4 pt-4 border-t border-border-subtle grid grid-cols-2 sm:grid-cols-4 gap-3 text-center sm:text-left">
       <div>
-        <span class="text-[10px] uppercase font-semibold text-slate-500 block">Total Net Return</span>
+        <span class="text-[10px] uppercase font-semibold text-text-tertiary block">Total Net Return</span>
         <span
-          class="text-sm sm:text-base font-bold font-mono"
-          :class="totalNetPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+          class="text-sm sm:text-base font-bold font-mono tabular-nums"
+          :class="totalNetPnl >= 0 ? 'text-profit' : 'text-loss'"
         >
           {{ totalNetPnl >= 0 ? '+' : '' }}${{ totalNetPnl.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
         </span>
       </div>
       <div>
-        <span class="text-[10px] uppercase font-semibold text-slate-500 block">Avg Win Trade</span>
-        <span class="text-sm sm:text-base font-bold font-mono text-emerald-400">
+        <span class="text-[10px] uppercase font-semibold text-text-tertiary block">Avg Win Trade</span>
+        <span class="text-sm sm:text-base font-bold font-mono tabular-nums text-profit">
           +${{ avgWin.toFixed(2) }}
         </span>
       </div>
       <div>
-        <span class="text-[10px] uppercase font-semibold text-slate-500 block">Avg Loss Trade</span>
-        <span class="text-sm sm:text-base font-bold font-mono text-rose-400">
+        <span class="text-[10px] uppercase font-semibold text-text-tertiary block">Avg Loss Trade</span>
+        <span class="text-sm sm:text-base font-bold font-mono tabular-nums text-loss">
           -${{ Math.abs(avgLoss).toFixed(2) }}
         </span>
       </div>
       <div>
-        <span class="text-[10px] uppercase font-semibold text-slate-500 block">Profit Factor</span>
-        <span class="text-sm sm:text-base font-bold font-mono text-accent">
+        <span class="text-[10px] uppercase font-semibold text-text-tertiary block">Profit Factor</span>
+        <span class="text-sm sm:text-base font-bold font-mono tabular-nums text-accent">
           {{ profitFactor }}
         </span>
       </div>
@@ -99,6 +99,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+import Icon from '@/components/ui/Icon.vue'
 import {
   Chart,
   LineController,

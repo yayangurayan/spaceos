@@ -3,62 +3,62 @@
     <!-- Header Summary Row -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- 1. Average Rating Stat Card -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60 flex flex-col justify-between">
+      <div class="surface-card p-5 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Rata-rata Rating</span>
-          <span class="text-xl">⭐</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rata-rata Rating</span>
+          <Icon name="star" class="w-5 h-5 text-amber-400" />
         </div>
         <div class="my-3 flex items-baseline gap-3">
-          <span class="text-3xl sm:text-4xl font-extrabold font-mono text-amber-400">
+          <span class="text-3xl sm:text-4xl font-extrabold font-mono text-amber-500 dark:text-amber-400">
             {{ averageRating.toFixed(1) }}
           </span>
-          <span class="text-xs text-slate-400 font-medium">dari 5.0 bintang</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">dari 5.0 bintang</span>
         </div>
         <div class="flex items-center gap-1">
           <span
             v-for="s in 5"
             :key="s"
             class="text-sm"
-            :class="s <= Math.round(averageRating) ? 'text-amber-400' : 'text-slate-700'"
+            :class="s <= Math.round(averageRating) ? 'text-amber-400' : 'text-slate-300 dark:text-slate-700'"
           >
             ★
           </span>
-          <span class="text-[11px] text-slate-400 ml-2">Total {{ totalBooks }} Buku</span>
+          <span class="text-[11px] text-slate-500 dark:text-slate-400 ml-2">Total {{ totalBooks }} Buku</span>
         </div>
       </div>
 
       <!-- 2. Reading Pace / Speed -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60 flex flex-col justify-between">
+      <div class="surface-card p-5 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Kecepatan Membaca</span>
-          <span class="text-xl">⚡</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Kecepatan Membaca</span>
+          <Icon name="zap" class="w-5 h-5 text-sky-500 dark:text-sky-400" />
         </div>
         <div class="my-3 flex items-baseline gap-2">
-          <span class="text-3xl sm:text-4xl font-extrabold font-mono text-cyan-400">
+          <span class="text-3xl sm:text-4xl font-extrabold font-mono text-sky-600 dark:text-cyan-400">
             {{ avgPagesPerDay }}
           </span>
-          <span class="text-xs text-slate-400 font-medium">Halaman / Hari Aktif</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Halaman / Hari Aktif</span>
         </div>
-        <p class="text-[11px] text-slate-400">
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">
           Konsistensi membentuk retensi ilmu jangka panjang
         </p>
       </div>
 
       <!-- 3. Top Favorite Genre -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60 flex flex-col justify-between">
+      <div class="surface-card p-5 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Genre Terbanyak</span>
-          <span class="text-xl">🏆</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Genre Terbanyak</span>
+          <Icon name="trophy" class="w-5 h-5 text-amber-500 dark:text-amber-400" />
         </div>
         <div class="my-3">
-          <p class="text-xl sm:text-2xl font-extrabold text-white truncate">
+          <p class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate">
             {{ topGenre ? topGenre.genre : 'Belum ada data' }}
           </p>
-          <p class="text-xs text-slate-400 mt-0.5">
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {{ topGenre ? `${topGenre.count} buku (${topGenre.percentage}% dari koleksi)` : 'Tambahkan buku pertama' }}
           </p>
         </div>
-        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
           <div
             class="bg-accent h-full rounded-full"
             :style="{ width: `${topGenre ? topGenre.percentage : 0}%` }"
@@ -70,16 +70,16 @@
     <!-- Charts Row: Books Per Month (Bar) & Genre Distribution (Doughnut) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Chart A: Books Per Month -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60">
+      <div class="surface-card p-5">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
-            <span class="text-lg">📊</span>
+            <Icon name="bar-chart-2" class="w-5 h-5 text-sky-500 dark:text-sky-400" />
             <div>
-              <h3 class="text-sm sm:text-base font-bold text-white">Buku Diselesaikan Per Bulan</h3>
-              <p class="text-[11px] text-slate-400">Tren membaca tahun {{ currentYear }}</p>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Buku Diselesaikan Per Bulan</h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Tren membaca tahun {{ currentYear }}</p>
             </div>
           </div>
-          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-sky-600 dark:text-cyan-400 border border-slate-200 dark:border-slate-700">
             {{ totalCompletedThisYear }} Selesai
           </span>
         </div>
@@ -90,23 +90,23 @@
       </div>
 
       <!-- Chart B: Genre Distribution -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60">
+      <div class="surface-card p-5">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
-            <span class="text-lg">🍩</span>
+            <Icon name="pie-chart" class="w-5 h-5 text-purple-500 dark:text-purple-400" />
             <div>
-              <h3 class="text-sm sm:text-base font-bold text-white">Distribusi Genre & Minat</h3>
-              <p class="text-[11px] text-slate-400">Komposisi topik buku di perpustakaan</p>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Distribusi Genre & Minat</h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Komposisi topik buku di perpustakaan</p>
             </div>
           </div>
-          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-purple-400 border border-slate-700">
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-purple-600 dark:text-purple-400 border border-slate-200 dark:border-slate-700">
             {{ genreStats.length }} Kategori
           </span>
         </div>
 
         <div class="relative w-full h-56 sm:h-64 flex items-center justify-center">
           <canvas v-if="genreStats.length > 0" ref="doughnutCanvasRef"></canvas>
-          <div v-else class="text-center text-xs text-slate-500">
+          <div v-else class="text-center text-xs text-slate-400 dark:text-slate-500">
             Belum ada data genre untuk ditampilkan.
           </div>
         </div>
@@ -114,20 +114,20 @@
     </div>
 
     <!-- 3. Reading Heatmap: GitHub-style 60-Day Activity Matrix -->
-    <div class="glass rounded-2xl p-5 border border-slate-700/60 space-y-4">
+    <div class="surface-card p-5 space-y-4">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <span class="text-lg">🔥</span>
+          <Icon name="flame" class="w-5 h-5 text-amber-500" />
           <div>
-            <h3 class="text-sm sm:text-base font-bold text-white">Reading Activity Heatmap (60 Hari Terakhir)</h3>
-            <p class="text-[11px] text-slate-400">Aktivitas dan volume halaman yang kamu selesaikan setiap hari</p>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Reading Activity Heatmap (60 Hari Terakhir)</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Aktivitas dan volume halaman yang kamu selesaikan setiap hari</p>
           </div>
         </div>
 
         <!-- Legend -->
-        <div class="flex items-center gap-1.5 text-[10px] text-slate-400 self-end sm:self-center">
+        <div class="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 self-end sm:self-center">
           <span>Kurang</span>
-          <span class="w-3 h-3 rounded-sm bg-slate-800/80 border border-slate-700"></span>
+          <span class="w-3 h-3 rounded-sm bg-slate-200 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700"></span>
           <span class="w-3 h-3 rounded-sm bg-cyan-900/60 border border-cyan-800"></span>
           <span class="w-3 h-3 rounded-sm bg-cyan-700/80 border border-cyan-600"></span>
           <span class="w-3 h-3 rounded-sm bg-cyan-500 border border-cyan-400"></span>
@@ -161,6 +161,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import Icon from '@/components/ui/Icon.vue'
 import {
   Chart,
   BarController,

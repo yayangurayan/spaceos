@@ -19,18 +19,16 @@
         <button
           type="button"
           @click="showStats = !showStats"
-          class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border flex items-center justify-center gap-2"
-          :class="showStats
-            ? 'bg-slate-700 text-white border-slate-600'
-            : 'bg-dark/60 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'"
+          class="btn-secondary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border flex items-center justify-center gap-2"
         >
-          <span>{{ showStats ? '📕 ' + t('close_statistics') : '📊 ' + t('stats_heatmap') }}</span>
+          <Icon :name="showStats ? 'book-open' : 'bar-chart-2'" :size="16" />
+          <span>{{ showStats ? t('close_statistics') : t('stats_heatmap') }}</span>
         </button>
 
         <button
           type="button"
           @click="openAddModal"
-          class="btn-primary flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
+          class="btn-primary flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-sky-500/10"
         >
           <Icon name="plus" :size="16" />
           <span>{{ t('add_book') }}</span>
@@ -41,63 +39,63 @@
     <!-- 2. Library Stats Overview Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       <!-- Total Books Read -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">✅</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">{{ t('total_trades') }}</span>
+          <Icon name="check-circle" class="w-5 h-5 text-emerald-500" />
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">{{ t('total_trades') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-emerald-400">
+        <p class="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
           <AnimatedNumber :value="libraryStats.totalRead" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('books_finished') }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('books_finished') }}</p>
       </div>
 
       <!-- Currently Reading -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">📖</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400">{{ t('active') }}</span>
+          <Icon name="book-open" class="w-5 h-5 text-sky-500" />
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-cyan-400">{{ t('active') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-cyan-300">
+        <p class="text-2xl font-bold font-mono text-sky-600 dark:text-cyan-300">
           <AnimatedNumber :value="libraryStats.currentlyReading" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('currently_reading') }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('currently_reading') }}</p>
       </div>
 
       <!-- Books This Year -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">🗓️</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300">{{ t('this_year') }}</span>
+          <Icon name="calendar" class="w-5 h-5 text-indigo-500" />
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-600 dark:text-indigo-300">{{ t('this_year') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-white">
+        <p class="text-2xl font-bold font-mono text-slate-900 dark:text-white">
           <AnimatedNumber :value="libraryStats.booksThisYear" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('books_this_year') }} {{ currentYear }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('books_this_year') }} {{ currentYear }}</p>
       </div>
 
       <!-- Reading Streak -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">🔥</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">{{ t('streak') }}</span>
+          <Icon name="flame" class="w-5 h-5 text-amber-500" />
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">{{ t('streak') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-amber-400">
+        <p class="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400">
           <AnimatedNumber :value="libraryStats.readingStreak" suffix=" Hari" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('reading_consistency') }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('reading_consistency') }}</p>
       </div>
 
       <!-- Pages Read This Month -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5 col-span-2 sm:col-span-1">
+      <div class="surface-card p-4 transition-transform hover:-translate-y-0.5 col-span-2 sm:col-span-1">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">📄</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300">{{ t('this_month') }}</span>
+          <Icon name="file-text" class="w-5 h-5 text-rose-500" />
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-300">{{ t('this_month') }}</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-accent">
+        <p class="text-2xl font-bold font-mono text-sky-600 dark:text-accent">
           <AnimatedNumber :value="libraryStats.pagesReadThisMonth" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">{{ t('pages_read') }}</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ t('pages_read') }}</p>
       </div>
     </div>
 
@@ -115,7 +113,7 @@
     <!-- 4. Book Shelves Tabs & Filters Toolbar -->
     <div class="space-y-3 pt-2">
       <!-- Shelves Tabs -->
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
         <!-- Tabs -->
         <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto custom-scrollbar pb-1">
           <!-- Currently Reading -->
@@ -124,14 +122,14 @@
             @click="selectedShelf = 'reading'"
             class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 flex-shrink-0"
             :class="selectedShelf === 'reading'
-              ? 'bg-accent text-dark font-bold shadow-lg shadow-cyan-500/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
+              ? 'bg-sky-500 text-white font-bold shadow-lg shadow-sky-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80'"
           >
-            <span>📖</span>
+            <Icon name="book-open" :size="15" />
             <span>{{ t('currently_reading') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
-              :class="selectedShelf === 'reading' ? 'bg-dark/30 text-dark' : 'bg-slate-800 text-slate-400'"
+              :class="selectedShelf === 'reading' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
             >
               {{ shelfCounts.reading }}
             </span>
@@ -143,14 +141,14 @@
             @click="selectedShelf = 'completed'"
             class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 flex-shrink-0"
             :class="selectedShelf === 'completed'
-              ? 'bg-emerald-500 text-dark font-bold shadow-lg shadow-emerald-500/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
+              ? 'bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80'"
           >
-            <span>✅</span>
+            <Icon name="check-circle" :size="15" />
             <span>{{ t('completed') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
-              :class="selectedShelf === 'completed' ? 'bg-dark/30 text-dark' : 'bg-slate-800 text-slate-400'"
+              :class="selectedShelf === 'completed' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
             >
               {{ shelfCounts.completed }}
             </span>
@@ -163,13 +161,13 @@
             class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 flex-shrink-0"
             :class="selectedShelf === 'want_to_read'
               ? 'bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80'"
           >
-            <span>📚</span>
+            <Icon name="bookmark" :size="15" />
             <span>{{ t('want_to_read') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
-              :class="selectedShelf === 'want_to_read' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'"
+              :class="selectedShelf === 'want_to_read' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
             >
               {{ shelfCounts.want_to_read }}
             </span>
@@ -181,14 +179,14 @@
             @click="selectedShelf = 'favorites'"
             class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 flex-shrink-0"
             :class="selectedShelf === 'favorites'
-              ? 'bg-amber-400 text-dark font-bold shadow-lg shadow-amber-500/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80'"
+              ? 'bg-amber-500 text-white font-bold shadow-lg shadow-amber-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80'"
           >
-            <span>⭐</span>
+            <Icon name="star" :size="15" />
             <span>{{ t('favorite') }}</span>
             <span
               class="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
-              :class="selectedShelf === 'favorites' ? 'bg-dark/30 text-dark' : 'bg-slate-800 text-slate-400'"
+              :class="selectedShelf === 'favorites' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
             >
               {{ shelfCounts.favorites }}
             </span>
@@ -199,19 +197,19 @@
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <!-- Search Bar -->
           <div class="relative flex-1 sm:w-56">
-            <Icon name="search" :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Icon name="search" :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Cari judul, penulis..."
-              class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-accent"
+              class="input-field pl-9 pr-3 py-1.5 text-xs"
             />
           </div>
 
           <!-- Genre Dropdown -->
           <select
             v-model="selectedGenre"
-            class="bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-accent"
+            class="input-field px-3 py-1.5 text-xs"
           >
             <option value="all">Semua Genre</option>
             <option v-for="genre in availableGenres" :key="genre" :value="genre">
@@ -223,9 +221,9 @@
     </div>
 
     <!-- 5. Books Grid -->
-    <div v-if="filteredBooks.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-3">
-      <span class="text-4xl block mb-1">📖</span>
-      <h3 class="text-base font-bold text-white">{{ t('no_books_on_shelf') }}</h3>
+    <div v-if="filteredBooks.length === 0" class="surface-card p-12 text-center text-slate-500 dark:text-slate-400 space-y-3">
+      <Icon name="book-open" class="w-10 h-10 mx-auto mb-2 text-slate-400 opacity-60" />
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ t('no_books_on_shelf') }}</h3>
       <p class="text-xs text-slate-500 max-w-sm mx-auto">
         {{ searchQuery || selectedGenre !== 'all' ? t('change_search_filter') : t('add_book_to_shelf') }}
       </p>

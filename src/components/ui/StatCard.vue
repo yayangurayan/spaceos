@@ -1,20 +1,25 @@
 <template>
   <div
-    class="stat-card glass rounded-xl p-5 animate-slide-in cursor-default"
-    :style="{ animationDelay: `${delay}ms`, opacity: 0 }"
+    class="rounded-xl p-4 sm:p-5 border transition-all duration-150 cursor-default"
+    :class="'dark:bg-dark-surface bg-light-surface dark:border-white/[0.08] border-slate-200 dark:hover:border-sky-500/30 hover:border-slate-300 hover:-translate-y-0.5 shadow-sm'"
+    :style="{ animationDelay: `${delay}ms` }"
   >
     <!-- Top row: icon + trend -->
     <div class="flex items-center justify-between mb-3">
-      <div class="stat-icon-wrap">
-        <span class="text-2xl">{{ icon }}</span>
+      <div class="w-8 h-8 rounded-lg dark:bg-white/[0.05] bg-slate-100 flex items-center justify-center dark:text-sky-400 text-sky-600 border dark:border-white/[0.06] border-slate-200">
+        <Icon v-if="isSvgIcon(icon)" :name="icon" :size="17" />
+        <span v-else class="text-base">{{ icon }}</span>
       </div>
+
       <span
         v-if="change !== undefined"
-        class="text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-0.5"
-        :class="changePositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'"
+        class="text-[11px] font-mono font-semibold px-2 py-0.5 rounded inline-flex items-center gap-1 border"
+        :class="changePositive
+          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'"
       >
         <svg
-          class="w-3 h-3"
+          class="w-2.5 h-2.5 shrink-0"
           viewBox="0 0 12 12"
           fill="none"
           stroke="currentColor"
@@ -33,12 +38,12 @@
             stroke-linejoin="round"
           />
         </svg>
-        {{ change }}
+        <span>{{ change }}</span>
       </span>
     </div>
 
-    <!-- Value -->
-    <p class="text-2xl font-bold text-white mb-0.5">
+    <!-- Value: prominent focal point -->
+    <p class="text-xl sm:text-2xl font-bold dark:text-white text-slate-900 font-mono tracking-tight tabular-nums mb-1">
       <AnimatedNumber
         v-if="typeof numericValue === 'number'"
         :value="numericValue"
@@ -49,8 +54,8 @@
       <span v-else>{{ value }}</span>
     </p>
 
-    <!-- Label -->
-    <p class="text-xs text-slate-500">{{ label }}</p>
+    <!-- Label: crisp secondary typography -->
+    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ label }}</p>
 
     <!-- Optional progress bar slot -->
     <div v-if="$slots.default" class="mt-3">
@@ -62,6 +67,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AnimatedNumber from './AnimatedNumber.vue'
+import Icon from './Icon.vue'
 
 const props = withDefaults(defineProps<{
   icon: string
@@ -81,91 +87,18 @@ const props = withDefaults(defineProps<{
   decimals: 0,
 })
 
+function isSvgIcon(iconName: string): boolean {
+  // If it's a typical icon name without unicode emoji characters
+  return /^[a-z0-9-]+$/.test(iconName)
+}
+
 /**
  * Extract numeric value for animation.
- * Strips common prefixes like $ and suffixes like % or k
  */
 const numericValue = computed(() => {
   if (typeof props.value === 'number') return props.value
-  // Try to parse the string as a number
   const cleaned = String(props.value).replace(/[$,]/g, '')
   const parsed = parseFloat(cleaned)
   return isNaN(parsed) ? null : parsed
 })
 </script>
-
-<style scoped>
-.stat-card {
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
-  position: relative;
-  overflow: hidden;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.06);
-}
-
-/* Animated gradient border */
-.stat-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), transparent 40%, transparent 60%, rgba(99, 102, 241, 0.15));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
-}
-
-.stat-card:hover::before {
-  opacity: 1;
-}
-
-/* Inner top glow */
-.stat-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
-}
-
-.stat-card:hover::after {
-  opacity: 1;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 12px 30px -5px rgba(0, 0, 0, 0.35),
-    0 0 20px -3px rgba(6, 182, 212, 0.08);
-  border-color: rgba(148, 163, 184, 0.1);
-}
-
-.stat-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(99, 102, 241, 0.08));
-  border: 1px solid rgba(6, 182, 212, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.stat-card:hover .stat-icon-wrap {
-  transform: scale(1.08);
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
-}
-</style>
-

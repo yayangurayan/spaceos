@@ -1,20 +1,17 @@
 <template>
-  <div class="min-h-screen bg-dark text-slate-200 font-sans relative">
-    <!-- Subtle aurora background for the main app -->
-    <AuroraBackground variant="subtle" />
-
+  <div class="min-h-screen bg-dark-base dark:bg-dark-base dark:text-slate-200 text-slate-800 bg-light-base font-sans relative transition-colors duration-200">
     <!-- ============================
          Desktop Sidebar (lg+)
          ============================ -->
     <aside
-      class="fixed top-0 left-0 z-40 h-screen hidden lg:block border-r border-slate-700/50"
-      :style="{ width: isSidebarCollapsed ? '0px' : '280px', transition: 'width 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }"
+      class="fixed top-0 left-0 z-40 h-screen hidden lg:block border-r border-slate-800/80 dark:border-white/[0.08] dark:bg-dark-surface/95 bg-light-surface/95"
+      :style="{ width: isSidebarCollapsed ? '64px' : '260px', transition: 'width 0.25s cubic-bezier(0.2, 0, 0, 1)' }"
     >
-      <div
-        class="h-full overflow-hidden"
-        :style="{ width: isSidebarCollapsed ? '0px' : '280px', opacity: isSidebarCollapsed ? 0 : 1, transition: 'width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease' }"
-      >
-        <Sidebar @navigate="onNavigate" />
+      <div class="h-full overflow-hidden">
+        <Sidebar
+          :is-collapsed="isSidebarCollapsed"
+          @navigate="onNavigate"
+        />
       </div>
     </aside>
 
@@ -37,7 +34,7 @@
           <transition name="sidebar-slide">
             <div
               v-if="isMobileSidebarOpen"
-              class="absolute top-0 left-0 h-full w-[280px] shadow-2xl shadow-black/50"
+              class="absolute top-0 left-0 h-full w-[260px] shadow-2xl shadow-black/50"
               @touchstart="onTouchStart"
               @touchmove="onTouchMove"
               @touchend="onTouchEnd"
@@ -54,12 +51,14 @@
          ============================ -->
     <div
       class="flex flex-col min-h-screen relative z-[1]"
-      :style="{ marginLeft: desktopMargin, transition: 'margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }"
+      :style="{ marginLeft: desktopMargin, transition: 'margin-left 0.25s cubic-bezier(0.2, 0, 0, 1)' }"
     >
       <!-- Top Bar -->
       <Topbar
+        :is-sidebar-collapsed="isSidebarCollapsed"
         @toggle-sidebar="toggleDesktopSidebar"
         @toggle-mobile-sidebar="toggleMobileSidebar"
+        @open-command-palette="isCommandPaletteOpen = true"
       />
 
       <!-- Page Content -->
@@ -71,6 +70,9 @@
         </router-view>
       </main>
     </div>
+
+    <!-- Command Palette (Ctrl+K Quick Switcher) -->
+    <CommandPalette v-model="isCommandPaletteOpen" />
   </div>
 </template>
 
@@ -78,8 +80,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
 import Topbar from '@/components/layout/Topbar.vue'
-import AuroraBackground from '@/components/ui/AuroraBackground.vue'
+import CommandPalette from '@/components/layout/CommandPalette.vue'
 import { useNavigation } from '@/composables/useNavigation'
+import { useTheme } from '@/composables/useTheme'
+
+// Initialize theme state and persistence
+useTheme()
+
+const isCommandPaletteOpen = ref(false)
 
 const {
   isMobile,
@@ -99,7 +107,7 @@ function toggleDesktopSidebar() {
 
 const desktopMargin = computed(() => {
   if (isMobile.value) return '0px'
-  return isSidebarCollapsed.value ? '0px' : '280px'
+  return isSidebarCollapsed.value ? '64px' : '260px'
 })
 
 function onNavigate() {
@@ -123,7 +131,6 @@ function onTouchMove(e: TouchEvent) {
 
 function onTouchEnd() {
   const diff = touchStartX - touchCurrentX
-  // Swipe left to close
   if (diff > 60) {
     closeMobileSidebar()
   }
@@ -149,21 +156,20 @@ onUnmounted(() => {
 
 <style scoped>
 /* ============================
-   Page Transition (smooth fade + subtle slide)
+   Page Transition (Fast, Non-Distracting)
    ============================ */
 .page-enter-active {
-  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1), transform 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(12px) scale(0.99);
+  transform: translateY(6px);
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-6px) scale(0.99);
 }
 
 /* ============================
@@ -171,7 +177,7 @@ onUnmounted(() => {
    ============================ */
 .overlay-enter-active,
 .overlay-leave-active {
-  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.25s ease;
 }
 .overlay-enter-from,
 .overlay-leave-to {
@@ -182,10 +188,10 @@ onUnmounted(() => {
    Mobile Sidebar Slide
    ============================ */
 .sidebar-slide-enter-active {
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
 }
 .sidebar-slide-leave-active {
-  transition: transform 0.28s cubic-bezier(0.4, 0, 1, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
 .sidebar-slide-enter-from,
 .sidebar-slide-leave-to {

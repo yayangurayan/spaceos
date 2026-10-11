@@ -35,7 +35,6 @@ export function purgeLegacyDummyData() {
       // 2. Inspect content for known dummy signatures
       if (
         key.startsWith('spaceos_trades_') ||
-        key.startsWith('spaceos_backtest_trades_') ||
         key.startsWith('spaceos_tx_') ||
         key.startsWith('spaceos_bg_') ||
         key.startsWith('spaceos_habits_') ||

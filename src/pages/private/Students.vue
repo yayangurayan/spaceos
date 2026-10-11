@@ -4,12 +4,14 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <div class="flex items-center gap-2.5">
-          <span class="text-2xl sm:text-3xl">👥</span>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <span class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-500/20">
+            <Icon name="graduation-cap" :size="20" />
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Data Siswa Bimbingan
           </h1>
         </div>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Kelola profil siswa, mata pelajaran, jadwal bimbingan rutin, dan riwayat SPP.
         </p>
       </div>
@@ -19,7 +21,7 @@
         <button
           type="button"
           @click="openAddModal"
-          class="btn-primary flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
+          class="btn-primary flex-1 sm:flex-none px-4 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
         >
           <Icon name="plus" :size="16" />
           <span>Tambah Siswa Baru</span>
@@ -30,73 +32,81 @@
     <!-- 2. Overview Stats Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
       <!-- Total Students -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">👨‍🎓</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Total</span>
+          <span class="p-1.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <Icon name="users" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Total</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-white">
+        <p class="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
           <AnimatedNumber :value="teacherStats.totalStudents" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Semua Siswa Terdaftar</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Semua Siswa Terdaftar</p>
       </div>
 
       <!-- Active Students -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">🟢</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Aktif</span>
+          <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <Icon name="check-circle" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Aktif</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-emerald-400">
+        <p class="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
           <AnimatedNumber :value="teacherStats.activeStudents" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Siswa Sedang Bimbingan</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Siswa Sedang Bimbingan</p>
       </div>
 
       <!-- Lessons This Week -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">📚</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400">Minggu Ini</span>
+          <span class="p-1.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <Icon name="calendar" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-300">Minggu Ini</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-cyan-300">
+        <p class="text-2xl font-bold font-mono tabular-nums text-sky-600 dark:text-sky-400">
           <AnimatedNumber :value="teacherStats.lessonsThisWeek" />
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Total Sesi Terjadwal</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Total Sesi Terjadwal</p>
       </div>
 
       <!-- Potential Monthly Revenue -->
-      <div class="glass rounded-xl p-4 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card rounded-xl p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xl">💰</span>
-          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Potensi SPP</span>
+          <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <Icon name="dollar-sign" :size="16" />
+          </span>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">Potensi SPP</span>
         </div>
-        <p class="text-lg sm:text-xl font-bold font-mono text-accent truncate">
+        <p class="text-lg sm:text-xl font-bold font-mono tabular-nums text-amber-600 dark:text-amber-400 truncate">
           {{ formatCompactCurrency(potentialMonthlyRevenue) }}
         </p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Estimasi Pendapatan/Bulan</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Estimasi Pendapatan/Bulan</p>
       </div>
     </div>
 
     <!-- 3. Search, Filter & Sort Toolbar -->
-    <div class="glass rounded-2xl p-4 border border-slate-700/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+    <div class="surface-card rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
       <!-- Filters -->
       <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
         <!-- Status Filter -->
         <select
           v-model="selectedStatus"
-          class="bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-accent"
+          class="input-field text-xs h-9"
         >
           <option value="all">Semua Status</option>
-          <option value="active">🟢 Aktif</option>
-          <option value="paused">⏸️ Cuti</option>
-          <option value="graduated">🎓 Lulus</option>
+          <option value="active">Aktif</option>
+          <option value="paused">Cuti</option>
+          <option value="graduated">Lulus</option>
         </select>
 
         <!-- Subject Filter -->
         <select
           v-model="selectedSubject"
-          class="bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-accent"
+          class="input-field text-xs h-9"
         >
           <option value="all">Semua Mapel</option>
           <option v-for="sub in availableSubjects" :key="sub" :value="sub">{{ sub }}</option>
@@ -105,7 +115,7 @@
         <!-- Grade Filter -->
         <select
           v-model="selectedGrade"
-          class="bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-accent"
+          class="input-field text-xs h-9"
         >
           <option value="all">Semua Jenjang</option>
           <option v-for="g in availableGrades" :key="g" :value="g">{{ g }}</option>
@@ -114,7 +124,7 @@
         <!-- Sort -->
         <select
           v-model="sortBy"
-          class="bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-accent"
+          class="input-field text-xs h-9"
         >
           <option value="name_asc">Nama (A - Z)</option>
           <option value="fee_desc">SPP Tertinggi</option>
@@ -124,29 +134,32 @@
 
       <!-- Search Bar -->
       <div class="relative w-full md:w-64">
-        <Icon name="search" :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+        <Icon name="search" :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           v-model="searchQuery"
           type="text"
           placeholder="Cari nama siswa, orang tua, no HP..."
-          class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-accent"
+          class="input-field w-full pl-9 text-xs h-9"
         />
       </div>
     </div>
 
     <!-- 4. Students Cards Grid -->
-    <div v-if="sortedStudents.length === 0" class="glass rounded-2xl p-12 text-center text-slate-400 space-y-3">
-      <span class="text-4xl block mb-1">👨‍🎓</span>
-      <h3 class="text-base font-bold text-white">Tidak ada data siswa yang cocok</h3>
+    <div v-if="sortedStudents.length === 0" class="surface-card rounded-2xl p-12 text-center text-slate-500 space-y-3">
+      <span class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-500 mx-auto flex items-center justify-center">
+        <Icon name="users" :size="24" />
+      </span>
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">Tidak ada data siswa yang cocok</h3>
       <p class="text-xs text-slate-500 max-w-sm mx-auto">
         Coba sesuaikan kata kunci pencarian atau filter mata pelajaran kamu.
       </p>
       <button
         type="button"
         @click="openAddModal"
-        class="btn-primary mt-2 px-5 py-2 text-xs font-bold rounded-xl"
+        class="btn-primary mt-2 px-5 py-2 text-xs font-bold rounded-xl inline-flex items-center gap-1.5"
       >
-        + Daftarkan Siswa Baru
+        <Icon name="plus" :size="14" />
+        <span>Daftarkan Siswa Baru</span>
       </button>
     </div>
 

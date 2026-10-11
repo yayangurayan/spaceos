@@ -3,11 +3,13 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div>
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <span>📐</span>
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-500/20">
+            <Icon name="calculator" :size="20" />
+          </span>
           <span>Position Sizing & Risk Calculator</span>
         </h1>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Hitung ukuran lot ideal dan batasi risiko trading per posisi secara matematis dan disiplin.
         </p>
       </div>
@@ -16,9 +18,10 @@
         <button
           type="button"
           @click="resetForm"
-          class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-all"
+          class="btn-secondary px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5"
         >
-          Reset
+          <Icon name="rotate-ccw" :size="14" />
+          <span>Reset</span>
         </button>
       </div>
     </div>
@@ -26,20 +29,20 @@
     <!-- Calculator Grid: Inputs (Left) & Results Summary (Right) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- INPUT FORM (7 cols) -->
-      <div class="lg:col-span-7 glass rounded-2xl p-5 sm:p-6 border border-slate-700/60 space-y-4">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-          <span>⚙️</span>
+      <div class="lg:col-span-7 surface-card rounded-2xl p-5 sm:p-6 space-y-4">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 flex items-center gap-2">
+          <Icon name="sliders" :size="16" />
           <span>Parameter Trade & Akun</span>
         </h2>
 
         <!-- 1. Account Balance & Risk Mode -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Saldo Akun (Account Balance)
             </label>
             <div class="relative">
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
               <input
                 v-model.number="form.balance"
                 type="number"
@@ -53,13 +56,13 @@
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="text-xs font-semibold text-slate-300">Toleransi Risiko</label>
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Toleransi Risiko</label>
               <div class="flex items-center gap-1 text-[11px]">
                 <button
                   type="button"
                   @click="form.riskMode = 'percent'"
                   class="px-2 py-0.5 rounded font-bold transition-colors"
-                  :class="form.riskMode === 'percent' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-500 hover:text-slate-300'"
+                  :class="form.riskMode === 'percent' ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
                 >
                   %
                 </button>
@@ -67,7 +70,7 @@
                   type="button"
                   @click="form.riskMode = 'amount'"
                   class="px-2 py-0.5 rounded font-bold transition-colors"
-                  :class="form.riskMode === 'amount' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-500 hover:text-slate-300'"
+                  :class="form.riskMode === 'amount' ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
                 >
                   $
                 </button>
@@ -75,7 +78,7 @@
             </div>
 
             <div class="relative">
-              <span v-if="form.riskMode === 'amount'" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+              <span v-if="form.riskMode === 'amount'" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
               <input
                 v-model.number="form.riskValue"
                 type="number"
@@ -85,7 +88,7 @@
                 :class="form.riskMode === 'amount' ? 'pl-8' : 'pr-8'"
                 :placeholder="form.riskMode === 'percent' ? '1.0' : '100'"
               />
-              <span v-if="form.riskMode === 'percent'" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">%</span>
+              <span v-if="form.riskMode === 'percent'" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
             </div>
 
             <!-- Quick risk preset pills -->
@@ -96,7 +99,7 @@
                 type="button"
                 @click="form.riskMode = 'percent'; form.riskValue = p"
                 class="px-2 py-0.5 rounded text-[10px] font-bold transition-colors"
-                :class="form.riskMode === 'percent' && form.riskValue === p ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-400 hover:text-white'"
+                :class="form.riskMode === 'percent' && form.riskValue === p ? 'bg-sky-500 text-slate-950 font-extrabold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
               >
                 {{ p }}%
               </button>
@@ -105,9 +108,9 @@
         </div>
 
         <!-- 2. Instrument & Pair Selector -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-700/40">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Kategori Aset</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Kategori Aset</label>
             <select v-model="form.assetClass" class="input-field w-full text-xs">
               <option value="forex_standard">Forex (EURUSD, GBPUSD, dll.)</option>
               <option value="forex_jpy">Forex JPY (USDJPY, EURJPY, dll.)</option>
@@ -118,7 +121,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Pair / Simbol</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pair / Simbol</label>
             <input
               v-model="form.pair"
               type="text"
@@ -129,9 +132,9 @@
         </div>
 
         <!-- 3. Entry, Stop Loss & Take Profit -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-700/40">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Harga Entry</label>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Harga Entry</label>
             <input
               v-model.number="form.entryPrice"
               type="number"
@@ -142,7 +145,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-rose-300 mb-1.5">Harga Stop Loss</label>
+            <label class="block text-xs font-semibold text-rose-600 dark:text-rose-400 mb-1.5">Harga Stop Loss</label>
             <input
               v-model.number="form.stopLossPrice"
               type="number"
@@ -153,7 +156,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-emerald-300 mb-1.5">Harga Take Profit (Opsional)</label>
+            <label class="block text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1.5">Harga Take Profit (Opsional)</label>
             <input
               v-model.number="form.takeProfitPrice"
               type="number"
@@ -168,32 +171,32 @@
       <!-- RESULTS DISPLAY (5 cols) -->
       <div class="lg:col-span-5 flex flex-col gap-4">
         <!-- Main Recommended Lot Card -->
-        <div class="glass rounded-2xl p-6 border border-cyan-500/40 bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-900 shadow-xl shadow-cyan-950/20 space-y-4">
+        <div class="surface-card rounded-2xl p-6 border-sky-500/40 space-y-4">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-widest text-cyan-300">Rekomendasi Posisi</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-sky-600 dark:text-sky-300">Rekomendasi Posisi</span>
             <span
               class="px-2.5 py-1 rounded-full text-[10px] font-bold"
-              :class="calculatedLot > 0 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-slate-800 text-slate-500'"
+              :class="calculatedLot > 0 ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'"
             >
               {{ form.pair || 'INSTRUMENT' }}
             </span>
           </div>
 
-          <div class="text-center py-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
-            <span class="text-xs font-medium text-slate-400 block mb-1">Ukuran Posisi / Lot Size</span>
-            <span class="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight text-white">
+          <div class="text-center py-4 bg-slate-50 dark:bg-slate-950/70 rounded-xl border border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Ukuran Posisi / Lot Size</span>
+            <span class="text-3xl sm:text-4xl font-extrabold font-mono tabular-nums tracking-tight text-slate-900 dark:text-white">
               {{ formattedLot }}
             </span>
-            <span class="text-xs text-slate-400 block mt-1">
+            <span class="text-xs text-slate-500 dark:text-slate-400 block mt-1">
               {{ form.assetClass === 'crypto' ? 'Unit Koin' : 'Lots Standard' }}
             </span>
           </div>
 
           <!-- Key Metrics -->
           <div class="grid grid-cols-2 gap-3 pt-2">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-              <span class="text-[10px] font-semibold text-slate-400 uppercase block mb-1">Total Resiko ($)</span>
-              <span class="text-lg font-bold font-mono text-rose-400 block">
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase block mb-1">Total Resiko ($)</span>
+              <span class="text-lg font-bold font-mono tabular-nums text-rose-600 dark:text-rose-400 block">
                 ${{ calculatedRiskDollars.toFixed(2) }}
               </span>
               <span class="text-[10px] text-slate-500">
@@ -201,9 +204,9 @@
               </span>
             </div>
 
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-              <span class="text-[10px] font-semibold text-slate-400 uppercase block mb-1">Jarak Stop Loss</span>
-              <span class="text-lg font-bold font-mono text-white block">
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase block mb-1">Jarak Stop Loss</span>
+              <span class="text-lg font-bold font-mono tabular-nums text-slate-900 dark:text-white block">
                 {{ stopLossDistanceDisplay }}
               </span>
               <span class="text-[10px] text-slate-500">
@@ -213,16 +216,16 @@
           </div>
 
           <!-- Risk to Reward Ratio (If TP entered) -->
-          <div v-if="calculatedRR > 0" class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between">
+          <div v-if="calculatedRR > 0" class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
             <div>
-              <span class="text-[10px] font-bold uppercase text-emerald-400 block">Risk : Reward Ratio</span>
-              <span class="text-lg font-bold font-mono text-emerald-300">
+              <span class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Risk : Reward Ratio</span>
+              <span class="text-lg font-bold font-mono text-emerald-600 dark:text-emerald-300">
                 1 : {{ calculatedRR.toFixed(2) }}
               </span>
             </div>
             <div class="text-right">
-              <span class="text-[10px] font-semibold text-slate-400 block">Potensi Profit</span>
-              <span class="text-sm font-bold font-mono text-emerald-400">
+              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">Potensi Profit</span>
+              <span class="text-sm font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
                 +${{ potentialProfit.toFixed(2) }}
               </span>
             </div>
@@ -230,12 +233,12 @@
         </div>
 
         <!-- Discipline Reminder Card -->
-        <div class="glass rounded-xl p-4 border border-slate-700/50 bg-slate-900/40 text-xs text-slate-300 space-y-2">
-          <div class="flex items-center gap-2 text-cyan-400 font-bold">
-            <span>🛡️</span>
+        <div class="surface-card rounded-xl p-4 text-xs space-y-2">
+          <div class="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold">
+            <Icon name="shield" :size="16" />
             <span>Aturan Disiplin Trading SpaceOS</span>
           </div>
-          <p class="text-slate-400 leading-relaxed text-[11px]">
+          <p class="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
             Jangan pernah memperbesar lot karena emosi atau balas dendam market. Selalu pasang Stop Loss di sistem sebelum menekan tombol Buy/Sell.
           </p>
         </div>
@@ -246,6 +249,7 @@
 
 <script setup lang="ts">
 import { reactive, computed } from 'vue'
+import Icon from '@/components/ui/Icon.vue'
 
 interface FormState {
   balance: number

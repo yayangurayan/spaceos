@@ -1,51 +1,54 @@
 <template>
-  <div>
+  <div class="space-y-6">
     <!-- Page Header -->
-    <div class="mb-6 animate-fade-in flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="animate-fade-in flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-2">
-          <span>📈</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight mb-1 flex items-center gap-2.5">
+          <Icon name="chart-line" size="24" class="text-accent" />
           <span>{{ currentSpace?.category === 'private' ? t('private_dashboard') : t('dashboard_trading') }}</span>
         </h1>
-        <p class="text-slate-400 text-xs sm:text-sm">{{ currentSpace?.category === 'private' ? t('private_space_subtitle') : t('trading_habit') }}</p>
+        <p class="text-text-tertiary text-xs sm:text-sm">{{ currentSpace?.category === 'private' ? t('private_space_subtitle') : t('trading_habit') }}</p>
       </div>
 
       <div class="flex items-center gap-2">
         <router-link
           to="/backtesting"
-          class="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 text-xs font-bold border border-cyan-500/30 transition-all flex items-center gap-1.5 shadow-sm"
+          class="px-3.5 py-2 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold border border-accent/25 transition-all flex items-center gap-1.5 shadow-sm active:scale-98"
         >
-          <span>🔬</span>
+          <Icon name="zap" size="14" />
           <span>Lab Backtesting</span>
         </router-link>
 
         <router-link
           to="/trading"
-          class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5"
+          class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 active:scale-98"
         >
+          <Icon name="plus" size="14" />
           <span>{{ t('add_new_trade') }}</span>
         </router-link>
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-if="error" class="glass rounded-xl p-8 text-center animate-fade-in">
-      <span class="text-4xl block mb-3">⚠️</span>
-      <p class="text-white font-medium mb-1">{{ t('failed_load_data') }}</p>
-      <p class="text-sm text-slate-400 mb-4">{{ error }}</p>
+    <div v-if="error" class="surface-card p-8 text-center animate-fade-in border border-rose-500/30">
+      <div class="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-3">
+        <Icon name="alert-triangle" size="24" />
+      </div>
+      <p class="text-text-primary font-semibold mb-1">{{ t('failed_load_data') }}</p>
+      <p class="text-xs text-text-tertiary mb-4">{{ error }}</p>
       <button class="btn-primary" @click="retry">{{ t('try_again') }}</button>
     </div>
 
     <template v-else>
       <!-- Stats Cards (Loading) -->
-      <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SkeletonLoader v-for="i in 4" :key="i" type="card" />
       </div>
 
       <!-- Stats Cards -->
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon="📊"
+          icon="bar-chart-2"
           :value="stats.totalTrades"
           label="Total Trades (bulan ini)"
           :change="stats.totalTradesChange"
@@ -53,7 +56,7 @@
           :delay="0"
         />
         <StatCard
-          icon="🎯"
+          icon="target"
           :value="stats.winRate"
           label="Win Rate"
           :change="stats.winRateChange"
@@ -64,21 +67,20 @@
           <ProgressBar
             :value="stats.winRate"
             color="cyan"
-            :height="5"
+            :height="4"
           />
         </StatCard>
         <StatCard
-          icon="💰"
+          icon="dollar-sign"
           :value="stats.totalPnl"
           label="Total P&L (bulan ini)"
           :change="stats.totalPnlChange"
           :change-positive="stats.totalPnl >= 0"
           prefix="$"
           :delay="200"
-          :class="stats.totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative'"
         />
         <StatCard
-          icon="🔥"
+          icon="flame"
           :value="stats.currentStreak"
           label="Current Streak (hari)"
           :change="stats.streakChange"
@@ -89,14 +91,17 @@
       </div>
 
       <!-- Trading Plan & Active Strategy (Editable) -->
-      <TradingPlanCard :show-backtest-link="true" class="mb-8 animate-fade-in" />
+      <TradingPlanCard :show-backtest-link="true" class="animate-fade-in" />
 
       <!-- Recent Trades Table -->
-      <div class="mb-8 animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-white">{{ t('trades_last') }}</h2>
-          <button @click="router.push('/trading')" class="text-accent text-sm hover:underline transition-colors">
-            Lihat Semua →
+      <div class="animate-fade-in" :style="{ animationDelay: '250ms', opacity: 0 }">
+        <div class="flex items-center justify-between mb-3.5">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm sm:text-base font-bold text-text-primary uppercase tracking-wider">{{ t('trades_last') }}</h2>
+          </div>
+          <button @click="router.push('/trading')" class="text-accent text-xs font-semibold hover:underline flex items-center gap-1 transition-colors">
+            <span>Lihat Semua</span>
+            <Icon name="arrow-up-right" size="13" />
           </button>
         </div>
 
@@ -104,9 +109,9 @@
         <SkeletonLoader v-if="isLoading" type="table" :rows="5" :columns="5" />
 
         <!-- Table -->
-        <div v-else class="glass rounded-xl overflow-hidden">
+        <div v-else class="surface-card overflow-hidden">
           <!-- Header -->
-          <div class="hidden sm:grid grid-cols-5 gap-4 px-5 py-3 border-b border-slate-700/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div class="hidden sm:grid grid-cols-5 gap-4 px-5 py-3 border-b border-border-subtle text-[11px] font-semibold text-text-tertiary uppercase tracking-wider bg-surface-elevated/40">
             <span>{{ t('date') }}</span>
             <span>{{ t('pair') }}</span>
             <span>{{ t('position') }}</span>
@@ -118,128 +123,138 @@
           <div
             v-for="trade in recentTrades"
             :key="trade.id"
-            class="trade-row grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 px-5 py-4 border-b border-slate-700/30 last:border-0 cursor-pointer"
+            class="trade-row grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 px-5 py-3.5 border-b border-border-subtle last:border-0 cursor-pointer transition-colors"
             @click="onTradeClick(trade)"
           >
             <!-- Date -->
-            <div class="text-sm text-slate-300">
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block">{{ t('date') }}</span>
+            <div class="text-xs text-text-secondary flex items-center">
+              <span class="sm:hidden text-[10px] text-text-tertiary uppercase mr-1">{{ t('date') }}:</span>
               {{ formatTradeDate(trade.date) }}
             </div>
             <!-- Pair -->
-            <div class="text-sm text-white font-medium">
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block">{{ t('pair') }}</span>
+            <div class="text-xs font-mono font-bold text-text-primary flex items-center">
+              <span class="sm:hidden text-[10px] text-text-tertiary uppercase mr-1 font-sans font-normal">{{ t('pair') }}:</span>
               {{ trade.pair }}
             </div>
             <!-- Position -->
             <div>
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block mb-0.5">{{ t('position') }}</span>
+              <span class="sm:hidden text-[10px] text-text-tertiary uppercase block mb-0.5">{{ t('position') }}</span>
               <span
-                class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                class="text-[11px] font-bold font-mono px-2 py-0.5 rounded-md"
                 :class="trade.position === 'Long'
-                  ? 'bg-emerald-500/10 text-emerald-400'
-                  : 'bg-orange-500/10 text-orange-400'"
+                  ? 'bg-profit/10 text-profit border border-profit/25'
+                  : 'bg-amber-500/10 text-amber-500 border border-amber-500/25'"
               >
                 {{ trade.position }}
               </span>
             </div>
             <!-- P&L -->
-            <div class="text-sm font-mono font-semibold text-right"
-              :class="trade.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'"
+            <div class="text-xs font-mono tabular-nums font-semibold text-right"
+              :class="trade.pnl >= 0 ? 'text-profit' : 'text-loss'"
             >
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block font-sans font-normal">{{ t('pnl') }}</span>
+              <span class="sm:hidden text-[10px] text-text-tertiary uppercase block font-sans font-normal">{{ t('pnl') }}</span>
               {{ trade.pnl >= 0 ? '+' : '' }}${{ trade.pnl.toFixed(2) }}
             </div>
             <!-- Status -->
             <div class="text-right">
-              <span class="sm:hidden text-[10px] text-slate-500 uppercase block mb-0.5 text-left">{{ t('status') }}</span>
+              <span class="sm:hidden text-[10px] text-text-tertiary uppercase block mb-0.5 text-left">{{ t('status') }}</span>
               <span
-                class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full"
                 :class="trade.status === 'Win'
-                  ? 'bg-emerald-500/15 text-emerald-400'
-                  : 'bg-red-500/15 text-red-400'"
+                  ? 'bg-profit/15 text-profit'
+                  : 'bg-loss/15 text-loss'"
               >
-                {{ trade.status === 'Win' ? '✓ Win' : '✗ Loss' }}
+                {{ trade.status === 'Win' ? 'Win' : 'Loss' }}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Quick Actions + Habit Progress -->
+      <!-- Quick Actions + Risk Management -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Quick Actions -->
-        <div class="animate-fade-in" :style="{ animationDelay: '450ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">{{ t('quick_actions') }}</h2>
-          <div class="flex flex-col sm:flex-row gap-3">
+        <div class="surface-card p-5 animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
+          <h2 class="text-sm font-bold text-text-primary uppercase tracking-wider mb-3.5">{{ t('quick_actions') }}</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <button
               @click="router.push('/trading')"
-              class="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
+              class="btn-primary flex items-center justify-center gap-2 py-2.5 text-xs font-bold"
             >
-              <span class="text-lg">📝</span>
-              {{ t('add_new_trade') }}
+              <Icon name="edit" size="15" />
+              <span>{{ t('add_new_trade') }}</span>
             </button>
             <button
               @click="router.push('/backtesting')"
-              class="flex-1 glass rounded-lg py-3 px-4 text-xs sm:text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+              class="btn-secondary flex items-center justify-center gap-2 py-2.5 text-xs font-medium"
             >
-              <span class="text-lg">🔬</span>
-              <span>Uji Backtesting</span>
+              <Icon name="zap" size="15" />
+              <span>Uji Backtest</span>
             </button>
             <button
               @click="router.push('/calculator')"
-              class="flex-1 glass rounded-lg py-3 px-4 text-xs sm:text-sm font-medium text-slate-300 hover:text-white hover:border-accent/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+              class="btn-secondary flex items-center justify-center gap-2 py-2.5 text-xs font-medium"
             >
-              <span class="text-lg">📐</span>
-              <span>Kalkulator Lot</span>
+              <Icon name="calculator" size="15" />
+              <span>Kalkulator</span>
             </button>
           </div>
         </div>
 
         <!-- Risk Management & Discipline Widget -->
-        <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-white">🛡️ Manajemen Risiko & Disiplin</h2>
+        <div class="surface-card p-5 animate-fade-in" :style="{ animationDelay: '400ms', opacity: 0 }">
+          <div class="flex items-center justify-between mb-3.5">
+            <div class="flex items-center gap-2">
+              <Icon name="shield" size="16" class="text-accent" />
+              <h2 class="text-sm font-bold text-text-primary uppercase tracking-wider">Manajemen Risiko & Disiplin</h2>
+            </div>
             <router-link
               to="/calculator"
-              class="text-xs font-semibold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 border border-cyan-500/30 transition-all"
+              class="text-[11px] font-semibold text-accent hover:underline flex items-center gap-1"
             >
-              📐 Buka Kalkulator Lot →
+              <span>Kalkulator Lot</span>
+              <Icon name="arrow-up-right" size="12" />
             </router-link>
           </div>
 
-          <div class="glass rounded-xl p-5 border border-slate-700/60 space-y-3">
-            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-elevated/70 border border-border-subtle">
               <div class="flex items-center gap-2.5">
-                <span class="text-xl">🛑</span>
+                <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                  <Icon name="stop-circle" size="15" />
+                </div>
                 <div>
-                  <p class="text-xs font-bold text-white">Aturan Stop Loss Otomatis</p>
-                  <p class="text-[10px] text-slate-400">Selalu tentukan SL sebelum entri posisi</p>
+                  <p class="text-xs font-bold text-text-primary">Aturan Stop Loss Otomatis</p>
+                  <p class="text-[10px] text-text-tertiary">Selalu tentukan SL sebelum entri posisi</p>
                 </div>
               </div>
-              <span class="text-xs font-bold font-mono text-cyan-400">Max 1-2%</span>
+              <span class="text-xs font-bold font-mono tabular-nums text-accent">Max 1-2%</span>
             </div>
 
-            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-elevated/70 border border-border-subtle">
               <div class="flex items-center gap-2.5">
-                <span class="text-xl">🎯</span>
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <Icon name="target" size="15" />
+                </div>
                 <div>
-                  <p class="text-xs font-bold text-white">Target Risk : Reward Ideal</p>
-                  <p class="text-[10px] text-slate-400">Hanya ambil setup dengan potensi profit memadai</p>
+                  <p class="text-xs font-bold text-text-primary">Target Risk : Reward Ideal</p>
+                  <p class="text-[10px] text-text-tertiary">Hanya ambil setup dengan potensi memadai</p>
                 </div>
               </div>
-              <span class="text-xs font-bold font-mono text-emerald-400">Min 1 : 2</span>
+              <span class="text-xs font-bold font-mono tabular-nums text-profit">Min 1 : 2</span>
             </div>
 
-            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-elevated/70 border border-border-subtle">
               <div class="flex items-center gap-2.5">
-                <span class="text-xl">🧘</span>
+                <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                  <Icon name="activity" size="15" />
+                </div>
                 <div>
-                  <p class="text-xs font-bold text-white">Disiplin Psikologi Pasar</p>
-                  <p class="text-[10px] text-slate-400">Jeda setelah 2x loss beruntun, hindari FOMO</p>
+                  <p class="text-xs font-bold text-text-primary">Disiplin Psikologi Pasar</p>
+                  <p class="text-[10px] text-text-tertiary">Jeda setelah 2x loss beruntun, hindari FOMO</p>
                 </div>
               </div>
-              <span class="text-xs font-bold font-mono text-amber-400">Cooling Off</span>
+              <span class="text-xs font-bold font-mono tabular-nums text-amber-400">Cooling Off</span>
             </div>
           </div>
         </div>
@@ -250,6 +265,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import Icon from '@/components/ui/Icon.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'

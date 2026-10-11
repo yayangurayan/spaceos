@@ -1,16 +1,16 @@
 <template>
-  <div class="glass rounded-2xl p-5 sm:p-6 border border-slate-700/60 transition-all">
+  <div class="surface-card p-5 sm:p-6 transition-all">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-slate-700/40 pb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-border-subtle pb-4">
       <div>
         <div class="flex items-center gap-2">
-          <span class="text-xl">📋</span>
-          <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">Trading Plan & Strategi Teruji</h2>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+          <Icon name="clipboard" size="18" class="text-accent" />
+          <h2 class="text-base sm:text-lg font-bold text-text-primary tracking-tight">Trading Plan & Strategi Teruji</h2>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25">
             Aktif
           </span>
         </div>
-        <p class="text-xs text-slate-400 mt-1">
+        <p class="text-xs text-text-tertiary mt-1">
           Patuhi trading plan berikut secara disiplin untuk menjaga psikologi dan konsistensi probabilitas.
         </p>
       </div>
@@ -19,49 +19,50 @@
         <button
           type="button"
           @click="openEditModal"
-          class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700/80 transition-all flex items-center gap-1.5 shadow-sm"
+          class="btn-secondary px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5"
         >
-          <span>✏️</span>
+          <Icon name="edit" size="13" />
           <span>Edit Plan</span>
         </button>
 
         <router-link
           v-if="showBacktestLink"
           to="/backtesting"
-          class="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 text-xs font-semibold border border-cyan-500/30 transition-all flex items-center gap-1.5 shadow-sm"
+          class="px-3 py-1.5 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold border border-accent/25 transition-all flex items-center gap-1.5 shadow-sm active:scale-98"
         >
-          <span>🔬</span>
-          <span>Buka Backtesting →</span>
+          <Icon name="zap" size="13" />
+          <span>Buka Backtesting</span>
+          <Icon name="arrow-up-right" size="12" />
         </router-link>
       </div>
     </div>
 
     <!-- Strategy Summary Strip -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nama Strategi</div>
-        <div class="text-xs sm:text-sm font-bold text-cyan-300 truncate" :title="tradingPlan.strategyName">
+      <div class="p-3 rounded-xl bg-surface-elevated/70 border border-border-subtle">
+        <div class="text-[10px] font-bold text-text-tertiary uppercase tracking-wider mb-1">Nama Strategi</div>
+        <div class="text-xs sm:text-sm font-bold text-accent truncate" :title="tradingPlan.strategyName">
           {{ tradingPlan.strategyName || 'Smart Money Concept' }}
         </div>
       </div>
 
-      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sesi Trading</div>
-        <div class="text-xs sm:text-sm font-semibold text-slate-200 truncate" :title="tradingPlan.marketSession">
+      <div class="p-3 rounded-xl bg-surface-elevated/70 border border-border-subtle">
+        <div class="text-[10px] font-bold text-text-tertiary uppercase tracking-wider mb-1">Sesi Trading</div>
+        <div class="text-xs sm:text-sm font-semibold text-text-primary truncate" :title="tradingPlan.marketSession">
           {{ tradingPlan.marketSession || 'London & NY' }}
         </div>
       </div>
 
-      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Timeframe Analisa</div>
-        <div class="text-xs sm:text-sm font-semibold text-slate-200 truncate" :title="tradingPlan.timeframes">
+      <div class="p-3 rounded-xl bg-surface-elevated/70 border border-border-subtle">
+        <div class="text-[10px] font-bold text-text-tertiary uppercase tracking-wider mb-1">Timeframe Analisa</div>
+        <div class="text-xs sm:text-sm font-semibold text-text-primary truncate" :title="tradingPlan.timeframes">
           {{ tradingPlan.timeframes || 'HTF: 1H | LTF: 5m' }}
         </div>
       </div>
 
-      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Risiko Per Posisi</div>
-        <div class="text-xs sm:text-sm font-bold text-amber-300 truncate" :title="tradingPlan.riskPerTrade">
+      <div class="p-3 rounded-xl bg-surface-elevated/70 border border-border-subtle">
+        <div class="text-[10px] font-bold text-text-tertiary uppercase tracking-wider mb-1">Risiko Per Posisi</div>
+        <div class="text-xs sm:text-sm font-bold text-amber-400 truncate" :title="tradingPlan.riskPerTrade">
           {{ tradingPlan.riskPerTrade || 'Max 1%' }}
         </div>
       </div>
@@ -70,57 +71,57 @@
     <!-- Strategy Detail Blocks -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- 1. Entry Rules -->
-      <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+      <div class="p-4 rounded-xl bg-surface-elevated/50 border border-border-subtle space-y-2">
         <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
-          <span>🎯</span>
+          <Icon name="target" size="14" />
           <span>Aturan Konfirmasi Entri (Entry Rules)</span>
         </div>
-        <div class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-1 font-mono">
+        <div class="text-xs text-text-secondary whitespace-pre-line leading-relaxed pl-1 font-mono">
           {{ tradingPlan.entryRules || 'Belum ada aturan entri tertulis.' }}
         </div>
       </div>
 
       <!-- 2. Stop Loss & Invalidation -->
-      <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+      <div class="p-4 rounded-xl bg-surface-elevated/50 border border-border-subtle space-y-2">
         <div class="flex items-center gap-2 text-xs font-bold text-rose-400 uppercase tracking-wider">
-          <span>🛑</span>
+          <Icon name="stop-circle" size="14" />
           <span>Invalidasi & Stop Loss (Risk Rules)</span>
         </div>
-        <div class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-1 font-mono">
+        <div class="text-xs text-text-secondary whitespace-pre-line leading-relaxed pl-1 font-mono">
           {{ tradingPlan.invalidationRules || 'Selalu tetapkan SL sebelum entry.' }}
         </div>
       </div>
 
       <!-- 3. Take Profit & Targets -->
-      <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
-        <div class="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-          <span>🏁</span>
+      <div class="p-4 rounded-xl bg-surface-elevated/50 border border-border-subtle space-y-2">
+        <div class="flex items-center gap-2 text-xs font-bold text-accent uppercase tracking-wider">
+          <Icon name="check-circle" size="14" />
           <span>Target Profit & Manajemen Posisi</span>
         </div>
-        <div class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-1 font-mono">
+        <div class="text-xs text-text-secondary whitespace-pre-line leading-relaxed pl-1 font-mono">
           {{ tradingPlan.exitRules || 'Target minimal 1:2 Risk to Reward.' }}
         </div>
       </div>
 
       <!-- 4. Psychology & Discipline -->
-      <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+      <div class="p-4 rounded-xl bg-surface-elevated/50 border border-border-subtle space-y-2">
         <div class="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
-          <span>🧘</span>
+          <Icon name="activity" size="14" />
           <span>Disiplin Psikologi & Batas Harian</span>
         </div>
-        <div class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-1 font-mono">
+        <div class="text-xs text-text-secondary whitespace-pre-line leading-relaxed pl-1 font-mono">
           {{ tradingPlan.psychologyRules || 'Max 2x loss sehari, no revenge trading.' }}
         </div>
       </div>
     </div>
 
     <!-- Pairs Pill List -->
-    <div v-if="tradingPlan.pairs && tradingPlan.pairs.length > 0" class="mt-4 flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-800/80">
-      <span class="text-[11px] font-semibold text-slate-400 mr-1">Pair Fokus:</span>
+    <div v-if="tradingPlan.pairs && tradingPlan.pairs.length > 0" class="mt-4 flex flex-wrap items-center gap-1.5 pt-3 border-t border-border-subtle">
+      <span class="text-[11px] font-semibold text-text-tertiary mr-1">Pair Fokus:</span>
       <span
         v-for="p in tradingPlan.pairs"
         :key="p"
-        class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700/60"
+        class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-surface-elevated text-text-secondary border border-border-subtle"
       >
         {{ p }}
       </span>
@@ -132,22 +133,22 @@
     <teleport to="body">
       <div
         v-if="isEditing"
-        class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
         @click.self="isEditing = false"
       >
-        <div class="glass-modal max-w-2xl w-full rounded-2xl p-5 sm:p-6 border border-slate-700 shadow-2xl space-y-4 my-auto">
+        <div class="bg-surface border border-border-default max-w-2xl w-full rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 my-auto">
           <!-- Modal Header -->
-          <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+          <div class="flex items-center justify-between border-b border-border-subtle pb-3">
             <div class="flex items-center gap-2">
-              <span class="text-xl">✏️</span>
-              <h3 class="text-base sm:text-lg font-bold text-white">Edit Trading Plan & Strategi</h3>
+              <Icon name="edit" size="18" class="text-accent" />
+              <h3 class="text-base sm:text-lg font-bold text-text-primary">Edit Trading Plan & Strategi</h3>
             </div>
             <button
               type="button"
               @click="isEditing = false"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-text-tertiary hover:text-text-primary hover:bg-surface-elevated transition-colors"
             >
-              ✕
+              <Icon name="x" size="16" />
             </button>
           </div>
 
@@ -156,7 +157,7 @@
             <!-- 1. Strategy Name & Session -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Nama Strategi</label>
+                <label class="block text-xs font-semibold text-text-secondary mb-1">Nama Strategi</label>
                 <input
                   v-model="editForm.strategyName"
                   type="text"
@@ -166,7 +167,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Sesi Pasar (Trading Session)</label>
+                <label class="block text-xs font-semibold text-text-secondary mb-1">Sesi Pasar (Trading Session)</label>
                 <input
                   v-model="editForm.marketSession"
                   type="text"
@@ -179,7 +180,7 @@
             <!-- 2. Timeframes & Risk -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Timeframe Analisa</label>
+                <label class="block text-xs font-semibold text-text-secondary mb-1">Timeframe Analisa</label>
                 <input
                   v-model="editForm.timeframes"
                   type="text"
@@ -189,7 +190,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Toleransi Risiko</label>
+                <label class="block text-xs font-semibold text-text-secondary mb-1">Toleransi Risiko</label>
                 <input
                   v-model="editForm.riskPerTrade"
                   type="text"
@@ -201,7 +202,7 @@
 
             <!-- 3. Pairs -->
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">
+              <label class="block text-xs font-semibold text-text-secondary mb-1">
                 Pasangan Mata Uang / Pair (Pisahkan dengan koma)
               </label>
               <input
@@ -215,7 +216,7 @@
             <!-- 4. Entry Rules -->
             <div>
               <label class="block text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1.5">
-                <span>🎯</span>
+                <Icon name="target" size="13" />
                 <span>Aturan Entri / Checklist Konfirmasi</span>
               </label>
               <textarea
@@ -229,7 +230,7 @@
             <!-- 5. Invalidation & SL -->
             <div>
               <label class="block text-xs font-semibold text-rose-400 mb-1 flex items-center gap-1.5">
-                <span>🛑</span>
+                <Icon name="stop-circle" size="13" />
                 <span>Aturan Stop Loss & Invalidasi Setup</span>
               </label>
               <textarea
@@ -242,8 +243,8 @@
 
             <!-- 6. Exit & TP -->
             <div>
-              <label class="block text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1.5">
-                <span>🏁</span>
+              <label class="block text-xs font-semibold text-accent mb-1 flex items-center gap-1.5">
+                <Icon name="check-circle" size="13" />
                 <span>Aturan Take Profit & Penguncian Profit (BE)</span>
               </label>
               <textarea
@@ -257,7 +258,7 @@
             <!-- 7. Psychology -->
             <div>
               <label class="block text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1.5">
-                <span>🧘</span>
+                <Icon name="activity" size="13" />
                 <span>Aturan Disiplin Psikologi & Larangan</span>
               </label>
               <textarea
@@ -270,20 +271,20 @@
           </div>
 
           <!-- Modal Footer -->
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-700/60">
+          <div class="flex items-center justify-end gap-2 pt-3 border-t border-border-subtle">
             <button
               type="button"
               @click="isEditing = false"
-              class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+              class="btn-secondary px-4 py-2 text-xs font-semibold"
             >
               Batal
             </button>
             <button
               type="button"
               @click="savePlan"
-              class="btn-primary px-5 py-2 rounded-xl text-xs font-bold shadow-lg flex items-center gap-1.5"
+              class="btn-primary px-5 py-2 text-xs font-bold shadow-lg flex items-center gap-1.5"
             >
-              <span>💾</span>
+              <Icon name="bookmark" size="14" />
               <span>Simpan Trading Plan</span>
             </button>
           </div>
@@ -295,6 +296,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import Icon from '@/components/ui/Icon.vue'
 import { useBacktesting } from '@/composables/useBacktesting'
 
 withDefaults(defineProps<{
@@ -346,10 +348,3 @@ function savePlan() {
   isEditing.value = false
 }
 </script>
-
-<style scoped>
-.glass-modal {
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(51, 65, 85, 0.8);
-}
-</style>

@@ -4,12 +4,12 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <div class="flex items-center gap-2.5">
-          <span class="text-2xl sm:text-3xl">🌿</span>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <Icon name="heart" size="26" class="text-accent" />
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight">
             Personal Space Dashboard
           </h1>
         </div>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+        <p class="text-xs sm:text-sm text-text-tertiary mt-1">
           Pantau keuangan, konsistensi habit harian, dan ruang refleksi diri pribadi Anda.
         </p>
       </div>
@@ -18,25 +18,25 @@
       <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
         <router-link
           to="/finance"
-          class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1.5 transition-all"
+          class="flex-1 sm:flex-none btn-secondary px-3.5 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
         >
-          <span>💵</span>
+          <Icon name="wallet" size="14" />
           <span>+ Transaksi</span>
         </router-link>
 
         <router-link
           to="/habits"
-          class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1.5 transition-all"
+          class="flex-1 sm:flex-none btn-secondary px-3.5 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
         >
-          <span>🎯</span>
+          <Icon name="target" size="14" />
           <span>+ Habit</span>
         </router-link>
 
         <router-link
           to="/personal-journal"
-          class="flex-1 sm:flex-none btn-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10"
+          class="flex-1 sm:flex-none btn-primary px-4 py-2 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md"
         >
-          <span>✍️</span>
+          <Icon name="feather" size="14" />
           <span>Tulis Jurnal</span>
         </router-link>
       </div>
@@ -45,79 +45,80 @@
     <!-- 2. High-Level Summary Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <!-- Habit Progress Today -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card p-5 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="text-xl">🎯</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Habit Hari Ini</span>
+            <Icon name="target" size="16" class="text-accent" />
+            <span class="text-xs font-bold uppercase tracking-wider text-text-tertiary">Habit Hari Ini</span>
           </div>
-          <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
-            🔥 {{ streakOverview.longestStreak }} hari streak
+          <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-profit/15 text-profit flex items-center gap-1">
+            <Icon name="flame" size="12" />
+            <span>{{ streakOverview.longestStreak }} hari</span>
           </span>
         </div>
         <div class="flex items-end justify-between">
           <div>
-            <p class="text-2xl font-bold font-mono text-white">
+            <p class="text-2xl font-bold font-mono tabular-nums text-text-primary">
               {{ completedTodayCount }} / {{ todayHabits.length }}
             </p>
-            <p class="text-[11px] text-slate-400 mt-0.5">Target terselesaikan</p>
+            <p class="text-[11px] text-text-tertiary mt-0.5">Target terselesaikan</p>
           </div>
           <div class="text-right">
-            <span class="text-lg font-bold font-mono text-emerald-400">{{ todayCompletionRate }}%</span>
+            <span class="text-lg font-bold font-mono tabular-nums text-profit">{{ todayCompletionRate }}%</span>
           </div>
         </div>
         <!-- Progress bar -->
-        <div class="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+        <div class="w-full bg-surface-elevated h-2 rounded-full mt-3 overflow-hidden border border-border-subtle">
           <div
-            class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500"
+            class="bg-profit h-full transition-all duration-500 rounded-full"
             :style="{ width: `${todayCompletionRate}%` }"
           ></div>
         </div>
       </div>
 
       <!-- Financial Snapshot (This Month) -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60 transition-transform hover:-translate-y-0.5">
+      <div class="surface-card p-5 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="text-xl">💰</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Cashflow Bulan Ini</span>
+            <Icon name="dollar-sign" size="16" class="text-accent" />
+            <span class="text-xs font-bold uppercase tracking-wider text-text-tertiary">Cashflow Bulan Ini</span>
           </div>
           <span
             class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-            :class="overviewStats.netSavings >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'"
+            :class="overviewStats.netSavings >= 0 ? 'bg-profit/15 text-profit' : 'bg-loss/15 text-loss'"
           >
             {{ overviewStats.netSavings >= 0 ? 'Surplus' : 'Defisit' }}
           </span>
         </div>
-        <p class="text-2xl font-bold font-mono text-white">
+        <p class="text-2xl font-bold font-mono tabular-nums text-text-primary">
           {{ formatCurrency(overviewStats.netSavings) }}
         </p>
-        <div class="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-800/80">
-          <span class="text-emerald-400">Masuk: +{{ formatCurrency(overviewStats.totalIncome) }}</span>
-          <span class="text-rose-400">Keluar: -{{ formatCurrency(overviewStats.totalExpense) }}</span>
+        <div class="flex items-center justify-between text-xs text-text-tertiary mt-2 pt-2 border-t border-border-subtle">
+          <span class="text-profit font-mono tabular-nums">+{{ formatCurrency(overviewStats.totalIncome) }}</span>
+          <span class="text-loss font-mono tabular-nums">-{{ formatCurrency(overviewStats.totalExpense) }}</span>
         </div>
       </div>
 
       <!-- Budget Progress -->
-      <div class="glass rounded-2xl p-5 border border-slate-700/60 transition-transform hover:-translate-y-0.5 sm:col-span-2 lg:col-span-1">
+      <div class="surface-card p-5 transition-transform hover:-translate-y-0.5 sm:col-span-2 lg:col-span-1">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="text-xl">📊</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Anggaran</span>
+            <Icon name="bar-chart-2" size="16" class="text-accent" />
+            <span class="text-xs font-bold uppercase tracking-wider text-text-tertiary">Sisa Anggaran</span>
           </div>
-          <span class="text-[10px] text-slate-400">Bulan Ini</span>
+          <span class="text-[10px] text-text-tertiary font-mono">Bulan Ini</span>
         </div>
-        <p class="text-2xl font-bold font-mono text-white">
+        <p class="text-2xl font-bold font-mono tabular-nums text-text-primary">
           {{ formatCurrency(budgetRemaining) }}
         </p>
-        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+        <div class="flex items-center justify-between text-[11px] text-text-tertiary mt-1">
           <span>Terpakai {{ budgetPercentUsed.toFixed(0) }}%</span>
-          <span>Batas: {{ formatCurrency(totalBudget) }}</span>
+          <span class="font-mono tabular-nums">Batas: {{ formatCurrency(totalBudget) }}</span>
         </div>
-        <div class="w-full bg-slate-800 h-2 rounded-full mt-2.5 overflow-hidden">
+        <div class="w-full bg-surface-elevated h-2 rounded-full mt-2.5 overflow-hidden border border-border-subtle">
           <div
-            class="h-full transition-all duration-500"
-            :class="budgetPercentUsed > 90 ? 'bg-rose-500' : budgetPercentUsed > 75 ? 'bg-amber-500' : 'bg-cyan-500'"
+            class="h-full transition-all duration-500 rounded-full"
+            :class="budgetPercentUsed > 90 ? 'bg-loss' : budgetPercentUsed > 75 ? 'bg-amber-500' : 'bg-accent'"
             :style="{ width: `${Math.min(100, budgetPercentUsed)}%` }"
           ></div>
         </div>
@@ -127,21 +128,22 @@
     <!-- 3. Middle Section: Habit Checklist & Reflection -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Left: Quick Habit Checklist (7 cols) -->
-      <div class="lg:col-span-7 glass rounded-2xl p-5 sm:p-6 border border-slate-700/60 space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-700/50">
+      <div class="lg:col-span-7 surface-card p-5 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-border-subtle">
           <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <span>✅</span>
+            <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
+              <Icon name="check-circle" size="16" class="text-profit" />
               <span>Checklist Habit Hari Ini</span>
             </h2>
-            <p class="text-xs text-slate-400 mt-0.5">Centang kebiasaan harian langsung dari sini.</p>
+            <p class="text-xs text-text-tertiary mt-0.5">Centang kebiasaan harian langsung dari sini.</p>
           </div>
-          <router-link to="/habits" class="text-xs text-accent hover:underline font-semibold">
-            Kelola Habit →
+          <router-link to="/habits" class="text-xs text-accent hover:underline font-semibold flex items-center gap-1">
+            <span>Kelola Habit</span>
+            <Icon name="arrow-up-right" size="12" />
           </router-link>
         </div>
 
-        <div v-if="todayHabits.length === 0" class="py-8 text-center text-slate-400 text-xs">
+        <div v-if="todayHabits.length === 0" class="py-8 text-center text-text-tertiary text-xs">
           Belum ada habit yang dijadwalkan hari ini.
           <router-link to="/habits" class="text-accent underline ml-1">Buat Habit Baru</router-link>
         </div>
@@ -153,16 +155,18 @@
             @click="handleToggleHabit(habit.id)"
             class="flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer select-none"
             :class="habit.isCompletedToday
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-white'
-              : 'bg-slate-900/60 hover:bg-slate-800/80 border-slate-800 text-slate-300'"
+              ? 'bg-profit/10 border-profit/25 text-text-primary'
+              : 'bg-surface-elevated/70 hover:bg-surface-elevated border-border-subtle text-text-secondary'"
           >
             <div class="flex items-center gap-3 min-w-0">
-              <span class="text-2xl shrink-0">{{ habit.icon }}</span>
+              <div class="w-8 h-8 rounded-lg bg-surface border border-border-subtle flex items-center justify-center shrink-0 text-accent font-bold text-xs">
+                <Icon name="target" size="15" />
+              </div>
               <div class="min-w-0">
-                <p class="text-xs sm:text-sm font-bold truncate" :class="{ 'line-through text-slate-400': habit.isCompletedToday }">
+                <p class="text-xs sm:text-sm font-bold truncate" :class="{ 'line-through text-text-tertiary': habit.isCompletedToday }">
                   {{ habit.name }}
                 </p>
-                <p class="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                <p class="text-[11px] text-text-tertiary flex items-center gap-1.5 mt-0.5">
                   <span>{{ habit.category }}</span>
                   <span v-if="habit.target">• {{ habit.target }}</span>
                 </p>
@@ -172,12 +176,12 @@
             <!-- Checkbox Circle -->
             <button
               type="button"
-              class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all shrink-0 ml-3"
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all shrink-0 ml-3"
               :class="habit.isCompletedToday
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'border-2 border-slate-600 hover:border-slate-400 text-transparent'"
+                ? 'bg-profit text-white shadow-sm'
+                : 'border border-border-default text-transparent hover:border-accent'"
             >
-              ✓
+              <Icon name="check" size="13" />
             </button>
           </div>
         </div>
@@ -186,18 +190,19 @@
       <!-- Right: Jurnal Refleksi & Catatan Harian (5 cols) -->
       <div class="lg:col-span-5 flex flex-col gap-4">
         <!-- Daily Reflection Card -->
-        <div class="glass rounded-2xl p-5 border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 via-slate-900 to-slate-900 shadow-lg space-y-3">
+        <div class="surface-card p-5 border border-border-subtle shadow-md space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
-              <span>💡</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+              <Icon name="sparkles" size="13" />
               <span>Refleksi Hari Ini</span>
             </span>
-            <router-link to="/personal-journal" class="text-[11px] text-slate-400 hover:text-white">
-              Buka Jurnal →
+            <router-link to="/personal-journal" class="text-[11px] text-text-tertiary hover:text-text-primary flex items-center gap-1">
+              <span>Buka Jurnal</span>
+              <Icon name="arrow-up-right" size="11" />
             </router-link>
           </div>
 
-          <h3 class="text-sm font-bold text-white leading-snug">
+          <h3 class="text-xs sm:text-sm font-semibold text-text-primary leading-relaxed">
             "{{ currentPrompt }}"
           </h3>
 
@@ -209,11 +214,11 @@
               placeholder="Tuliskan catatan singkat atau pikiran Anda hari ini..."
             ></textarea>
             <div class="flex items-center justify-between">
-              <span class="text-[10px] text-slate-500">Tersimpan ke Jurnal Pribadi</span>
+              <span class="text-[10px] text-text-tertiary">Tersimpan ke Jurnal Pribadi</span>
               <button
                 type="submit"
                 :disabled="!quickNote.trim()"
-                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                class="btn-primary px-3.5 py-1.5 text-xs font-bold transition-all disabled:opacity-40"
               >
                 Simpan Catatan
               </button>
@@ -222,18 +227,19 @@
         </div>
 
         <!-- Recent Transactions Mini Card -->
-        <div class="glass rounded-2xl p-5 border border-slate-700/60 space-y-3">
-          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <span>💳</span>
+        <div class="surface-card p-5 border border-border-subtle space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+              <Icon name="wallet" size="14" class="text-accent" />
               <span>Transaksi Terkini</span>
             </h3>
-            <router-link to="/finance" class="text-xs text-accent hover:underline">
-              Semua →
+            <router-link to="/finance" class="text-xs text-accent hover:underline flex items-center gap-1">
+              <span>Semua</span>
+              <Icon name="arrow-up-right" size="11" />
             </router-link>
           </div>
 
-          <div v-if="recentTransactions.length === 0" class="text-center py-4 text-slate-500 text-xs">
+          <div v-if="recentTransactions.length === 0" class="text-center py-4 text-text-tertiary text-xs">
             Belum ada transaksi bulan ini.
           </div>
 
@@ -241,15 +247,18 @@
             <div
               v-for="tx in recentTransactions"
               :key="tx.id"
-              class="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-800/50"
+              class="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-surface-elevated/60 transition-colors"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <span class="text-sm">{{ tx.type === 'income' ? '🟢' : '🔴' }}</span>
-                <span class="text-slate-300 font-medium truncate">{{ tx.description || tx.category }}</span>
+                <span
+                  class="w-2 h-2 rounded-full shrink-0"
+                  :class="tx.type === 'income' ? 'bg-profit' : 'bg-loss'"
+                />
+                <span class="text-text-secondary font-medium truncate">{{ tx.description || tx.category }}</span>
               </div>
               <span
-                class="font-mono font-bold shrink-0 ml-2"
-                :class="tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'"
+                class="font-mono tabular-nums font-bold shrink-0 ml-2"
+                :class="tx.type === 'income' ? 'text-profit' : 'text-loss'"
               >
                 {{ tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
               </span>
@@ -263,6 +272,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import Icon from '@/components/ui/Icon.vue'
 import { useHabits } from '@/composables/useHabits'
 import { useFinance } from '@/composables/useFinance'
 import { useToastStore } from '@/stores/toast'

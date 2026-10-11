@@ -112,9 +112,9 @@ Emosi & Dampak Kerugian:\n${JSON.stringify(emotionStats, null, 2)}`
         }
       })
 
-      return `## 🧠 Laporan Analisis AI Trading Coach (Institusional)
+      return `## Laporan Analisis AI Trading Coach (Institusional)
 
-### 1. 📊 Pola Win Rate & Profitabilitas
+### 1. Pola Win Rate & Profitabilitas
 * **Evaluasi Win Rate:** Win rate Anda berada di **${winRate}%** pada ${totalCount} trade terakhir dengan Net PnL **$${totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}**.
 * **Ekspektansi Sistem:** ${
         Number(winRate) >= 50
@@ -124,23 +124,23 @@ Emosi & Dampak Kerugian:\n${JSON.stringify(emotionStats, null, 2)}`
 
 ---
 
-### 2. 🌍 Analisis Per-Sesi (Asia vs London vs New York)
-* 🌟 **Sesi Terbaik:** **${bestSession}** (${sessionStats[bestSession]?.count || 0} trades, Net PnL: $${sessionStats[bestSession]?.pnl.toFixed(2) || '0.00'}) — Likuiditas dan volatilitas pada sesi ini sangat sesuai dengan karakteristik entry Anda.
-* ⚠️ **Sesi Berisiko:** **${worstSession}** (${sessionStats[worstSession]?.count || 0} trades) — Sesi ini kerap menyumbang false breakout atau slippage. Disarankan kurangi frekuensi trade di sesi ini.
+### 2. Analisis Per-Sesi (Asia vs London vs New York)
+* **Sesi Terbaik:** **${bestSession}** (${sessionStats[bestSession]?.count || 0} trades, Net PnL: $${sessionStats[bestSession]?.pnl.toFixed(2) || '0.00'}) - Likuiditas dan volatilitas pada sesi ini sangat sesuai dengan karakteristik entry Anda.
+* **Sesi Berisiko:** **${worstSession}** (${sessionStats[worstSession]?.count || 0} trades) - Sesi ini kerap menyumbang false breakout atau slippage. Disarankan kurangi frekuensi trade di sesi ini.
 
 ---
 
-### 3. ⚖️ Manajemen Lot Sizing & Risiko Akun
+### 3. Manajemen Lot Sizing & Risiko Akun
 * **Profil Ukuran Lot:** Min: **${minLot}**, Rata-rata: **${avgLot}**, Max: **${maxLot}**.
 * **Konsistensi Risiko:** ${
         hasLotSpike
-          ? `⚠️ **Peringatan Lot Sizing Spike!** Terdeteksi trade dengan lot hingga **${maxLot}** (>2x rata-rata). Ini mengindikasikan lonjakan risiko impulsif atau usaha balas dendam (revenge trading). Wajib standarisasi risiko maksimal 1-2% modal per trade.`
-          : `✅ **Lot Sizing Disiplin:** Ukuran lot Anda konsisten di kisaran rata-rata ${avgLot}, menjaga kurva ekuitas akun dari lonjakan drawdown tak terduga.`
+          ? `**Peringatan Lot Sizing Spike!** Terdeteksi trade dengan lot hingga **${maxLot}** (>2x rata-rata). Ini mengindikasikan lonjakan risiko impulsif atau usaha balas dendam (revenge trading). Wajib standarisasi risiko maksimal 1-2% modal per trade.`
+          : `**Lot Sizing Disiplin:** Ukuran lot Anda konsisten di kisaran rata-rata ${avgLot}, menjaga kurva ekuitas akun dari lonjakan drawdown tak terduga.`
       }
 
 ---
 
-### 4. 🧘 Korelasi Psikologi & Emosi Terhadap Drawdown
+### 4. Korelasi Psikologi & Emosi Terhadap Drawdown
 * ${
         toxicEmotion
           ? `**Emosi Paling Berisiko (${toxicEmotion}):** Menghasilkan **${highestLossRate.toFixed(0)}% kerugian** dengan drawdown $${emotionStats[toxicEmotion].netPnL.toFixed(2)}. Emosi ini memicu entry prematur sebelum candle close.`
@@ -150,7 +150,7 @@ Emosi & Dampak Kerugian:\n${JSON.stringify(emotionStats, null, 2)}`
 
 ---
 
-### 5. 💡 3 Langkah Rekomendasi Taktis
+### 5. Tiga Langkah Rekomendasi Taktis
 1. **Rule 1% Risk Rule:** Kunci ukuran lot maksimal Anda agar tidak melebihi persentase risiko tetap per posisi.
 2. **Prioritas Sesi ${bestSession}:** Alokasikan fokus eksekusi terbaik Anda pada window waktu likuiditas prima ini.
 3. **Cooling-down Protocol:** Jika mengalami 2 loss berurutan pada satu sesi, kunci terminal trading minimal selama 2 jam.`

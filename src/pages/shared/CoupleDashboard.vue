@@ -1,10 +1,12 @@
 <template>
   <div>
     <!-- Error State -->
-    <div v-if="error" class="glass rounded-xl p-8 text-center animate-fade-in">
-      <span class="text-4xl block mb-3">⚠️</span>
-      <p class="text-white font-medium mb-1">{{ t('failed_load_data') }}</p>
-      <p class="text-sm text-slate-400 mb-4">{{ error }}</p>
+    <div v-if="error" class="surface-card rounded-2xl p-8 text-center animate-fade-in">
+      <span class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 mx-auto flex items-center justify-center mb-3">
+        <Icon name="alert-triangle" :size="24" />
+      </span>
+      <p class="text-slate-900 dark:text-white font-medium mb-1">{{ t('failed_load_data') }}</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ error }}</p>
       <button class="btn-primary" @click="retry">{{ t('try_again') }}</button>
     </div>
 
@@ -12,27 +14,14 @@
       <!-- ============================
            Hero Header
            ============================ -->
-      <div class="couple-header glass rounded-2xl p-6 sm:p-8 mb-8 animate-fade-in overflow-hidden relative">
-        <!-- Floating hearts background -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden">
-          <span
-            v-for="i in 6"
-            :key="i"
-            class="floating-heart absolute text-rose-500/10"
-            :style="{
-              left: `${15 + i * 14}%`,
-              top: `${10 + (i % 3) * 25}%`,
-              fontSize: `${18 + (i % 3) * 8}px`,
-              animationDelay: `${i * 0.7}s`,
-              animationDuration: `${3 + (i % 2)}s`,
-            }"
-          >♥</span>
-        </div>
-
+      <div class="couple-header surface-card rounded-2xl p-6 sm:p-8 mb-8 animate-fade-in overflow-hidden relative">
         <div class="relative z-10">
           <!-- Greeting -->
-          <p class="text-rose-400/80 text-sm font-medium mb-1">{{ t(greeting) }} 💕</p>
-          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-4">
+          <p class="text-rose-500 dark:text-rose-400 text-xs sm:text-sm font-semibold tracking-wide uppercase mb-1 flex items-center gap-1.5">
+            <Icon name="heart" :size="14" class="text-rose-500 fill-rose-500/20" />
+            <span>{{ t(greeting) }}</span>
+          </p>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight">
             {{ coupleNames }}
           </h1>
 
@@ -40,37 +29,37 @@
           <div class="flex flex-wrap gap-6">
             <!-- Days together -->
             <div
-              class="flex items-center gap-3 group cursor-pointer p-1.5 -m-1.5 rounded-2xl hover:bg-white/5 transition-all"
+              class="flex items-center gap-3 group cursor-pointer p-2 -m-2 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all"
               @click="openDateModal"
               title="Klik untuk ubah tanggal jadian / mulai bersama"
             >
-              <div class="w-12 h-12 rounded-xl bg-rose-500/15 group-hover:bg-rose-500/25 flex items-center justify-center text-xl transition-colors">
-                💕
+              <div class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 group-hover:bg-rose-500/20 flex items-center justify-center transition-colors">
+                <Icon name="heart" :size="22" class="fill-rose-500/30" />
               </div>
               <div>
                 <div class="flex items-center gap-1.5">
-                  <p class="text-2xl font-bold text-white">
+                  <p class="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
                     <AnimatedNumber :value="daysTogether" :duration="1500" />
                   </p>
-                  <span class="text-[11px] text-rose-300 opacity-60 group-hover:opacity-100 transition-opacity">✏️</span>
+                  <Icon name="edit" :size="13" class="text-rose-400 opacity-60 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <p class="text-xs text-slate-400 flex items-center gap-1">
+                <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                   <span>{{ t('days_together') }}</span>
-                  <span class="text-[10px] text-slate-500 hidden sm:inline">(sejak {{ formatDate(togetherSince) }})</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline">(sejak {{ formatDate(togetherSince) }})</span>
                 </p>
               </div>
             </div>
 
             <!-- Anniversary countdown -->
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-xl bg-amber-500/15 flex items-center justify-center text-xl">
-                🎂
+              <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <Icon name="calendar-heart" :size="22" />
               </div>
               <div>
-                <p class="text-2xl font-bold text-white">
+                <p class="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
                   <AnimatedNumber :value="anniversaryCountdown.days" :duration="1500" />
                 </p>
-                <p class="text-xs text-slate-400">
+                <p class="text-xs text-slate-500 dark:text-slate-400">
                   {{ t('days_to_anniversary', { years: anniversaryCountdown.years }) }}
                 </p>
               </div>
@@ -82,20 +71,20 @@
       <!-- ============================
            Partner Connection & Shared Space Info
            ============================ -->
-      <div class="glass rounded-2xl p-5 mb-8 border border-pink-500/30 bg-pink-950/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
+      <div class="surface-card rounded-2xl p-5 mb-8 border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
         <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center text-xl shadow-md">
-            💞
+          <div class="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center shadow-sm">
+            <Icon name="users" :size="20" />
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-white">{{ t('active_account', { name: currentUser?.full_name || currentUser?.email?.split('@')[0] || 'Akun Anda' }) }}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/30">
+              <span class="text-xs font-bold text-slate-900 dark:text-white">{{ t('active_account', { name: currentUser?.full_name || currentUser?.email?.split('@')[0] || 'Akun Anda' }) }}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-300 font-semibold border border-rose-500/25">
                 {{ isSpaceOwner ? 'Pemilik Ruang' : 'Pasangan' }}
               </span>
             </div>
-            <p class="text-xs text-slate-400 mt-0.5">
-              {{ t('invite_code') }}: <strong class="text-pink-300 font-mono tracking-wider">{{ coupleInviteCode }}</strong>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {{ t('invite_code') }}: <strong class="text-rose-500 dark:text-rose-300 font-mono tracking-wider">{{ coupleInviteCode }}</strong>
             </p>
           </div>
         </div>
@@ -104,18 +93,18 @@
           <button
             type="button"
             @click="copyInviteCode"
-            class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 transition-colors"
+            class="btn-secondary px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5"
           >
-            <span>📋</span>
+            <Icon name="clipboard" :size="14" />
             <span>{{ t('copy_invite_code') }}</span>
           </button>
 
           <button
             type="button"
             @click="copyInviteLink"
-            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-bold shadow-md shadow-pink-500/20 flex items-center gap-1.5 transition-all hover:scale-102"
+            class="btn-primary px-3.5 py-2 text-xs font-bold flex items-center gap-1.5"
           >
-            <span>🔗</span>
+            <Icon name="external-link" :size="14" />
             <span>Bagi Link Undangan</span>
           </button>
         </div>
@@ -125,21 +114,21 @@
            Memory Lane
            ============================ -->
       <div class="mb-8 animate-fade-in" :style="{ animationDelay: '200ms', opacity: 0 }">
-        <h2 class="text-lg font-semibold text-white mb-4">{{ t('memory_lane') }}</h2>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">{{ t('memory_lane') }}</h2>
 
         <SkeletonLoader v-if="isLoading" type="table" :rows="2" :columns="4" />
 
         <template v-else>
           <!-- On This Day -->
-          <div v-if="onThisDay" class="glass rounded-xl p-4 mb-4 flex items-center gap-4">
-            <div class="w-16 h-16 rounded-lg on-this-day-gradient shrink-0 flex items-center justify-center text-2xl overflow-hidden">
-              <img v-if="onThisDay.url" :src="onThisDay.url" class="w-full h-full object-cover rounded-lg" />
-              <span v-else>📅</span>
+          <div v-if="onThisDay" class="surface-card rounded-2xl p-4 mb-4 flex items-center gap-4">
+            <div class="w-16 h-16 rounded-xl bg-amber-500/10 text-amber-500 shrink-0 flex items-center justify-center overflow-hidden">
+              <img v-if="onThisDay.url" :src="onThisDay.url" class="w-full h-full object-cover rounded-xl" />
+              <Icon v-else name="calendar" :size="24" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-0.5">{{ t('on_this_day') }}</p>
-              <p class="text-sm text-white truncate">{{ onThisDay.caption }}</p>
-              <p class="text-[11px] text-slate-500">{{ formatDate(onThisDay.date) }}</p>
+              <p class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">{{ t('on_this_day') }}</p>
+              <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ onThisDay.caption }}</p>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 font-mono tabular-nums">{{ formatDate(onThisDay.date) }}</p>
             </div>
           </div>
 
@@ -148,7 +137,7 @@
             <div
               v-for="photo in recentPhotos"
               :key="photo.id"
-              class="photo-card rounded-xl overflow-hidden aspect-square relative group cursor-pointer bg-slate-900 border border-slate-800"
+              class="photo-card rounded-2xl overflow-hidden aspect-square relative group cursor-pointer bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
             >
               <img
                 v-if="photo.url"
@@ -157,28 +146,30 @@
                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              <div v-else class="w-full h-full flex items-center justify-center text-3xl bg-pink-950/20">
-                📷
+              <div v-else class="w-full h-full flex items-center justify-center text-slate-400">
+                <Icon name="images" :size="28" />
               </div>
 
               <!-- Caption overlay -->
-              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                 <p class="text-xs text-white font-medium truncate">{{ photo.caption }}</p>
-                <p class="text-[10px] text-pink-300">{{ formatDate(photo.date) }}</p>
+                <p class="text-[10px] text-rose-300 font-mono tabular-nums">{{ formatDate(photo.date) }}</p>
               </div>
             </div>
           </div>
 
           <!-- Empty state if no photos yet -->
-          <div v-else class="glass rounded-xl p-8 text-center border border-dashed border-pink-500/20">
-            <span class="text-3xl block mb-2">📸</span>
-            <p class="text-sm font-medium text-white mb-1">Belum Ada Foto Kenangan</p>
-            <p class="text-xs text-slate-400 mb-4">Abadikan momen pertama kalian bersama di Galeri Ruang Cinta.</p>
+          <div v-else class="surface-card rounded-2xl p-8 text-center border-dashed border-rose-500/20">
+            <span class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center mb-2">
+              <Icon name="images" :size="24" />
+            </span>
+            <p class="text-sm font-bold text-slate-900 dark:text-white mb-1">Belum Ada Foto Kenangan</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Abadikan momen pertama kalian bersama di Galeri Ruang Cinta.</p>
             <router-link
               to="/gallery"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-semibold shadow-md shadow-pink-500/20 transition-all hover:scale-102"
+              class="btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold"
             >
-              <span>+</span>
+              <Icon name="plus" :size="14" />
               <span>Tambah Foto Pertama</span>
             </router-link>
           </div>
@@ -191,7 +182,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Upcoming Events -->
         <div class="animate-fade-in" :style="{ animationDelay: '350ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">{{ t('upcoming_events') }}</h2>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">{{ t('upcoming_events') }}</h2>
 
           <SkeletonLoader v-if="isLoading" type="circle" />
 
@@ -199,40 +190,42 @@
             <div
               v-for="event in upcomingEvents"
               :key="event.id"
-              class="event-card glass rounded-xl p-4 flex items-center gap-4"
+              class="event-card surface-card rounded-2xl p-4 flex items-center gap-4"
             >
               <div
-                class="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
+                class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
                 :class="{
-                  'bg-rose-500/15': event.type === 'date',
-                  'bg-violet-500/15': event.type === 'trip',
-                  'bg-pink-500/15': event.type === 'anniversary',
-                  'bg-slate-500/15': event.type === 'general',
+                  'bg-rose-500/15 text-rose-500': event.type === 'date',
+                  'bg-violet-500/15 text-violet-500': event.type === 'trip',
+                  'bg-pink-500/15 text-pink-500': event.type === 'anniversary',
+                  'bg-slate-500/15 text-slate-500': event.type === 'general',
                 }"
               >
-                {{ event.icon }}
+                <Icon name="calendar-heart" :size="20" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-white truncate">{{ event.title }}</p>
-                <p class="text-xs text-slate-400">{{ formatFullDate(event.date) }}</p>
+                <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ event.title }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">{{ formatFullDate(event.date) }}</p>
               </div>
               <div class="shrink-0">
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-700/50 text-slate-300">
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono tabular-nums">
                   {{ daysUntil(event.date) }}
                 </span>
               </div>
             </div>
 
-            <div v-if="upcomingEvents.length === 0" class="glass rounded-xl p-8 text-center">
-              <span class="text-3xl block mb-2">📅</span>
-              <p class="text-sm text-slate-400">Belum ada event mendatang.</p>
+            <div v-if="upcomingEvents.length === 0" class="surface-card rounded-2xl p-8 text-center text-slate-500">
+              <span class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center mb-2">
+                <Icon name="calendar" :size="20" />
+              </span>
+              <p class="text-sm">Belum ada event mendatang.</p>
             </div>
           </div>
         </div>
 
         <!-- Recent Journal Entries -->
         <div class="animate-fade-in" :style="{ animationDelay: '450ms', opacity: 0 }">
-          <h2 class="text-lg font-semibold text-white mb-4">{{ t('recent_journals') }}</h2>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">{{ t('recent_journals') }}</h2>
 
           <SkeletonLoader v-if="isLoading" type="text" />
 
@@ -240,29 +233,31 @@
             <div
               v-for="journal in recentJournals"
               :key="journal.id"
-              class="journal-card glass rounded-xl p-4 cursor-pointer"
+              class="journal-card surface-card rounded-2xl p-4 cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all"
             >
               <!-- Header -->
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-xl">{{ journal.mood }}</span>
-                  <span class="text-sm font-medium text-white">{{ journal.title }}</span>
+                  <span class="text-xs px-2 py-0.5 rounded bg-rose-500/10 text-rose-500 font-semibold">{{ journal.mood }}</span>
+                  <span class="text-sm font-bold text-slate-900 dark:text-white">{{ journal.title }}</span>
                 </div>
-                <span class="text-[11px] text-slate-500">{{ formatDate(journal.date) }}</span>
+                <span class="text-[11px] text-slate-400 dark:text-slate-500 font-mono tabular-nums">{{ formatDate(journal.date) }}</span>
               </div>
               <!-- Preview -->
-              <p class="text-xs text-slate-400 leading-relaxed line-clamp-2">
+              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
                 {{ journal.preview }}
               </p>
               <!-- Author -->
-              <p class="text-[10px] text-slate-500 mt-2">
-                ditulis oleh <span class="text-slate-400 font-medium">{{ journal.author }}</span>
+              <p class="text-[10px] text-slate-400 mt-2">
+                ditulis oleh <span class="text-slate-700 dark:text-slate-300 font-medium">{{ journal.author }}</span>
               </p>
             </div>
 
-            <div v-if="recentJournals.length === 0" class="glass rounded-xl p-8 text-center">
-              <span class="text-3xl block mb-2">📖</span>
-              <p class="text-sm text-slate-400">Belum ada journal entry.</p>
+            <div v-if="recentJournals.length === 0" class="surface-card rounded-2xl p-8 text-center text-slate-500">
+              <span class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center mb-2">
+                <Icon name="book-heart" :size="20" />
+              </span>
+              <p class="text-sm">Belum ada journal entry.</p>
             </div>
           </div>
         </div>
@@ -272,28 +267,28 @@
            Quick Actions
            ============================ -->
       <div class="animate-fade-in" :style="{ animationDelay: '550ms', opacity: 0 }">
-        <h2 class="text-lg font-semibold text-white mb-4">{{ t('quick_actions') }}</h2>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">{{ t('quick_actions') }}</h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <router-link
             to="/gallery"
-            class="couple-btn-primary flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium text-white transition-all duration-150 hover:opacity-90 shadow-md shadow-rose-500/20"
+            class="btn-primary flex items-center justify-center gap-2 py-3 text-xs font-bold"
           >
-            <span class="text-lg">📷</span>
+            <Icon name="images" :size="16" />
             <span>Galeri & Tambah Foto</span>
           </router-link>
           <router-link
             to="/journal"
-            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-rose-500/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            class="btn-secondary py-3 px-5 text-xs font-semibold flex items-center justify-center gap-2"
           >
-            <span class="text-lg">📖</span>
+            <Icon name="edit" :size="16" />
             <span>Tulis Journal</span>
           </router-link>
           <router-link
-            to="/journal"
-            class="glass rounded-lg py-3 px-5 text-sm font-medium text-slate-300 hover:text-white hover:border-rose-500/30 transition-all duration-150 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            to="/love-notes"
+            class="btn-secondary py-3 px-5 text-xs font-semibold flex items-center justify-center gap-2"
           >
-            <span class="text-lg">📖</span>
-            <span>Shared Journal</span>
+            <Icon name="message-heart" :size="16" />
+            <span>Love Notes</span>
           </router-link>
         </div>
       </div>
@@ -304,20 +299,20 @@
       <transition name="fade">
         <div
           v-if="showDateModal"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
           @click.self="showDateModal = false"
         >
-          <div class="glass rounded-2xl p-6 w-full max-w-sm border border-rose-500/40 shadow-2xl space-y-4 animate-slide-in">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 class="text-base font-bold text-white flex items-center gap-2">
-                <span>💕</span>
+          <div class="surface-card rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4 animate-slide-in">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Icon name="heart" :size="18" class="text-rose-500" />
                 <span>Tanggal Mulai Bersama</span>
               </h3>
-              <button @click="showDateModal = false" class="text-slate-400 hover:text-white text-sm">✕</button>
+              <button @click="showDateModal = false" class="text-slate-400 hover:text-slate-900 dark:hover:text-white"><Icon name="x" :size="18" /></button>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Tanggal Jadian / Bersama Sejak
               </label>
               <input
@@ -325,23 +320,23 @@
                 type="date"
                 class="input-field w-full text-sm font-mono"
               />
-              <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                 Tanggal ini digunakan untuk menghitung jumlah hari bersama dan hitung mundur anniversary secara otomatis.
               </p>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 @click="showDateModal = false"
-                class="px-3.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white border border-slate-700"
+                class="btn-secondary px-3.5 py-1.5 text-xs font-semibold"
               >
                 Batal
               </button>
               <button
                 type="button"
                 @click="handleSaveDate"
-                class="btn-primary px-4 py-1.5 rounded-xl text-xs font-bold"
+                class="btn-primary px-4 py-1.5 text-xs font-bold"
               >
                 Simpan Tanggal
               </button>
@@ -358,6 +353,7 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import AnimatedNumber from '@/components/ui/AnimatedNumber.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
+import Icon from '@/components/ui/Icon.vue'
 import { useCoupleDashboard } from '@/composables/useCoupleDashboard'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
