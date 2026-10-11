@@ -8,7 +8,7 @@
       <!-- Mobile Hamburger -->
       <button
         type="button"
-        class="lg:hidden p-1.5 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+        class="lg:hidden w-10 h-10 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors flex items-center justify-center shrink-0"
         @click="$emit('toggle-mobile-sidebar')"
         aria-label="Toggle mobile menu"
       >
@@ -18,7 +18,7 @@
       <!-- Desktop Sidebar Toggle -->
       <button
         type="button"
-        class="hidden lg:flex p-1.5 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+        class="hidden lg:flex w-9 h-9 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors items-center justify-center shrink-0"
         @click="$emit('toggle-sidebar')"
         :title="isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
       >
@@ -34,7 +34,7 @@
           <p class="text-xs font-semibold dark:text-white text-slate-900 leading-tight flex items-center gap-1.5">
             <span class="truncate max-w-[180px]">{{ currentSpace.name }}</span>
             <span
-              class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase"
+              class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase shrink-0"
               :class="getSpaceBadgeClass(currentSpace)"
             >
               {{ getSpaceLabel(currentSpace) }}
@@ -44,19 +44,19 @@
       </div>
 
       <!-- Current Space Badge (Mobile) -->
-      <div v-if="currentSpace" class="sm:hidden flex items-center gap-1.5 min-w-0 max-w-[150px]">
+      <div v-if="currentSpace" class="sm:hidden flex items-center gap-1.5 min-w-0 max-w-[120px] xs:max-w-[150px]">
         <Icon :name="getSpaceIcon(currentSpace)" :size="15" class="text-sky-500 dark:text-sky-400 shrink-0" />
         <span class="text-xs font-semibold dark:text-white text-slate-900 truncate">{{ currentSpace.name }}</span>
       </div>
     </div>
 
     <!-- Right: Quick Actions + Theme Switcher + Space Switcher -->
-    <div class="flex items-center gap-1.5 sm:gap-2">
+    <div class="flex items-center gap-1 sm:gap-2">
       <!-- Command Palette Trigger Button (Ctrl+K) -->
       <button
         type="button"
         @click="$emit('open-command-palette')"
-        class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/10 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
+        class="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/10 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
         title="Buka Command Palette (Ctrl+K)"
       >
         <Icon name="search" :size="13" />
@@ -68,7 +68,7 @@
       <button
         type="button"
         @click="$emit('open-command-palette')"
-        class="md:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+        class="md:hidden w-10 h-10 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors flex items-center justify-center shrink-0"
         title="Cari (Ctrl+K)"
       >
         <Icon name="search" :size="16" />
@@ -78,7 +78,7 @@
       <button
         type="button"
         @click="toggleTheme"
-        class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+        class="w-10 h-10 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors flex items-center justify-center shrink-0"
         :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
       >
         <Icon :name="isDark ? 'sun' : 'moon'" :size="17" />
@@ -88,21 +88,21 @@
       <button
         type="button"
         @click="toggleLang"
-        class="px-2 py-1 rounded-md text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] border dark:border-white/10 border-slate-200 transition-colors"
+        class="h-9 px-2.5 rounded-lg text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] border dark:border-white/10 border-slate-200 transition-colors flex items-center justify-center shrink-0"
         :title="currentLang === 'id' ? t('switch_to_de') : t('switch_to_id')"
       >
         {{ currentLang.toUpperCase() }}
       </button>
 
       <!-- Space Switcher & User Profile Dropdown -->
-      <div class="relative" ref="dropdownRef">
+      <div class="relative shrink-0" ref="dropdownRef">
         <button
           type="button"
           @click="isDropdownOpen = !isDropdownOpen"
-          class="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-colors"
+          class="h-10 flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 pr-1.5 sm:pr-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-colors"
         >
           <!-- User Initials Avatar -->
-          <div class="w-6 h-6 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center text-[11px] font-mono font-bold border border-sky-500/30">
+          <div class="w-6 h-6 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center text-[11px] font-mono font-bold border border-sky-500/30 shrink-0">
             {{ userInitials }}
           </div>
           <span class="hidden md:block text-xs font-medium dark:text-slate-200 text-slate-700 max-w-[120px] truncate">

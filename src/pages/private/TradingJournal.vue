@@ -15,12 +15,12 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
         <!-- AI Trading Coach CTA -->
         <button
           type="button"
           @click="runAICoach"
-          class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98"
+          class="min-h-[44px] px-3 sm:px-4 py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98"
           title="Analisis pola performa, emosi, dan rekomendasi trading dengan AI"
         >
           <Icon name="sparkles" size="14" />
@@ -31,7 +31,7 @@
         <button
           type="button"
           @click="exportToCSV()"
-          class="flex-1 sm:flex-none btn-secondary px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
+          class="min-h-[44px] btn-secondary px-3 sm:px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
           title="Export data trade yang terfilter ke format CSV"
         >
           <Icon name="download" size="14" />
@@ -42,7 +42,7 @@
         <button
           type="button"
           @click="openAddTradeModal"
-          class="flex-1 sm:flex-none btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
+          class="col-span-2 sm:col-span-1 min-h-[44px] btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
         >
           <Icon name="plus" size="15" />
           <span>Add New Trade</span>

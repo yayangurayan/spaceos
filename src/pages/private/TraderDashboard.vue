@@ -10,10 +10,10 @@
         <p class="text-text-tertiary text-xs sm:text-sm">{{ currentSpace?.category === 'private' ? t('private_space_subtitle') : t('trading_habit') }}</p>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 w-full sm:w-auto">
         <router-link
           to="/backtesting"
-          class="px-3.5 py-2 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold border border-accent/25 transition-all flex items-center gap-1.5 shadow-sm active:scale-98"
+          class="flex-1 sm:flex-none min-h-[44px] px-3.5 py-2 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold border border-accent/25 transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
         >
           <Icon name="zap" size="14" />
           <span>Lab Backtesting</span>
@@ -21,7 +21,7 @@
 
         <router-link
           to="/trading"
-          class="btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 active:scale-98"
+          class="flex-1 sm:flex-none min-h-[44px] btn-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-1.5 active:scale-98"
         >
           <Icon name="plus" size="14" />
           <span>{{ t('add_new_trade') }}</span>

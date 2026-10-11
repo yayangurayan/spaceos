@@ -21,7 +21,7 @@
         <button
           type="button"
           @click="exportTransactionsCSV"
-          class="flex-1 sm:flex-none btn-secondary px-3.5 py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
+          class="flex-1 sm:flex-none min-h-[44px] btn-secondary px-3.5 py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
         >
           <Icon name="download" :size="15" />
           <span>{{ t('export_csv') }}</span>
@@ -30,7 +30,7 @@
         <button
           type="button"
           @click="openAddModal"
-          class="flex-1 sm:flex-none btn-primary px-4 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
+          class="flex-1 sm:flex-none min-h-[44px] btn-primary px-4 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
         >
           <Icon name="plus" :size="16" />
           <span>{{ t('record_transaction') }}</span>

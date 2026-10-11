@@ -50,8 +50,8 @@
          Main Content Area
          ============================ -->
     <div
-      class="flex flex-col min-h-screen relative z-[1]"
-      :style="{ marginLeft: desktopMargin, transition: 'margin-left 0.25s cubic-bezier(0.2, 0, 0, 1)' }"
+      class="flex flex-col min-h-screen relative z-[1] transition-[margin] duration-200 ease-out"
+      :class="isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-[260px]'"
     >
       <!-- Top Bar -->
       <Topbar
@@ -62,12 +62,14 @@
       />
 
       <!-- Page Content -->
-      <main class="flex-1 p-4 lg:p-6 overflow-x-hidden">
-        <router-view v-slot="{ Component, route }">
-          <transition name="page" mode="out-in">
-            <component :is="Component" :key="route.path" />
-          </transition>
-        </router-view>
+      <main class="flex-1 p-3.5 sm:p-5 lg:p-6 overflow-x-hidden">
+        <div class="max-w-[1600px] w-full mx-auto">
+          <router-view v-slot="{ Component, route }">
+            <transition name="page" mode="out-in">
+              <component :is="Component" :key="route.path" />
+            </transition>
+          </router-view>
+        </div>
       </main>
     </div>
 
@@ -77,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
 import Topbar from '@/components/layout/Topbar.vue'
 import CommandPalette from '@/components/layout/CommandPalette.vue'
@@ -90,7 +92,6 @@ useTheme()
 const isCommandPaletteOpen = ref(false)
 
 const {
-  isMobile,
   isMobileSidebarOpen,
   closeMobileSidebar,
   toggleMobileSidebar,
@@ -104,11 +105,6 @@ const isSidebarCollapsed = ref(false)
 function toggleDesktopSidebar() {
   isSidebarCollapsed.value = !isSidebarCollapsed.value
 }
-
-const desktopMargin = computed(() => {
-  if (isMobile.value) return '0px'
-  return isSidebarCollapsed.value ? '64px' : '260px'
-})
 
 function onNavigate() {
   // Handled by Sidebar emitting 'navigate'

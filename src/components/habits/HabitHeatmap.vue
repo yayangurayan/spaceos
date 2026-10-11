@@ -1,20 +1,20 @@
 <template>
-  <div class="glass rounded-xl p-5 border border-slate-700/60 mb-6">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-700/50">
+  <div class="surface-card p-4 sm:p-5 mb-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
       <div>
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <span>🟩</span>
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Icon name="activity" :size="16" class="text-emerald-500" />
           <span>Konsistensi Habit (12 Minggu Terakhir)</span>
         </h3>
-        <p class="text-xs text-slate-400">Pola frekuensi eksekusi kebiasaan harian ala GitHub heatmap</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Pola frekuensi eksekusi kebiasaan harian ala GitHub heatmap</p>
       </div>
 
       <!-- Level Legend -->
-      <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
+      <div class="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 self-end sm:self-center">
         <span>Kurang</span>
-        <span class="w-3 h-3 rounded-sm bg-slate-800 border border-slate-700"></span>
-        <span class="w-3 h-3 rounded-sm bg-cyan-900 border border-cyan-800"></span>
-        <span class="w-3 h-3 rounded-sm bg-cyan-600"></span>
+        <span class="w-3 h-3 rounded-sm bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"></span>
+        <span class="w-3 h-3 rounded-sm bg-sky-900/60 border border-sky-800"></span>
+        <span class="w-3 h-3 rounded-sm bg-sky-600"></span>
         <span class="w-3 h-3 rounded-sm bg-emerald-500"></span>
         <span class="w-3 h-3 rounded-sm bg-emerald-400"></span>
         <span>Sering</span>
@@ -22,11 +22,11 @@
     </div>
 
     <!-- Heatmap Grid Container (Horizontal scroll on mobile) -->
-    <div class="overflow-x-auto pb-2">
-      <div class="min-w-[640px]">
+    <div class="overflow-x-auto pb-2 custom-scrollbar">
+      <div class="min-w-[560px] sm:min-w-[640px]">
         <!-- Days of week labels on left + Columns of 7 days -->
         <div class="flex gap-1.5 items-start">
-          <div class="flex flex-col gap-1 text-[9px] text-slate-500 font-semibold pr-1">
+          <div class="flex flex-col gap-1 text-[9px] text-slate-400 dark:text-slate-500 font-semibold pr-1">
             <span class="h-3.5">Min</span>
             <span class="h-3.5">Sen</span>
             <span class="h-3.5">Sel</span>
@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+import Icon from '@/components/ui/Icon.vue'
 import type { HabitStreakOverview } from '@/types'
 
 defineProps<{
